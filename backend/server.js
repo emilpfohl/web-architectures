@@ -4,14 +4,15 @@ const cors = require('cors');
 const app = express();
 const PORT = 3000;
 
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors());
 app.use(express.json());
 
 // In-Memory Data Store Simulation
 const data = {
+  shoppingCategories: ['Lebensmittel', 'Haushalt', 'Wishlist'],
   shopping: [
-    { id: 1, name: 'Milch', checked: false },
-    { id: 2, name: 'Toilettenpapier', checked: true }
+    { id: 1, name: 'Milch', checked: false, category: 'Lebensmittel' },
+    { id: 2, name: 'Toilettenpapier', checked: true, category: 'Haushalt' }
   ],
   todos: [
     { id: 1, title: 'Küche putzen', assignee: 'Max', completed: false },
@@ -26,9 +27,20 @@ const data = {
 };
 
 // Shopping Routes
+app.get('/api/shopping/categories', (req, res) => res.json(data.shoppingCategories));
+app.post('/api/shopping/categories', (req, res) => {
+  const newCat = req.body.name?.trim();
+  if (newCat && !data.shoppingCategories.includes(newCat)) {
+    data.shoppingCategories.push(newCat);
+  }
+  res.status(201).json(data.shoppingCategories);
+});
+
 app.get('/api/shopping', (req, res) => res.json(data.shopping));
 app.post('/api/shopping', (req, res) => {
   const newItem = { id: Date.now(), ...req.body, checked: false };
+  // fallback if category is missing
+  if (!newItem.category) newItem.category = 'Lebensmittel';
   data.shopping.push(newItem);
   res.status(201).json(newItem);
 });
