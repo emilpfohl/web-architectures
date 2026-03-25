@@ -68,7 +68,7 @@ export default async function Home({ searchParams }: { searchParams: { tab?: str
 
       <main className="mt-6 flex justify-center w-full">
         {currentTab === 'dashboard' && <DashboardClient shopping={shopping} todos={todos} finances={finances} />}
-        {currentTab === 'shopping' && <ShoppingClient initialItems={shopping} />}
+        {currentTab === 'shopping' && <ShoppingClient initialItems={shopping} initialCategories={categories} />}
         {currentTab === 'todos' && <TodoClient initialTodos={todos} />}
         {currentTab === 'finance' && <FinanceClient initialExpenses={finances} />}
       </main>
