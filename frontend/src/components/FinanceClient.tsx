@@ -2,16 +2,16 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Wallet, Plus, DollarSign, Users, ArrowRight } from 'lucide-react';
 
 export function FinanceClient({ initialExpenses }: { initialExpenses: any[] }) {
+  const router = useRouter();
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [paidBy, setPaidBy] = useState('');
-  const [membersStr, setMembersStr] = useState('Max, Julius');
-  const router = useRouter();
 
-  const handleAddExpense = async (e: React.FormEvent) => {
+  const total = initialExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+  const addExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!description.trim() || !amount || !paidBy.trim()) return;
 
@@ -30,172 +30,116 @@ export function FinanceClient({ initialExpenses }: { initialExpenses: any[] }) {
     router.refresh();
   };
 
-  const totalExpenses = initialExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-  
-  const members = Array.from(new Set([
-    ...membersStr.split(',').map(m => m.trim()).filter(m => m),
-    ...initialExpenses.map(e => e.paidBy)
-  ]));
-
-  const perPerson = members.length > 0 ? totalExpenses / members.length : 0;
-
-  const balances: Record<string, number> = {};
-  members.forEach(m => balances[m] = 0);
-  initialExpenses.forEach(exp => {
-    if(balances[exp.paidBy] !== undefined) {
-      balances[exp.paidBy] += exp.amount;
-    }
-  });
-
-  const debts = members.map(person => ({
-    person,
-    balance: balances[person] - perPerson
-  }));
-
-  const creditors = debts.filter(d => d.balance > 0.01).map(d => ({ ...d }));
-  const debtors = debts.filter(d => d.balance < -0.01).map(d => ({ ...d }));
-
-  const transactions = [];
-  let i = 0; 
-  let j = 0;
-
-  while (i < creditors.length && j < debtors.length) {
-    const creditor = creditors[i];
-    const debtor = debtors[j];
-    
-    const settleAmount = Math.min(creditor.balance, Math.abs(debtor.balance));
-    
-    transactions.push({
-      from: debtor.person,
-      to: creditor.person,
-      amount: settleAmount
-    });
-    
-    creditor.balance -= settleAmount;
-    debtor.balance += settleAmount; 
-    
-    if (creditor.balance < 0.01) i++;
-    if (Math.abs(debtor.balance) < 0.01) j++;
-  }
-
   return (
-    <div className="flex flex-col lg:flex-row gap-8 items-start w-full animate-fade-in">
-        
-      <div className="w-full lg:w-2/3">
-        <div className="glass-panel p-4 md:p-8 mb-6 md:mb-8">
-          <h2 className="text-xl md:text-2xl font-semibold m-0 mb-4 text-slate-900 border-none">Neue Ausgabe erfassen</h2>
-          <form onSubmit={handleAddExpense} className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mt-4">
-            <div className="col-span-1 md:col-span-2">
-              <input 
-                type="text" 
-                className="w-full px-5 py-3 rounded-2xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-200 transition-all font-medium text-slate-800"
-                placeholder="Wofür? (z.B. Wocheneinkauf)"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </div>
-            <input 
-              type="number" 
-              step="0.01"
-              className="px-5 py-3 rounded-2xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-200 transition-all font-medium text-slate-800"
-              placeholder="Betrag in €"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-            />
-            <input 
-              type="text" 
-              className="px-5 py-3 rounded-2xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-200 transition-all font-medium text-slate-800"
-              placeholder="Wer? (Max)"
-              value={paidBy}
-              onChange={(e) => setPaidBy(e.target.value)}
-            />
-            <button type="submit" className="btn btn-primary col-span-1 md:col-span-2 m-0 bg-emerald-300 hover:bg-emerald-400 text-emerald-900 shadow-emerald-300/50 py-3">
-              <Plus size={20} />
-              Ausgabe hinzufügen
-            </button>
-          </form>
-        </div>
+    <div className="animate-fade-in w-full max-w-2xl mx-auto space-y-12 pb-32">
+      
+      <header className="px-4">
+        <h2 className="font-headline text-4xl font-black text-on-surface tracking-tighter">Shared Expenses</h2>
+        <p className="text-on-surface-variant font-bold text-[10px] uppercase tracking-[0.3em] mt-2 opacity-60">Balance the sanctuary books</p>
+      </header>
 
-        <div className="glass-panel p-4 md:p-8">
-          <h2 className="text-xl md:text-2xl font-semibold m-0 text-slate-900 border-none">Letzte Ausgaben</h2>
-          {initialExpenses.length === 0 ? (
-            <p className="text-slate-500 mt-4">Noch keine Ausgaben erfasst.</p>
-          ) : (
-            <ul className="flex flex-col gap-3 md:gap-4 mt-6 p-0 m-0">
-              {initialExpenses.slice().reverse().map(exp => (
-                <li key={exp.id} className="flex justify-between items-center p-4 bg-white border border-slate-100 shadow-sm rounded-xl">
-                  <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
-                    <div className="w-10 h-10 rounded-full bg-emerald-100 flex-shrink-0 flex items-center justify-center text-emerald-600">
-                      <DollarSign size={20} />
-                    </div>
-                    <div className="overflow-hidden">
-                      <strong className="text-slate-800 font-semibold block truncate">{exp.description}</strong>
-                      <div className="text-xs md:text-sm text-slate-500">Von {exp.paidBy}</div>
-                    </div>
-                  </div>
-                  <div className="text-lg md:text-xl font-bold text-slate-800 ml-2 whitespace-nowrap">
-                    {exp.amount.toFixed(2)} €
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-
-      <div className="flex-1 w-full lg:w-1/3 flex flex-col gap-6 md:gap-8">
-        
-        <div className="glass-panel p-6 md:p-8 flex flex-col items-center text-center">
-          <Wallet size={48} className="text-emerald-500 mb-4" />
-          <h3 className="text-slate-500 mb-2 font-medium">Gesamtausgaben</h3>
-          <span className="text-5xl font-bold text-slate-800 m-0 leading-none">
-            {totalExpenses.toFixed(2)} €
-          </span>
-          <div className="w-full h-px bg-slate-200 my-6"></div>
-          
-          <div className="w-full text-left">
-            <label className="text-sm text-slate-500 mb-2 block font-medium">
-              WG Mitglieder (kommagetrennt)
-            </label>
-            <input 
-              type="text" 
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-200 transition-all text-sm font-medium text-slate-700"
-              value={membersStr}
-              onChange={(e) => setMembersStr(e.target.value)}
-            />
+      {/* Balance Card */}
+      <section className="bg-primary p-12 rounded-[4rem] text-white shadow-2xl relative overflow-hidden transition-all hover:scale-[1.01] cursor-pointer">
+        <div className="relative z-10">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-60 mb-3">Total Pool</p>
+          <div className="flex items-baseline gap-3">
+            <span className="text-7xl font-black tracking-tighter">{total.toFixed(2)}</span>
+            <span className="text-2xl font-bold opacity-40">€</span>
           </div>
-          
-          <p className="text-sm text-slate-500 mt-4">
-            Pro Person: <strong className="text-slate-800 text-base">{perPerson.toFixed(2)} €</strong>
-          </p>
+          <div className="mt-10 flex gap-4">
+            <button className="btn bg-white/20 backdrop-blur-xl text-white border-none hover:bg-white/30 text-xs py-4 px-8 font-black uppercase tracking-widest">
+              Details
+            </button>
+            <button className="btn bg-white text-primary border-none hover:scale-105 text-xs py-4 px-8 font-black uppercase tracking-widest">
+              Settle Up
+            </button>
+          </div>
         </div>
+        {/* Abstract background elements */}
+        <div className="absolute -top-24 -right-24 w-80 h-80 bg-white/10 rounded-full blur-3xl opacity-50"></div>
+        <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-white/5 rounded-full blur-2xl opacity-30"></div>
+      </section>
 
-        <div className="glass-panel p-8">
-          <h2 className="flex items-center gap-2 text-xl font-semibold mb-6 m-0 border-none text-slate-800">
-            <Users size={24} className="text-blue-500" /> Wer schuldet wem?
-          </h2>
-          
-          {transactions.length === 0 ? (
-            <p className="text-slate-500 text-center py-4">
-              Alles ausgeglichen! Niemand schuldet jemandem etwas. 🎉
-            </p>
-          ) : (
-            <div className="flex flex-col gap-4">
-              {transactions.map((acc, idx) => (
-                <div key={idx} className="flex items-center justify-between p-4 bg-white border border-slate-100 shadow-sm rounded-xl">
-                  <div className="flex items-center gap-2">
-                    <strong className="text-rose-500">{acc.from}</strong>
-                    <ArrowRight size={16} className="text-slate-400" />
-                    <strong className="text-emerald-500">{acc.to}</strong>
-                  </div>
-                  <strong className="text-slate-800 text-lg">{acc.amount.toFixed(2)} €</strong>
+      {/* Transaction List */}
+      <section className="space-y-6">
+        <div className="flex items-center justify-between px-6">
+          <h3 className="font-headline text-xl font-black text-on-surface">Live Ledger</h3>
+          <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">{initialExpenses.length} Entries</span>
+        </div>
+        
+        <div className="space-y-4">
+          {initialExpenses.slice().reverse().map((exp: any) => (
+            <div key={exp.id} className="bg-white p-7 rounded-[2.5rem] flex items-center justify-between border border-outline-variant/10 chill-shadow group hover:bg-stone-50 transition-all cursor-default">
+              <div className="flex items-center gap-6">
+                <div className="w-16 h-16 rounded-full bg-sage-soft/40 flex items-center justify-center text-primary transition-all group-hover:scale-110 group-hover:bg-sage-soft/60">
+                  <span className="material-symbols-outlined text-3xl font-bold">payments</span>
                 </div>
-              ))}
+                <div>
+                  <h4 className="font-black text-xl text-on-surface leading-tight tracking-tight">{exp.description}</h4>
+                  <div className="flex items-center gap-3 mt-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">{exp.paidBy}</span>
+                    <span className="text-[10px] font-bold text-on-surface-variant opacity-40 uppercase tracking-widest">Logged • Today</span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-right pr-2">
+                <span className="font-headline font-black text-2xl text-on-surface tracking-tighter">-{exp.amount.toFixed(2)}€</span>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant opacity-40 mt-1">Settled</p>
+              </div>
+            </div>
+          ))}
+
+          {initialExpenses.length === 0 && (
+            <div className="text-center py-24 bg-stone-100/50 rounded-[4rem] border-2 border-dashed border-stone-200">
+              <span className="material-symbols-outlined text-7xl text-stone-300 mb-6 block">account_balance_wallet</span>
+              <p className="text-on-surface-variant font-bold text-sm tracking-widest opacity-40 uppercase">Books are balanced</p>
             </div>
           )}
-          
         </div>
+      </section>
 
+      {/* Expense Addition FAB style Interface */}
+      <div className="fixed bottom-32 right-8 z-50 flex flex-col items-end gap-6">
+        {description && (
+          <div className="bg-white/90 backdrop-blur-xl p-8 rounded-[3rem] shadow-2xl border border-outline-variant/30 animate-fade-in flex flex-col gap-5 min-w-[320px]">
+            <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant px-2">Log Transaction</p>
+            <div className="flex gap-3">
+              <div className="flex-1 space-y-2">
+                <label className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant opacity-50 px-2">Amount (€)</label>
+                <input 
+                  type="number" 
+                  placeholder="0.00"
+                  step="0.01"
+                  className="w-full px-6 py-4 rounded-2xl bg-stone-100 border-none text-sm font-black focus:ring-2 focus:ring-primary/20 transition-all font-headlines"
+                  value={amount}
+                  onChange={e => setAmount(e.target.value)}
+                />
+              </div>
+              <div className="flex-1 space-y-2">
+                <label className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant opacity-50 px-2">Who Paid?</label>
+                <input 
+                  type="text" 
+                  placeholder="Payer"
+                  className="w-full px-6 py-4 rounded-2xl bg-stone-100 border-none text-sm font-black focus:ring-2 focus:ring-primary/20 transition-all"
+                  value={paidBy}
+                  onChange={e => setPaidBy(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+        <form onSubmit={addExpense} className="flex items-center gap-4 translate-y-2">
+          <input 
+            type="text" 
+            placeholder="What was bought?"
+            className="w-full max-w-[280px] px-8 py-5 rounded-full bg-white shadow-2xl border-2 border-primary/10 focus:outline-none focus:border-primary/40 text-sm font-black transition-all"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+          />
+          <button type="submit" className="w-20 h-20 rounded-full bg-primary text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all">
+            <span className="material-symbols-outlined text-4xl font-black">receipt_long</span>
+          </button>
+        </form>
       </div>
 
     </div>

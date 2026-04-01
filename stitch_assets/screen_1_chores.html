@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FlatMate | Chores Rotation</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300..800&amp;family=Be+Vietnam+Pro:wght@100..900&amp;family=Fraunces:opsz,wght@9..144,300..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#50644e", // Sage Green
+              "secondary": "#a7b89f", // Lighter Sage
+              "accent": "#d2e9cc", // Soft Mint
+              "background": "#fbf9f5", // Cream
+              "surface": "#ffffff",
+              "on-surface": "#31332f",
+              "on-surface-variant": "#5e605b",
+              "outline": "#e0e2db",
+            },
+            fontFamily: {
+              "headline": ["Fraunces", "serif"],
+              "body": ["Be Vietnam Pro", "sans-serif"],
+              "label": ["Plus Jakarta Sans", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "1.5rem", "xl": "2.5rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body {
+        background-color: #fbf9f5;
+        color: #31332f;
+      }
+      .rotation-ring {
+        border: 2px dashed #e0e2db;
+      }
+    </style>
+</head>
+<body class="font-body min-h-screen selection:bg-accent selection:text-primary">
+<!-- TopAppBar component style -->
+<header class="sticky top-0 w-full z-50 bg-[#fbf9f5] shadow-[0_8px_24px_rgba(49,51,47,0.06)] pt-4 px-6">
+<div class="flex justify-between items-center w-full py-2">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-stone-200 overflow-hidden">
+<img alt="Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAl8q4lFjkfKOPpgnnc6irZEUOhEeMFPAiJI2NwYX9vYbpTkOGAbWaRsDbeqMXSbi_EiX6oKfW0fMgRUmTx47aeEmdmuowi_CM8UIdqhi_pdgqz1IHE4f64IvnLjdmQdEFAiTofFep89t7hOXcVImt_Pju5UCRVOIpBIjCAOyEi_ShwSgsWAKqXZwRZIpJX_KjrI5d-dg3unOyoW3RxivVLG3y9e9KcKHJiY1pASeVx983rVn9AoWdtHwoYonFYb6A50qQ11EF04UvK"/>
+</div>
+<span class="text-xl font-bold text-[#50644e] font-label tracking-tight">Tasks</span>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-stone-200/50 transition-colors active:scale-95">
+<span class="material-symbols-outlined text-[#50644e]" data-icon="wb_sunny">wb_sunny</span>
+</button>
+</div>
+</header>
+<main class="pb-32 px-6 pt-8 max-w-2xl mx-auto space-y-10">
+<!-- Hero: Calm Progress -->
+<section class="space-y-4">
+<div class="flex justify-between items-end">
+<div>
+<p class="font-label text-xs font-bold text-primary/60 uppercase tracking-widest mb-1">Weekly Focus</p>
+<h2 class="font-headline text-4xl font-semibold text-primary">Sanctuary Mode</h2>
+</div>
+<div class="text-right">
+<span class="font-headline text-4xl font-medium text-primary">82%</span>
+</div>
+</div>
+<div class="h-3 w-full bg-stone-200 rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full w-[82%] transition-all duration-1000"></div>
+</div>
+</section>
+<!-- The Rotation - Soft Bento Layout -->
+<section class="grid grid-cols-1 gap-6">
+<!-- Rotation Container -->
+<div class="bg-white rounded-xl p-8 flex flex-col items-center justify-center border border-outline shadow-sm">
+<div class="flex justify-between w-full mb-8 items-center">
+<h3 class="font-label text-sm font-bold text-on-surface-variant uppercase tracking-widest">Task Rotation</h3>
+<span class="text-xs bg-accent text-primary px-3 py-1 rounded-full font-bold">Active</span>
+</div>
+<div class="relative w-56 h-56 rounded-full rotation-ring flex items-center justify-center">
+<!-- Center Content -->
+<div class="text-center z-10">
+<span class="material-symbols-outlined text-primary text-3xl mb-1" data-icon="sync">sync</span>
+<p class="font-headline text-lg font-medium text-primary">Next: Alex</p>
+<p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Rotation Day 4</p>
+</div>
+<!-- Roommate Avatars around the ring -->
+<div class="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full border-2 border-white shadow-md overflow-hidden bg-stone-100">
+<img alt="Roommate" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTZJtBPs55LR2iErDPcFcMwz6hXV5FEWlFuqYKpaefsuul9AS2bDmKlN3RM7RXEksjtNHo6QDVQXOBkc1NN3BSiVXdIpdd93InxNfmI4MwnLBHdCD9XDjyNXsGCFtR8JHGqeJNWVaBRgsw3zb354NPpcxgZZpKvAz5luMIJ9wybuHKuuzGPHXvzutQbuQu0rlYVZtyDrwWGNf7aq57llcadiBxTUZKJ4y73iGhAqHkqQHeM5KVtOnhmlAWzJhvU-Ps1eQ-brRbBJHu"/>
+</div>
+<div class="absolute top-1/2 -right-5 -translate-y-1/2 w-10 h-10 rounded-full border-2 border-primary shadow-md overflow-hidden scale-110">
+<img alt="Roommate" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKX5nyR-5LsrStXV3d6wwvVkeQOtL8jb2w-K2iVYn1mTlAX3imZ_IHBarYwE_jDjvojfwRD3FB-eBtkpI4_BJcpjUIbiKj-uXgnWYvSnJC-BR4QtPbBQh5lbj4M1qzbXHjHHfr0CTmPDciJYJnd0InTHnJXS_Vgtkbn0yrB5Gi6rot2nd7WqZfgCEV2Y0JhBPYMCBlT9U0mfhH5b85qWi8_YGdGlW8pLegWDn3clRFVWLDyFEs6OZpqfl8lQH6Bol73L7Ia8x9x8I3"/>
+</div>
+<div class="absolute -bottom-5 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full border-2 border-white shadow-md overflow-hidden bg-stone-100">
+<img alt="Roommate" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsmJ1RjaLc9uOGmajtymoUoG68OkM3RGUjl_osq0WxSc8tuHLQLYAYol8s4nHCYLcUXFmcFk8RfMvFdoJK1F6isPQtbvxDbU1sphMpeu-5XzGeD9zG-vkRZ4Y5y0kFcPcCilBjy_gjTnyOBxrRKHp83BZ8g0pc9raQqmhZxtXV25JFyA5Zpx3U0QBe01lBBOAitVnkAIPWisbOFESdGilE3hZMtvWIHB-Xcnsd7xz-kjvaRDG-1ImWQoP-St4WkU_9GaF5d3sw-S4a"/>
+</div>
+</div>
+<button class="mt-8 px-10 py-3 bg-primary text-white font-label font-bold rounded-full text-xs uppercase tracking-[0.2em] hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/10">
+                Rotate Now
+            </button>
+</div>
+<!-- Pulse Summary -->
+<div class="bg-accent/40 rounded-xl p-6 border border-primary/10 flex flex-col justify-between">
+<h4 class="font-headline text-xl font-semibold text-primary mb-4">Harmony Score</h4>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-white/80 p-4 rounded-lg text-center">
+<p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">Streak</p>
+<p class="font-headline text-2xl font-bold text-primary">5 Days</p>
+</div>
+<div class="bg-white/80 p-4 rounded-lg text-center">
+<p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">Pending</p>
+<p class="font-headline text-2xl font-bold text-primary">12</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Task List -->
+<section class="space-y-6">
+<h3 class="font-label text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2">
+<span class="w-1 h-4 bg-primary rounded-full"></span>
+            Household Missions
+        </h3>
+<div class="space-y-4">
+<!-- Task 1 -->
+<div class="bg-white rounded-xl p-6 border border-outline hover:border-primary/30 transition-colors shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<div>
+<span class="text-[10px] font-bold text-primary uppercase tracking-widest bg-accent px-2 py-1 rounded">Kitchen</span>
+<h4 class="font-headline text-xl font-semibold text-on-surface mt-2">Deep Kitchen Purge</h4>
+</div>
+<div class="text-right">
+<p class="font-label text-lg font-bold text-primary">500</p>
+<p class="font-label text-[9px] text-on-surface-variant uppercase tracking-tighter">Pts</p>
+</div>
+</div>
+<p class="font-body text-sm text-on-surface-variant mb-6">Wipe every shelf and clear the old containers. Biohazard removal level.</p>
+<button class="w-full py-3 bg-[#f3f5f0] text-primary font-label font-bold text-xs uppercase tracking-widest rounded-full hover:bg-accent transition-colors active:scale-[0.98]">
+                    Accept Task
+                </button>
+</div>
+<!-- Task 2 -->
+<div class="bg-white rounded-xl p-6 border border-outline hover:border-primary/30 transition-colors shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<div>
+<span class="text-[10px] font-bold text-primary uppercase tracking-widest bg-accent px-2 py-1 rounded">Dishes</span>
+<h4 class="font-headline text-xl font-semibold text-on-surface mt-2">The Glass Cycle</h4>
+</div>
+<div class="text-right">
+<p class="font-label text-lg font-bold text-primary">120</p>
+<p class="font-label text-[9px] text-on-surface-variant uppercase tracking-tighter">Pts</p>
+</div>
+</div>
+<p class="font-body text-sm text-on-surface-variant mb-6">Unload dishwasher and clear the sink colony of mugs.</p>
+<button class="w-full py-3 bg-[#f3f5f0] text-primary font-label font-bold text-xs uppercase tracking-widest rounded-full hover:bg-accent transition-colors active:scale-[0.98]">
+                    Accept Task
+                </button>
+</div>
+<!-- Add Task -->
+<div class="border-2 border-dashed border-outline rounded-xl p-6 flex flex-col items-center justify-center gap-3 hover:bg-stone-50 transition-colors cursor-pointer group">
+<div class="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center text-on-surface-variant group-hover:text-primary transition-all">
+<span class="material-symbols-outlined text-2xl" data-icon="add">add</span>
+</div>
+<p class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-widest">Propose Change</p>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar component style -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 pb-8 pt-4 bg-[#ffffffcc] backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.03)] rounded-t-[3rem]">
+<!-- Tab: Vibe -->
+<a class="flex flex-col items-center justify-center text-[#5e605b] opacity-70 hover:opacity-100 transition-opacity" href="#">
+<span class="material-symbols-outlined text-2xl mb-1" data-icon="home_app_logo">home_app_logo</span>
+<span class="font-['Be_Vietnam_Pro'] text-[12px] font-medium">Vibe</span>
+</a>
+<!-- Tab: Tasks (ACTIVE) -->
+<a class="flex flex-col items-center justify-center bg-[#d2e9cc] text-[#455842] rounded-[2rem] px-5 py-2 scale-110 transition-transform duration-300 ease-out" href="#">
+<span class="material-symbols-outlined text-2xl mb-1" data-icon="assignment">assignment</span>
+<span class="font-['Be_Vietnam_Pro'] text-[12px] font-medium">Tasks</span>
+</a>
+<!-- Tab: Money -->
+<a class="flex flex-col items-center justify-center text-[#5e605b] opacity-70 hover:opacity-100 transition-opacity" href="#">
+<span class="material-symbols-outlined text-2xl mb-1" data-icon="payments">payments</span>
+<span class="font-['Be_Vietnam_Pro'] text-[12px] font-medium">Money</span>
+</a>
+<!-- Tab: Stock -->
+<a class="flex flex-col items-center justify-center text-[#5e605b] opacity-70 hover:opacity-100 transition-opacity" href="#">
+<span class="material-symbols-outlined text-2xl mb-1" data-icon="shopping_basket">shopping_basket</span>
+<span class="font-['Be_Vietnam_Pro'] text-[12px] font-medium">Stock</span>
+</a>
+</nav>
+</body></html>

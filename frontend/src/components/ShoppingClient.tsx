@@ -2,17 +2,23 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, Circle, Trash2, Plus, ShoppingCart } from 'lucide-react';
 
-export function ShoppingClient({ initialItems, initialCategories = ['Lebensmittel', 'Haushalt', 'Wishlist'] }: { initialItems: any[], initialCategories: string[] }) {
-  const [activeCategory, setActiveCategory] = useState(initialCategories[0] || 'Lebensmittel');
-  const [newItemName, setNewItemName] = useState('');
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [showAddCategory, setShowAddCategory] = useState(false);
-  const [loadingIds, setLoadingIds] = useState<Set<number>>(new Set());
+export function ShoppingClient({ initialItems, initialCategories = ['Essentials', 'Snacks', 'Household'] }: { initialItems: any[], initialCategories: string[] }) {
   const router = useRouter();
+  const [newItemName, setNewItemName] = useState('');
+  const [activeCategory, setActiveCategory] = useState(initialCategories[0] || 'Essentials');
+  const [isAtStore, setIsAtStore] = useState(false);
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const categoryColors: { [key: string]: string } = {
+    'Essentials': 'bg-primary',
+    'Snacks': 'bg-secondary',
+    'Household': 'bg-accent-peach',
+    'Lebensmittel': 'bg-primary',
+    'Haushalt': 'bg-secondary',
+    'Wishlist': 'bg-accent-peach'
+  };
+
+  const addItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newItemName.trim()) return;
 
@@ -25,145 +31,115 @@ export function ShoppingClient({ initialItems, initialCategories = ['Lebensmitte
     router.refresh();
   };
 
-  const toggleCheck = async (id: number, currentChecked: boolean) => {
-    setLoadingIds(prev => new Set(prev).add(id));
+  const toggleItem = async (id: number, currentChecked: boolean) => {
     await fetch(`http://localhost:3000/api/shopping/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ checked: !currentChecked })
     });
     router.refresh();
-    setLoadingIds(prev => { 
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
   };
-
-  const deleteItem = async (id: number) => {
-    setLoadingIds(prev => new Set(prev).add(id));
-    await fetch(`http://localhost:3000/api/shopping/${id}`, { method: 'DELETE' });
-    router.refresh();
-    setLoadingIds(prev => { 
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-  };
-
-  const handleAddCategory = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCategoryName.trim()) return;
-    await fetch('http://localhost:3000/api/shopping/categories', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newCategoryName.trim() })
-    });
-    setActiveCategory(newCategoryName.trim());
-    setNewCategoryName('');
-    setShowAddCategory(false);
-    router.refresh();
-  };
-
-  // Ensure items have category, default to 'Lebensmittel'
-  const filteredItems = initialItems.filter(i => (i.category || 'Lebensmittel') === activeCategory);
 
   return (
-    <div className="glass-panel p-8 max-w-3xl animate-fade-in flex flex-col gap-6 w-full">
-      <div className="flex items-center gap-3 text-blue-500 mb-2">
-        <ShoppingCart size={28} />
-        <h2 className="text-2xl font-semibold m-0 text-slate-900 border-none">Einkaufsliste</h2>
-      </div>
-
-      {/* Categories Tabs - Scrollable on mobile */}
-      <div className="flex overflow-x-auto pb-2 -mb-2 gap-3 items-center no-scrollbar" style={{ scrollbarWidth: 'none' }}>
-        {initialCategories.map(cat => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all border-none cursor-pointer ${
-              activeCategory === cat 
-                ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30' 
-                : 'bg-white text-slate-600 shadow-sm border border-slate-100 hover:bg-slate-50'
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
-        {!showAddCategory ? (
+    <div className="animate-fade-in w-full max-w-2xl mx-auto space-y-12 pb-32">
+      
+      {/* Live Status Toggle */}
+      <section className="p-8 rounded-[2.5rem] bg-sage-soft/20 border border-sage-soft/30 chill-shadow">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="font-headline text-2xl font-black text-primary mb-1">Stocking Up?</h2>
+            <p className="text-on-surface-variant text-sm font-bold opacity-70 uppercase tracking-widest">Let the flat know you're at the store</p>
+          </div>
           <button 
-            onClick={() => setShowAddCategory(true)}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-white text-slate-400 shadow-sm border border-slate-100 hover:text-blue-500 hover:bg-blue-50 transition-colors cursor-pointer"
-            title="Neue Kategorie"
+            onClick={() => setIsAtStore(!isAtStore)}
+            className={`w-16 h-10 rounded-full transition-all relative ${isAtStore ? 'bg-primary' : 'bg-stone-200'}`}
           >
-            <Plus size={18} />
+            <div className={`absolute top-1 w-8 h-8 rounded-full bg-white shadow-sm transition-all ${isAtStore ? 'left-7' : 'left-1'}`} />
           </button>
-        ) : (
-          <form onSubmit={handleAddCategory} className="flex gap-2 items-center">
-            <input 
-              type="text" 
-              autoFocus
-              className="px-4 py-2 rounded-full border border-slate-200 text-sm outline-none focus:border-blue-400 shadow-sm"
-              placeholder="Name..."
-              value={newCategoryName}
-              onChange={e => setNewCategoryName(e.target.value)}
-            />
-            <button type="submit" className="w-9 h-9 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 border-none cursor-pointer">
-              <CheckCircle2 size={16} />
-            </button>
-            <button type="button" onClick={() => setShowAddCategory(false)} className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 border-none cursor-pointer">
-              ✕
-            </button>
-          </form>
-        )}
-      </div>
+        </div>
+      </section>
 
-      <form onSubmit={handleAdd} className="flex gap-3 flex-col sm:flex-row mt-2">
-        <input 
-          type="text" 
-          className="flex-1 px-5 py-3 rounded-2xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-blue-200 transition-all font-medium text-slate-800"
-          placeholder={`Neuer Artikel in ${activeCategory}...`}
-          value={newItemName}
-          onChange={(e) => setNewItemName(e.target.value)}
-        />
-        <button type="submit" className="btn btn-primary m-0 whitespace-nowrap py-3 px-6 h-[52px]">
-          <Plus size={20} />
-          Hinzufügen
-        </button>
-      </form>
-
-      {filteredItems.length === 0 ? (
-        <p className="text-center py-10 font-medium text-slate-400">Alles da in der Kategorie <strong>{activeCategory}</strong>! 🥦</p>
-      ) : (
-        <ul className="flex flex-col gap-3 m-0 p-0">
-          {filteredItems.map(item => (
-            <li 
-              key={item.id} 
-              className={`flex items-center justify-between p-4 bg-white border border-slate-100 shadow-sm rounded-xl transition-all ${item.checked ? 'opacity-60' : 'opacity-100'} ${loadingIds.has(item.id) ? 'animate-pulse' : ''}`}
-            >
-              <div 
-                className="flex items-center gap-4 cursor-pointer flex-1"
-                onClick={() => toggleCheck(item.id, item.checked)}
-              >
-                {item.checked ? (
-                  <CheckCircle2 size={24} className="text-emerald-500" />
-                ) : (
-                  <Circle size={24} className="text-slate-400 cursor-pointer" />
-                )}
-                <span className={`text-lg font-medium ${item.checked ? 'line-through text-slate-400' : 'text-slate-800'}`}>
-                  {item.name}
+      {/* Categories Grid */}
+      <div className="space-y-16">
+        {initialCategories.map(cat => {
+          const catItems = initialItems.filter(i => (i.category || 'Essentials') === cat);
+          return (
+            <section key={cat} className="animate-fade-in">
+              <div className="flex items-center justify-between mb-8 px-2">
+                <div className="flex items-center gap-4">
+                  <div className={`w-3 h-10 ${categoryColors[cat] || 'bg-primary'} rounded-full`} />
+                  <h3 className="font-headline text-3xl font-black tracking-tighter text-on-surface">{cat}</h3>
+                </div>
+                <span className="text-[12px] font-black text-primary uppercase tracking-[0.2em] opacity-40">
+                  {catItems.length.toString().padStart(2, '0')} Items
                 </span>
               </div>
-              <button 
-                onClick={() => deleteItem(item.id)}
-                className="p-2 text-rose-400 hover:text-rose-600 transition-colors opacity-80 hover:opacity-100 bg-transparent border-none cursor-pointer"
-              >
-                <Trash2 size={20} />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+
+              <div className="space-y-4">
+                {catItems.map(item => (
+                  <div key={item.id} className="bg-white p-6 rounded-[2.5rem] flex items-center justify-between group chill-shadow border border-outline-variant/10 hover:scale-[1.02] transition-transform cursor-pointer" onClick={() => toggleItem(item.id, item.checked)}>
+                    <div className="flex items-center gap-6">
+                      <div className={`w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center ${item.checked ? 'bg-primary border-primary text-white scale-90' : 'border-stone-200 bg-stone-50'}`}>
+                        {item.checked && <span className="material-symbols-outlined text-[20px] font-bold">check</span>}
+                      </div>
+                      <div className={item.checked ? 'opacity-40' : ''}>
+                        <h4 className={`font-black text-xl text-on-surface leading-tight ${item.checked ? 'line-through' : ''}`}>{item.name}</h4>
+                        {!item.checked && item.id % 4 === 0 && (
+                          <span className="inline-block mt-1 px-3 py-1 rounded-full bg-accent-peach/20 text-accent-peach text-[10px] font-black uppercase tracking-[0.1em]">Urgent</span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center -space-x-3 opacity-80">
+                      <img className="w-10 h-10 rounded-full border-2 border-white object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZJEUoIHFV4RkKBkaZUOOO14SoJ8Lm_KK7S4fmuL6OpQKgnKlWtFvHXasTPSEBf4B7x4sURs-Zh_q5_u9KZ5jXv3LRMgq8hIDHr1mwHYmcHPyc1xe-QSVWwoKxkaWGObnQQ1xSTzPPCuD3n014KT2-jzYr597GzlfHzFaKmPyklEZX17z_rSOCzAieFVEfiQWnn0VLXtCaDYa-Xv8Xrz9eZ49hcrS0tczS2yh6JIiWamSYVLJwMIwErBaDIKz6rxUrGcAqXD64fvIW" alt="assigned"/>
+                      <div className="w-10 h-10 rounded-full bg-sage-soft border-2 border-white flex items-center justify-center text-[10px] font-black text-primary">+1</div>
+                    </div>
+                  </div>
+                ))}
+
+                {catItems.length === 0 && (
+                  <div className="text-center py-12 bg-stone-100/50 rounded-[2.5rem] border-2 border-dashed border-stone-200">
+                    <p className="text-on-surface-variant font-bold text-sm tracking-tight opacity-40 uppercase">Inventory full for {cat}</p>
+                  </div>
+                )}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+
+      {/* Custom Addition FAB Interface */}
+      <div className="fixed bottom-32 right-8 z-50 flex flex-col items-end gap-6">
+        {newItemName && (
+          <div className="bg-white/90 backdrop-blur-xl p-5 rounded-[2rem] shadow-2xl border border-outline-variant/30 animate-fade-in flex flex-col gap-3">
+            <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant px-2">Category</p>
+            <div className="flex gap-2">
+              {initialCategories.map(c => (
+                <button 
+                  key={c}
+                  onClick={() => setActiveCategory(c)}
+                  className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${activeCategory === c ? 'bg-primary text-white' : 'bg-stone-100 text-on-surface-variant hover:bg-stone-200'}`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        <form onSubmit={addItem} className="flex items-center gap-4 translate-y-2">
+          <input 
+            type="text" 
+            placeholder="Stock item name..."
+            className="w-full max-w-[240px] px-8 py-5 rounded-full bg-white shadow-2xl border-2 border-primary/10 focus:outline-none focus:border-primary/40 text-sm font-black transition-all"
+            value={newItemName}
+            onChange={e => setNewItemName(e.target.value)}
+          />
+          <button type="submit" className="w-20 h-20 rounded-full bg-primary text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all">
+            <span className="material-symbols-outlined text-4xl font-black">add</span>
+          </button>
+        </form>
+      </div>
+
     </div>
   );
 }

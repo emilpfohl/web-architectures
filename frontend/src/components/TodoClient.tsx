@@ -2,23 +2,26 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckSquare, Square, User, Plus } from 'lucide-react';
 
 export function TodoClient({ initialTodos }: { initialTodos: any[] }) {
-  const [title, setTitle] = useState('');
-  const [assignee, setAssignee] = useState('');
   const router = useRouter();
+  const [newTodoTitle, setNewTodoTitle] = useState('');
+  const [assignee, setAssignee] = useState('');
 
-  const handleCreateTask = async (e: React.FormEvent) => {
+  const addTodo = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !assignee.trim()) return;
+    if (!newTodoTitle.trim() || !assignee.trim()) return;
 
     await fetch('http://localhost:3000/api/todos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: title.trim(), assignee: assignee.trim() })
+      body: JSON.stringify({ 
+        title: newTodoTitle.trim(), 
+        assignee: assignee.trim(),
+        completed: false 
+      })
     });
-    setTitle('');
+    setNewTodoTitle('');
     setAssignee('');
     router.refresh();
   };
@@ -33,63 +36,79 @@ export function TodoClient({ initialTodos }: { initialTodos: any[] }) {
   };
 
   return (
-    <div className="glass-panel p-8 max-w-3xl animate-fade-in flex flex-col gap-6 w-full">
-      <div className="flex items-center gap-3 text-violet-500 mb-2">
-        <CheckSquare size={28} />
-        <h2 className="text-2xl font-semibold m-0 text-slate-900 border-none">WG Putz- & Todo Planer 🧹</h2>
-      </div>
+    <div className="animate-fade-in w-full max-w-2xl mx-auto space-y-10 pb-32">
+      
+      <header className="px-4">
+        <h2 className="font-headline text-4xl font-black text-on-surface tracking-tighter">Tasks & Rotation</h2>
+        <p className="text-on-surface-variant font-bold text-[10px] uppercase tracking-[0.3em] mt-2 opacity-60">Maintain the sanctuary flow</p>
+      </header>
 
-      <form onSubmit={handleCreateTask} className="flex gap-3 flex-col sm:flex-row mt-2">
-        <input 
-          type="text" 
-          className="flex-[2] px-5 py-3 rounded-2xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-violet-200 transition-all font-medium text-slate-800"
-          placeholder="Aufgabe (z.B. Küche putzen)..."
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <input 
-          type="text" 
-          className="flex-1 px-5 py-3 rounded-2xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-violet-200 transition-all font-medium text-slate-800"
-          placeholder="Wer? (Max)"
-          value={assignee}
-          onChange={(e) => setAssignee(e.target.value)}
-        />
-        <button type="submit" className="btn btn-primary m-0 whitespace-nowrap h-[52px]">
-          <Plus size={20} />
-          Neuer Task
-        </button>
-      </form>
-
-      {initialTodos.length === 0 ? (
-        <p className="text-center py-8 text-slate-500">Wow, keine Aufgaben! Habt ihr schon alles erledigt? ✨</p>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {initialTodos.map(todo => (
-            <div 
-              key={todo.id} 
-              className={`flex items-center gap-6 p-5 bg-white border border-slate-100 shadow-sm rounded-xl transition-all ${todo.completed ? 'opacity-60 border-l-4 border-l-emerald-500' : 'border-l-4 border-l-slate-300'}`}
-            >
-              <div onClick={() => toggleTodo(todo.id, todo.completed)} className="cursor-pointer">
-                {todo.completed ? (
-                  <CheckSquare size={28} className="text-emerald-500" />
-                ) : (
-                  <Square size={28} className="text-slate-400" />
-                )}
+      <div className="space-y-6">
+        {initialTodos.map((todo: any) => (
+          <div 
+            key={todo.id} 
+            onClick={() => toggleTodo(todo.id, todo.completed)}
+            className={`
+              bg-white p-8 rounded-[3.5rem] flex items-center justify-between group chill-shadow border border-outline-variant/10 transition-all cursor-pointer
+              ${todo.completed ? 'opacity-30 grayscale scale-[0.98]' : 'hover:scale-[1.02] hover:bg-sage-soft/5'}
+            `}
+          >
+            <div className="flex items-center gap-6">
+              <div className={`w-16 h-16 rounded-full border-2 flex items-center justify-center transition-all ${todo.completed ? 'bg-primary border-primary text-white scale-90' : 'border-stone-200 bg-stone-50'}`}>
+                {todo.completed ? <span className="material-symbols-outlined text-3xl font-bold">check</span> : <span className="material-symbols-outlined text-stone-300 text-3xl">assignment</span>}
               </div>
-              
-              <div className="flex-1">
-                <h3 className={`text-xl font-semibold mb-1 ${todo.completed ? 'line-through text-slate-400' : 'text-slate-800'}`}>
-                  {todo.title}
-                </h3>
-                <div className="flex items-center gap-2 text-slate-500 text-sm font-medium">
-                  <User size={14} />
-                  <span>Zuständig: <strong className="text-slate-700">{todo.assignee}</strong></span>
+              <div>
+                <h4 className={`font-black text-2xl text-on-surface leading-tight ${todo.completed ? 'line-through' : ''}`}>{todo.title}</h4>
+                <div className="flex items-center gap-3 mt-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">{todo.assignee}</span>
+                  <span className="text-[10px] font-bold text-on-surface-variant opacity-40 uppercase tracking-widest">Active • {todo.id % 2 === 0 ? 'Urgent' : 'Routine'}</span>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+            
+            <div className="text-right pr-2">
+              <span className="text-primary font-headline font-black text-2xl tracking-tighter">{(todo.id * 150 + 400).toString()}</span>
+              <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40">Pts</p>
+            </div>
+          </div>
+        ))}
+
+        {initialTodos.length === 0 && (
+          <div className="text-center py-24 bg-stone-100/50 rounded-[3.5rem] border-2 border-dashed border-stone-200">
+            <span className="material-symbols-outlined text-7xl text-stone-300 mb-6 block">fact_check</span>
+            <p className="text-on-surface-variant font-bold text-sm tracking-widest opacity-40 uppercase">All duties fulfilled</p>
+          </div>
+        )}
+      </div>
+
+      {/* Adding Chore Interface via FAB style */}
+      <div className="fixed bottom-32 right-8 z-50 flex flex-col items-end gap-6">
+        {newTodoTitle && (
+          <div className="bg-white/90 backdrop-blur-xl p-8 rounded-[3rem] shadow-2xl border border-outline-variant/30 animate-fade-in flex flex-col gap-5 min-w-[300px]">
+            <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant px-2">Assign & Scale</p>
+            <input 
+              type="text" 
+              placeholder="Who's responsible?"
+              className="w-full px-6 py-4 rounded-2xl bg-stone-100 border-none text-sm font-black focus:ring-2 focus:ring-primary/20 transition-all"
+              value={assignee}
+              onChange={e => setAssignee(e.target.value)}
+            />
+          </div>
+        )}
+        <form onSubmit={addTodo} className="flex items-center gap-4 translate-y-2">
+          <input 
+            type="text" 
+            placeholder="Log a new chore..."
+            className="w-full max-w-[260px] px-8 py-5 rounded-full bg-white shadow-2xl border-2 border-primary/10 focus:outline-none focus:border-primary/40 text-sm font-black transition-all"
+            value={newTodoTitle}
+            onChange={e => setNewTodoTitle(e.target.value)}
+          />
+          <button type="submit" className="w-20 h-20 rounded-full bg-primary text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all">
+            <span className="material-symbols-outlined text-4xl font-black">add_task</span>
+          </button>
+        </form>
+      </div>
+
     </div>
   );
 }

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Be+Vietnam_Pro:wght@300;400;500;600;700&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "background": "#fbf9f5",
+              "surface": "#ffffff",
+              "primary": "#50644e",
+              "secondary": "#a7c4a0",
+              "accent-peach": "#eeb49a",
+              "sage-soft": "#d2e9cc",
+              "on-surface": "#31332f",
+              "on-surface-variant": "#5e605b",
+              "outline-variant": "#e2e4df"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Be Vietnam Pro"],
+              "label": ["Plus Jakarta Sans"]
+            },
+            borderRadius: {"DEFAULT": "1.5rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .card-shadow {
+        box-shadow: 0 8px 24px rgba(49, 51, 47, 0.04);
+      }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary/20 min-h-screen pb-32">
+<!-- TopAppBar (Shared Component) -->
+<header class="flex justify-between items-center w-full sticky top-0 z-50 bg-[#fbf9f5] pt-4 px-6 shadow-[0_8px_24px_rgba(49,51,47,0.06)]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden hover:bg-stone-200/50 transition-colors cursor-pointer">
+<img alt="User Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCf39_KS5odwe7fMb6hC4tXMSjMbYdtr-3NafXt6FlxsSVDNdq8tU-Sv2-bCrrGyPpzjVHPXvG3OqrbDE1z9vPr7wlKBLP9xxhnvrbHeGGAyrponUSjA2Oi3roqxpNj7K7aVXhj949RTTl5EPEJGnBYhS68fBWU-jMSwXQelELokETUYqTmwRL4fJTW4szOUhdp3S4LBdXMfk1ImeG5k5oPh81WkZbH7uyz_hszaFk019Vb3Br_IDpYfLhpnoCU699D-Yqmv2v81eee"/>
+</div>
+<h1 class="text-xl font-bold text-[#50644e] tracking-tight">Sanctuary</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-[#50644e] hover:bg-stone-200/50 transition-colors active:scale-95 duration-150">
+<span class="material-symbols-outlined text-2xl" data-icon="wb_sunny">wb_sunny</span>
+</button>
+</header>
+<main class="pt-8 px-6 max-w-2xl mx-auto space-y-10">
+<!-- Live Status -->
+<section class="p-6 rounded-2xl bg-sage-soft/30 border border-sage-soft/50">
+<div class="flex justify-between items-center">
+<div>
+<h2 class="font-headline text-lg font-bold text-primary mb-0.5">Shopping Spree?</h2>
+<p class="text-on-surface-variant text-sm">Let the house know you're at the store</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-14 h-8 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[4px] after:start-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</section>
+<!-- Categories -->
+<div class="space-y-10">
+<!-- Essentials -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<div class="w-2 h-8 bg-primary rounded-full"></div>
+<h3 class="font-headline text-xl font-extrabold tracking-tight text-primary">Essentials</h3>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60">03 Items</span>
+</div>
+<div class="space-y-3">
+<!-- Item: Urgent -->
+<div class="bg-surface card-shadow p-5 rounded-2xl flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<input class="w-6 h-6 rounded-full border-2 border-stone-200 text-primary focus:ring-primary/20 cursor-pointer transition-colors" type="checkbox"/>
+<div>
+<h4 class="font-medium text-on-surface">Toilet Paper</h4>
+<span class="inline-block px-2 py-0.5 rounded-md bg-accent-peach/20 text-accent-peach text-[10px] font-bold uppercase tracking-wider">Urgent</span>
+</div>
+</div>
+<div class="flex items-center -space-x-2">
+<img alt="Alex" class="w-8 h-8 rounded-full border-2 border-white object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZJEUoIHFV4RkKBkaZUOOO14SoJ8Lm_KK7S4fmuL6OpQKgnKlWtFvHXasTPSEBf4B7x4sURs-Zh_q5_u9KZ5jXv3LRMgq8hIDHr1mwHYmcHPyc1xe-QSVWwoKxkaWGObnQQ1xSTzPPCuD3n014KT2-jzYr597GzlfHzFaKmPyklEZX17z_rSOCzAieFVEfiQWnn0VLXtCaDYa-Xv8Xrz9eZ49hcrS0tczS2yh6JIiWamSYVLJwMIwErBaDIKz6rxUrGcAqXD64fvIW"/>
+<div class="w-8 h-8 rounded-full bg-sage-soft border-2 border-white flex items-center justify-center text-[10px] font-bold text-primary">+1</div>
+</div>
+</div>
+<!-- Item: Regular -->
+<div class="bg-surface card-shadow p-5 rounded-2xl flex items-center justify-between">
+<div class="flex items-center gap-4">
+<input class="w-6 h-6 rounded-full border-2 border-stone-200 text-primary focus:ring-primary/20 cursor-pointer" type="checkbox"/>
+<div>
+<h4 class="font-medium text-on-surface">Oat Milk</h4>
+<p class="text-on-surface-variant text-xs">3 Liters</p>
+</div>
+</div>
+<img alt="Sarah" class="w-8 h-8 rounded-full border-2 border-white object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBP_31n_-VBh0w_tGOwHZxp53lCO6ysV5Ev6mOq08XqMkVycHHo7PtxHX3IAURysh4JqReYvtKj8YIkKjYGgUkEL1I_2eDyCUIKwe50pz3f59H6hFouBGLnp8QwlGEChFbxbwxYxCgb_5cwr62bmUKM_t6IJJdf8jL50g_gF3LrgDc5AS5UHjzeWz8mcqYE0Z97N5PniCMRST2OjdoQMOLM8MJ7NzxQfcoZKGHfp9kzvSnpyjRhDJ7zMSMvCZ2c39OWIppltmMVidmB"/>
+</div>
+</div>
+</section>
+<!-- Snacks -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<div class="w-2 h-8 bg-secondary rounded-full"></div>
+<h3 class="font-headline text-xl font-extrabold tracking-tight text-primary">Snacks</h3>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60">02 Items</span>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface card-shadow p-5 rounded-2xl flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<input class="w-6 h-6 rounded-full border-2 border-stone-200 text-secondary focus:ring-secondary/20 cursor-pointer" type="checkbox"/>
+<img alt="Me" class="w-6 h-6 rounded-full border border-stone-100 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXlO8P55bkok8GFJ61P2uvLA4AdLrYYnaem7Exd4RURSKcocrFbKhaJqjgvM9Qem8n3YXgymNFR7wIfrgEwpBRSWZHmwfJBwXGxClLoBjSV97ew_7a6ewvHd-v4Bz51bveC9M9LVgdMVvbKLPS2JARgUopK34pt5noKVu_W4fjKjD5wrfAoT5JpHyQGwtXNS48qU8RjOmR3ydwHEOazDdGrM5pNIT5s3nKHJZA_hsKJQv08O5dofyWPx7kIfjLJ9hK5kDaqLhRhmWQ"/>
+</div>
+<div>
+<h4 class="font-bold text-on-surface leading-tight">Kettle Chips</h4>
+<p class="text-on-surface-variant text-[10px] uppercase font-bold tracking-wider mt-1">Salt &amp; Vinegar</p>
+</div>
+</div>
+<div class="bg-surface card-shadow p-5 rounded-2xl flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<input class="w-6 h-6 rounded-full border-2 border-stone-200 text-secondary focus:ring-secondary/20 cursor-pointer" type="checkbox"/>
+<img alt="Sarah" class="w-6 h-6 rounded-full border border-stone-100 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4Z7dV5Aa7XSxQ0L5hoDpfYzECtZ8xpiUcgfCGQXHJlodg_V5mBwuPsFVxnk1UZyzkAtBmFMZrhEuYlmin9AhSbhuESVggF4DZRECM1fQ5aVTEVGbFweP8QKLV893oKzor33HPdK4aLiIbuG7vntSYTianjD8HqQQEppmzAPVrKTbPsqneXrw1MS7EuLHPsBg77IlXolVUTcQ4wLGwpxnDNrc4A4PRwsG4-h2dCBphhFpi3k7dKv42FqcUAXH_-1F7pnTDyphkQM-F"/>
+</div>
+<div>
+<h4 class="font-bold text-on-surface leading-tight">Protein Bars</h4>
+<p class="text-on-surface-variant text-[10px] uppercase font-bold tracking-wider mt-1">Chocolate Chunk</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Household -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<div class="w-2 h-8 bg-sage-soft rounded-full"></div>
+<h3 class="font-headline text-xl font-extrabold tracking-tight text-primary">Household</h3>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60">01 Item</span>
+</div>
+<div class="bg-surface card-shadow p-5 rounded-2xl flex items-center justify-between">
+<div class="flex items-center gap-4">
+<input class="w-6 h-6 rounded-full border-2 border-stone-200 text-primary focus:ring-primary/20 cursor-pointer" type="checkbox"/>
+<div>
+<h4 class="font-medium text-on-surface">Trash Bags</h4>
+<p class="text-on-surface-variant text-xs">60L Heavy Duty</p>
+</div>
+</div>
+<img alt="Liam" class="w-8 h-8 rounded-full border-2 border-white object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-3A8DJ49mYSsEui7H08_ayOuYHeJKam3ys4o3Sq8EFudptCY6YKjHVpX1xJ71K_DxOPQ_eVvzL06VpTsIfpJ1AtW1fKroSGc9O-5NKz1JlGZ09JVKGCNeli3AznXBGNiLzlk_KdUWPofxZGdN2L-nLjvSxUYbggRsjTReO1gwqHGymx2jV6VTPm_VV4kEdR5uPSeiVOpO-iwY_3sL6s-jJiAEzLQtoQStLMJ77RMfKPuxtN16lNFx6R52NGCuV9HnyINC6qDYpU6Y"/>
+</div>
+</section>
+</div>
+</main>
+<!-- Floating Action Button -->
+<div class="fixed bottom-32 right-6 z-50">
+<button class="w-14 h-14 rounded-full bg-primary text-white shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-2xl" data-icon="add">add</span>
+</button>
+</div>
+<!-- BottomNavBar (Shared Component) -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 pb-8 pt-4 bg-[#ffffffcc] backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.03)] rounded-t-[3rem]">
+<!-- Vibe -->
+<a class="flex flex-col items-center justify-center text-[#5e605b] opacity-70 hover:opacity-100 transition-opacity" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="home_app_logo">home_app_logo</span>
+<span class="font-['Be_Vietnam_Pro'] text-[12px] font-medium">Vibe</span>
+</a>
+<!-- Tasks -->
+<a class="flex flex-col items-center justify-center text-[#5e605b] opacity-70 hover:opacity-100 transition-opacity" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="assignment">assignment</span>
+<span class="font-['Be_Vietnam_Pro'] text-[12px] font-medium">Tasks</span>
+</a>
+<!-- Money -->
+<a class="flex flex-col items-center justify-center text-[#5e605b] opacity-70 hover:opacity-100 transition-opacity" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="payments">payments</span>
+<span class="font-['Be_Vietnam_Pro'] text-[12px] font-medium">Money</span>
+</a>
+<!-- Stock (ACTIVE) -->
+<a class="flex flex-col items-center justify-center bg-[#d2e9cc] text-[#455842] rounded-[2rem] px-5 py-2 scale-110 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="shopping_basket" style="font-variation-settings: 'FILL' 1;">shopping_basket</span>
+<span class="font-['Be_Vietnam_Pro'] text-[12px] font-medium">Stock</span>
+</a>
+</nav>
+</body></html>
