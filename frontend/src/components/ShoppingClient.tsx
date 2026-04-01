@@ -75,8 +75,8 @@ export function ShoppingClient({ initialItems, initialCategories = ['Lebensmitte
         <h2 className="text-2xl font-semibold m-0 text-slate-900 border-none">Einkaufsliste</h2>
       </div>
 
-      {/* Categories Tabs */}
-      <div className="flex flex-wrap gap-3 items-center">
+      {/* Categories Tabs - Scrollable on mobile */}
+      <div className="flex overflow-x-auto pb-2 -mb-2 gap-3 items-center no-scrollbar" style={{ scrollbarWidth: 'none' }}>
         {initialCategories.map(cat => (
           <button
             key={cat}
@@ -118,15 +118,15 @@ export function ShoppingClient({ initialItems, initialCategories = ['Lebensmitte
         )}
       </div>
 
-      <form onSubmit={handleAdd} className="flex gap-4 flex-wrap sm:flex-nowrap mt-2">
+      <form onSubmit={handleAdd} className="flex gap-3 flex-col sm:flex-row mt-2">
         <input 
           type="text" 
-          className="flex-1 px-5 py-3 rounded-2xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-blue-200 transition-all font-medium text-slate-800 min-w-[200px]"
+          className="flex-1 px-5 py-3 rounded-2xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-blue-200 transition-all font-medium text-slate-800"
           placeholder={`Neuer Artikel in ${activeCategory}...`}
           value={newItemName}
           onChange={(e) => setNewItemName(e.target.value)}
         />
-        <button type="submit" className="btn btn-primary m-0 whitespace-nowrap">
+        <button type="submit" className="btn btn-primary m-0 whitespace-nowrap py-3 px-6 h-[52px]">
           <Plus size={20} />
           Hinzufügen
         </button>

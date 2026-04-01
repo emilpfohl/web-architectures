@@ -48,7 +48,14 @@ body {
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--panel-border);
   border-radius: 24px;
+  padding: 1rem; /* default mobile */
   box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.02);
+}
+
+@media (min-width: 768px) {
+  .glass-panel {
+    padding: 2rem;
+  }
 }
 
 .btn {

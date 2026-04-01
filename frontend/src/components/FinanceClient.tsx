@@ -81,10 +81,10 @@ export function FinanceClient({ initialExpenses }: { initialExpenses: any[] }) {
   return (
     <div className="flex flex-col lg:flex-row gap-8 items-start w-full animate-fade-in">
         
-      <div className="flex-2 min-w-[300px] w-full lg:w-2/3">
-        <div className="glass-panel p-8 mb-8">
-          <h2 className="text-2xl font-semibold m-0 mb-4 text-slate-900 border-none">Neue Ausgabe erfassen</h2>
-          <form onSubmit={handleAddExpense} className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+      <div className="w-full lg:w-2/3">
+        <div className="glass-panel p-4 md:p-8 mb-6 md:mb-8">
+          <h2 className="text-xl md:text-2xl font-semibold m-0 mb-4 text-slate-900 border-none">Neue Ausgabe erfassen</h2>
+          <form onSubmit={handleAddExpense} className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mt-4">
             <div className="col-span-1 md:col-span-2">
               <input 
                 type="text" 
@@ -105,35 +105,35 @@ export function FinanceClient({ initialExpenses }: { initialExpenses: any[] }) {
             <input 
               type="text" 
               className="px-5 py-3 rounded-2xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-200 transition-all font-medium text-slate-800"
-              placeholder="Wer hat bezahlt? (Max)"
+              placeholder="Wer? (Max)"
               value={paidBy}
               onChange={(e) => setPaidBy(e.target.value)}
             />
-            <button type="submit" className="btn btn-primary col-span-1 md:col-span-2 m-0 bg-emerald-300 hover:bg-emerald-400 text-emerald-900 shadow-emerald-300/50">
+            <button type="submit" className="btn btn-primary col-span-1 md:col-span-2 m-0 bg-emerald-300 hover:bg-emerald-400 text-emerald-900 shadow-emerald-300/50 py-3">
               <Plus size={20} />
               Ausgabe hinzufügen
             </button>
           </form>
         </div>
 
-        <div className="glass-panel p-8">
-          <h2 className="text-2xl font-semibold m-0 text-slate-900 border-none">Letzte Ausgaben</h2>
+        <div className="glass-panel p-4 md:p-8">
+          <h2 className="text-xl md:text-2xl font-semibold m-0 text-slate-900 border-none">Letzte Ausgaben</h2>
           {initialExpenses.length === 0 ? (
             <p className="text-slate-500 mt-4">Noch keine Ausgaben erfasst.</p>
           ) : (
-            <ul className="flex flex-col gap-4 mt-6 p-0 m-0">
+            <ul className="flex flex-col gap-3 md:gap-4 mt-6 p-0 m-0">
               {initialExpenses.slice().reverse().map(exp => (
                 <li key={exp.id} className="flex justify-between items-center p-4 bg-white border border-slate-100 shadow-sm rounded-xl">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                  <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 flex-shrink-0 flex items-center justify-center text-emerald-600">
                       <DollarSign size={20} />
                     </div>
-                    <div>
-                      <strong className="text-slate-800 font-semibold">{exp.description}</strong>
-                      <div className="text-sm text-slate-500">Bezahlt von {exp.paidBy}</div>
+                    <div className="overflow-hidden">
+                      <strong className="text-slate-800 font-semibold block truncate">{exp.description}</strong>
+                      <div className="text-xs md:text-sm text-slate-500">Von {exp.paidBy}</div>
                     </div>
                   </div>
-                  <div className="text-xl font-bold text-slate-800">
+                  <div className="text-lg md:text-xl font-bold text-slate-800 ml-2 whitespace-nowrap">
                     {exp.amount.toFixed(2)} €
                   </div>
                 </li>
@@ -143,9 +143,9 @@ export function FinanceClient({ initialExpenses }: { initialExpenses: any[] }) {
         </div>
       </div>
 
-      <div className="flex-1 min-w-[300px] flex flex-col gap-8 w-full lg:w-1/3">
+      <div className="flex-1 w-full lg:w-1/3 flex flex-col gap-6 md:gap-8">
         
-        <div className="glass-panel p-8 flex flex-col items-center text-center">
+        <div className="glass-panel p-6 md:p-8 flex flex-col items-center text-center">
           <Wallet size={48} className="text-emerald-500 mb-4" />
           <h3 className="text-slate-500 mb-2 font-medium">Gesamtausgaben</h3>
           <span className="text-5xl font-bold text-slate-800 m-0 leading-none">

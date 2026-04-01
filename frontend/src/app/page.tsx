@@ -56,17 +56,17 @@ export default async function Home({ searchParams }: { searchParams: { tab?: str
   await Promise.all(fetchPromises);
 
   return (
-    <div className="flex flex-col min-h-screen pt-16 px-6 max-w-6xl mx-auto w-full animate-fade-in relative pb-20">
-      <header className="mb-10 text-center md:text-left flex flex-col items-center md:items-start">
-        <h1 className="text-[2.5rem] font-[800] mb-2 bg-gradient-to-r from-blue-500 to-violet-500 bg-clip-text text-transparent inline-block tracking-tight m-0">
+    <div className="flex flex-col min-h-screen pt-8 md:pt-16 px-4 md:px-6 max-w-6xl mx-auto w-full animate-fade-in relative pb-32 md:pb-20">
+      <header className="mb-8 md:mb-10 text-center md:text-left flex flex-col items-center md:items-start px-2">
+        <h1 className="text-3xl md:text-[2.5rem] font-[800] mb-2 bg-gradient-to-r from-blue-500 to-violet-500 bg-clip-text text-transparent inline-block tracking-tight m-0">
           Willkommen Zuhause! 🏠
         </h1>
-        <p className="text-slate-600 text-lg">Hier ist die aktuelle Übersicht für eure WG.</p>
+        <p className="text-slate-600 text-base md:text-lg">Hier ist die aktuelle Übersicht für eure WG.</p>
       </header>
 
       <TabsNav currentTab={currentTab} />
 
-      <main className="mt-6 flex justify-center w-full">
+      <main className="mt-4 md:mt-6 flex justify-center w-full">
         {currentTab === 'dashboard' && <DashboardClient shopping={shopping} todos={todos} finances={finances} />}
         {currentTab === 'shopping' && <ShoppingClient initialItems={shopping} initialCategories={categories} />}
         {currentTab === 'todos' && <TodoClient initialTodos={todos} />}

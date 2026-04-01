@@ -39,22 +39,22 @@ export function TodoClient({ initialTodos }: { initialTodos: any[] }) {
         <h2 className="text-2xl font-semibold m-0 text-slate-900 border-none">WG Putz- & Todo Planer 🧹</h2>
       </div>
 
-      <form onSubmit={handleCreateTask} className="flex gap-4 flex-wrap">
+      <form onSubmit={handleCreateTask} className="flex gap-3 flex-col sm:flex-row mt-2">
         <input 
           type="text" 
-          className="flex-[2] px-5 py-3 rounded-2xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-violet-200 transition-all font-medium text-slate-800 min-w-[200px]"
+          className="flex-[2] px-5 py-3 rounded-2xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-violet-200 transition-all font-medium text-slate-800"
           placeholder="Aufgabe (z.B. Küche putzen)..."
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
         <input 
           type="text" 
-          className="flex-1 px-5 py-3 rounded-2xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-violet-200 transition-all font-medium text-slate-800 min-w-[120px]"
-          placeholder="Zuständig (Max)..."
+          className="flex-1 px-5 py-3 rounded-2xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-violet-200 transition-all font-medium text-slate-800"
+          placeholder="Wer? (Max)"
           value={assignee}
           onChange={(e) => setAssignee(e.target.value)}
         />
-        <button type="submit" className="btn btn-primary m-0 whitespace-nowrap">
+        <button type="submit" className="btn btn-primary m-0 whitespace-nowrap h-[52px]">
           <Plus size={20} />
           Neuer Task
         </button>

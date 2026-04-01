@@ -54,7 +54,7 @@ export function DashboardClient({ shopping, todos, finances }: { shopping: any[]
   const totalFinances = finances.reduce((sum: number, exp: any) => sum + exp.amount, 0);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in w-full">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 animate-fade-in w-full pb-8">
       
       {/* SHOPPING QUICK VIEW */}
       <div className="glass-panel p-8 flex flex-col gap-4">
@@ -128,18 +128,18 @@ export function DashboardClient({ shopping, todos, finances }: { shopping: any[]
             className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:outline-none focus:border-emerald-400"
             value={desc} onChange={e => setDesc(e.target.value)}
           />
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <input 
               type="number" 
               step="0.01" 
               placeholder="0.00 €" 
-              className="w-1/2 px-3 py-2 text-sm rounded-lg border border-slate-200 focus:outline-none focus:border-emerald-400"
+              className="w-full sm:w-1/2 px-3 py-2 text-sm rounded-lg border border-slate-200 focus:outline-none focus:border-emerald-400"
               value={amount} onChange={e => setAmount(e.target.value)}
             />
             <input 
               type="text" 
               placeholder="Wer?" 
-              className="w-1/2 px-3 py-2 text-sm rounded-lg border border-slate-200 focus:outline-none focus:border-emerald-400"
+              className="w-full sm:w-1/2 px-3 py-2 text-sm rounded-lg border border-slate-200 focus:outline-none focus:border-emerald-400"
               value={paidBy} onChange={e => setPaidBy(e.target.value)}
             />
           </div>
