@@ -1,11 +1,8 @@
-'use client';
-
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 export function TabsNav() {
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'dashboard';
 
   const tabs = [
@@ -23,7 +20,7 @@ export function TabsNav() {
           return (
             <Link 
               key={tab.id} 
-              href={`/?tab=${tab.id}`}
+              to={`/?tab=${tab.id}`}
               className={`
                 relative flex items-center gap-2 transition-all duration-300 px-2 group
                 ${isActive ? 'text-primary' : 'text-on-surface-variant/40 hover:text-on-surface-variant'}

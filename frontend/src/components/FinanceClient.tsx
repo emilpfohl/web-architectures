@@ -1,10 +1,8 @@
-'use client';
-
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 
-export function FinanceClient({ initialExpenses }: { initialExpenses: any[] }) {
-  const router = useRouter();
+export function FinanceClient({ initialExpenses, onRefresh }: { initialExpenses: any[], onRefresh: () => void }) {
+  const navigate = useNavigate();
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [paidBy, setPaidBy] = useState('');
@@ -15,7 +13,7 @@ export function FinanceClient({ initialExpenses }: { initialExpenses: any[] }) {
     e.preventDefault();
     if (!description.trim() || !amount || !paidBy.trim()) return;
 
-    await fetch('http://localhost:3000/api/finances', {
+    await fetch('/api/finances', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
@@ -27,7 +25,7 @@ export function FinanceClient({ initialExpenses }: { initialExpenses: any[] }) {
     setDescription('');
     setAmount('');
     setPaidBy('');
-    router.refresh();
+    onRefresh();
   };
 
   return (
@@ -110,7 +108,7 @@ export function FinanceClient({ initialExpenses }: { initialExpenses: any[] }) {
                   type="number" 
                   placeholder="0.00"
                   step="0.01"
-                  className="w-full px-6 py-4 rounded-2xl bg-stone-100 border-none text-sm font-black focus:ring-2 focus:ring-primary/20 transition-all font-headlines"
+                  className="w-full px-6 py-4 rounded-2xl bg-stone-100 border-none text-sm font-black focus:ring-2 focus:ring-primary/20 transition-all"
                   value={amount}
                   onChange={e => setAmount(e.target.value)}
                 />

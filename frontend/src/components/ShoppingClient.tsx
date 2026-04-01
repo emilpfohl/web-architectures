@@ -1,10 +1,8 @@
-'use client';
-
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 
-export function ShoppingClient({ initialItems, initialCategories = ['Lebensmittel', 'Haushalt', 'Wishlist'] }: { initialItems: any[], initialCategories: string[] }) {
-  const router = useRouter();
+export function ShoppingClient({ initialItems, initialCategories = ['Lebensmittel', 'Haushalt', 'Wishlist'], onRefresh }: { initialItems: any[], initialCategories: string[], onRefresh: () => void }) {
+  const navigate = useNavigate();
   const [newItemName, setNewItemName] = useState('');
   const [activeCategory, setActiveCategory] = useState(initialCategories[0] || 'Essentials');
   const [isAtStore, setIsAtStore] = useState(false);
@@ -22,22 +20,22 @@ export function ShoppingClient({ initialItems, initialCategories = ['Lebensmitte
     e.preventDefault();
     if (!newItemName.trim()) return;
 
-    await fetch('http://localhost:3000/api/shopping', {
+    await fetch('/api/shopping', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: newItemName.trim(), category: activeCategory })
     });
     setNewItemName('');
-    router.refresh();
+    onRefresh();
   };
 
   const toggleItem = async (id: number, currentChecked: boolean) => {
-    await fetch(`http://localhost:3000/api/shopping/${id}`, {
+    await fetch(`/api/shopping/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ checked: !currentChecked })
     });
-    router.refresh();
+    onRefresh();
   };
 
   return (

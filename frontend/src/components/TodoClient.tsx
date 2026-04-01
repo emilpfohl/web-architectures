@@ -1,10 +1,8 @@
-'use client';
-
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 
-export function TodoClient({ initialTodos }: { initialTodos: any[] }) {
-  const router = useRouter();
+export function TodoClient({ initialTodos, onRefresh }: { initialTodos: any[], onRefresh: () => void }) {
+  const navigate = useNavigate();
   const [newTodoTitle, setNewTodoTitle] = useState('');
   const [assignee, setAssignee] = useState('');
 
@@ -12,7 +10,7 @@ export function TodoClient({ initialTodos }: { initialTodos: any[] }) {
     e.preventDefault();
     if (!newTodoTitle.trim() || !assignee.trim()) return;
 
-    await fetch('http://localhost:3000/api/todos', {
+    await fetch('/api/todos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
@@ -23,16 +21,16 @@ export function TodoClient({ initialTodos }: { initialTodos: any[] }) {
     });
     setNewTodoTitle('');
     setAssignee('');
-    router.refresh();
+    onRefresh();
   };
 
   const toggleTodo = async (id: number, currentCompleted: boolean) => {
-    await fetch(`http://localhost:3000/api/todos/${id}`, {
+    await fetch(`/api/todos/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ completed: !currentCompleted })
     });
-    router.refresh();
+    onRefresh();
   };
 
   return (

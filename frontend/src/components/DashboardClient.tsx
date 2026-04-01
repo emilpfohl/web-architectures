@@ -1,10 +1,8 @@
-'use client';
-
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 
-export function DashboardClient({ shopping, todos, finances }: { shopping: any[], todos: any[], finances: any[] }) {
-  const router = useRouter();
+export function DashboardClient({ shopping, todos, finances, onRefresh }: { shopping: any[], todos: any[], finances: any[], onRefresh: () => void }) {
+  const navigate = useNavigate();
 
   const missingItems = shopping.filter((i: any) => !i.checked);
   const openTodos = todos.filter((i: any) => !i.completed);
@@ -131,12 +129,12 @@ export function DashboardClient({ shopping, todos, finances }: { shopping: any[]
 
           {/* Quick Actions */}
           <section className="grid grid-cols-2 gap-4">
-            <div onClick={() => router.push('/?tab=shopping')} className="p-6 rounded-[2rem] bg-white border border-outline-variant/30 hover:bg-sage-soft/10 transition-all group cursor-pointer shadow-sm">
+            <div onClick={() => navigate('/?tab=shopping')} className="p-6 rounded-[2rem] bg-white border border-outline-variant/30 hover:bg-sage-soft/10 transition-all group cursor-pointer shadow-sm">
               <span className="material-symbols-outlined text-primary mb-3 text-3xl group-hover:scale-110 transition-transform">shopping_basket</span>
               <p className="font-headline font-black text-lg">Add Stock</p>
               <p className="text-[10px] text-on-surface-variant font-bold opacity-60">Milk, Eggs, Vibes...</p>
             </div>
-            <div onClick={() => router.push('/?tab=todos')} className="p-6 rounded-[2rem] bg-white border border-outline-variant/30 hover:bg-sage-soft/10 transition-all group cursor-pointer shadow-sm">
+            <div onClick={() => navigate('/?tab=todos')} className="p-6 rounded-[2rem] bg-white border border-outline-variant/30 hover:bg-sage-soft/10 transition-all group cursor-pointer shadow-sm">
               <span className="material-symbols-outlined text-primary mb-3 text-3xl group-hover:scale-110 transition-transform">task_alt</span>
               <p className="font-headline font-black text-lg">Did Task</p>
               <p className="text-[10px] text-on-surface-variant font-bold opacity-60">Log your points</p>
