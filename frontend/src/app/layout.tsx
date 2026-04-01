@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Be_Vietnam_Pro } from "next/font/google";
+import { Be_Vietnam_Pro, Plus_Jakarta_Sans } from "next/font/google";
+import { TabsNav } from "@/components/TabsNav"; // Added import
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -31,7 +32,13 @@ export default function RootLayout({
       <head>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body min-h-full flex flex-col">{children}</body>
+      <body className="font-body min-h-full flex flex-col bg-background">
+        <div className="bg-flare" />
+        <TabsNav />
+        <main className="flex-1 p-6 md:p-16 lg:p-24 overflow-x-hidden animate-fade-in">
+          {children}
+        </main>
+      </body>
     </html>
   );
 }

@@ -39,7 +39,7 @@ export function TodoClient({ initialTodos }: { initialTodos: any[] }) {
     <div className="animate-fade-in w-full max-w-2xl mx-auto space-y-10 pb-32">
       
       <header className="px-4">
-        <h2 className="font-headline text-4xl font-black text-on-surface tracking-tighter">Tasks & Rotation</h2>
+        <h2 className="font-headline text-4xl font-bold text-on-surface tracking-tighter">Tasks & Rotation</h2>
         <p className="text-on-surface-variant font-bold text-[10px] uppercase tracking-[0.3em] mt-2 opacity-60">Maintain the sanctuary flow</p>
       </header>
 
@@ -58,17 +58,17 @@ export function TodoClient({ initialTodos }: { initialTodos: any[] }) {
                 {todo.completed ? <span className="material-symbols-outlined text-3xl font-bold">check</span> : <span className="material-symbols-outlined text-stone-300 text-3xl">assignment</span>}
               </div>
               <div>
-                <h4 className={`font-black text-2xl text-on-surface leading-tight ${todo.completed ? 'line-through' : ''}`}>{todo.title}</h4>
+                <h4 className={`font-bold text-2xl text-on-surface leading-tight ${todo.completed ? 'line-through' : ''}`}>{todo.title}</h4>
                 <div className="flex items-center gap-3 mt-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">{todo.assignee}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">{todo.assignee}</span>
                   <span className="text-[10px] font-bold text-on-surface-variant opacity-40 uppercase tracking-widest">Active • {todo.id % 2 === 0 ? 'Urgent' : 'Routine'}</span>
                 </div>
               </div>
             </div>
             
             <div className="text-right pr-2">
-              <span className="text-primary font-headline font-black text-2xl tracking-tighter">{(todo.id * 150 + 400).toString()}</span>
-              <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40">Pts</p>
+              <span className="text-primary font-headline font-bold text-2xl tracking-tighter">{(todo.id * 150 + 400).toString()}</span>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant opacity-40">Pts</p>
             </div>
           </div>
         ))}
@@ -97,13 +97,15 @@ export function TodoClient({ initialTodos }: { initialTodos: any[] }) {
         )}
         <form onSubmit={addTodo} className="flex items-center gap-4 translate-y-2">
           <input 
+            id="todo-title-input"
+            data-testid="todo-title-input"
             type="text" 
             placeholder="Log a new chore..."
             className="w-full max-w-[260px] px-8 py-5 rounded-full bg-white shadow-2xl border-2 border-primary/10 focus:outline-none focus:border-primary/40 text-sm font-black transition-all"
             value={newTodoTitle}
             onChange={e => setNewTodoTitle(e.target.value)}
           />
-          <button type="submit" className="w-20 h-20 rounded-full bg-primary text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all">
+          <button id="add-todo-btn" data-testid="add-todo-btn" type="submit" className="w-20 h-20 rounded-full bg-primary text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all">
             <span className="material-symbols-outlined text-4xl font-black">add_task</span>
           </button>
         </form>

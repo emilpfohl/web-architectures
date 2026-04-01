@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export function ShoppingClient({ initialItems, initialCategories = ['Essentials', 'Snacks', 'Household'] }: { initialItems: any[], initialCategories: string[] }) {
+export function ShoppingClient({ initialItems, initialCategories = ['Lebensmittel', 'Haushalt', 'Wishlist'] }: { initialItems: any[], initialCategories: string[] }) {
   const router = useRouter();
   const [newItemName, setNewItemName] = useState('');
   const [activeCategory, setActiveCategory] = useState(initialCategories[0] || 'Essentials');
@@ -47,7 +47,7 @@ export function ShoppingClient({ initialItems, initialCategories = ['Essentials'
       <section className="p-8 rounded-[2.5rem] bg-sage-soft/20 border border-sage-soft/30 chill-shadow">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="font-headline text-2xl font-black text-primary mb-1">Stocking Up?</h2>
+            <h2 className="font-headline text-2xl font-bold text-primary mb-1">Stocking Up?</h2>
             <p className="text-on-surface-variant text-sm font-bold opacity-70 uppercase tracking-widest">Let the flat know you're at the store</p>
           </div>
           <button 
@@ -68,9 +68,9 @@ export function ShoppingClient({ initialItems, initialCategories = ['Essentials'
               <div className="flex items-center justify-between mb-8 px-2">
                 <div className="flex items-center gap-4">
                   <div className={`w-3 h-10 ${categoryColors[cat] || 'bg-primary'} rounded-full`} />
-                  <h3 className="font-headline text-3xl font-black tracking-tighter text-on-surface">{cat}</h3>
+                  <h3 className="font-headline text-3xl font-bold tracking-tighter text-on-surface">{cat}</h3>
                 </div>
-                <span className="text-[12px] font-black text-primary uppercase tracking-[0.2em] opacity-40">
+                <span className="text-[12px] font-bold text-primary uppercase tracking-[0.2em] opacity-40">
                   {catItems.length.toString().padStart(2, '0')} Items
                 </span>
               </div>
@@ -83,9 +83,9 @@ export function ShoppingClient({ initialItems, initialCategories = ['Essentials'
                         {item.checked && <span className="material-symbols-outlined text-[20px] font-bold">check</span>}
                       </div>
                       <div className={item.checked ? 'opacity-40' : ''}>
-                        <h4 className={`font-black text-xl text-on-surface leading-tight ${item.checked ? 'line-through' : ''}`}>{item.name}</h4>
+                        <h4 className={`font-bold text-xl text-on-surface leading-tight ${item.checked ? 'line-through' : ''}`}>{item.name}</h4>
                         {!item.checked && item.id % 4 === 0 && (
-                          <span className="inline-block mt-1 px-3 py-1 rounded-full bg-accent-peach/20 text-accent-peach text-[10px] font-black uppercase tracking-[0.1em]">Urgent</span>
+                          <span className="inline-block mt-1 px-3 py-1 rounded-full bg-accent-peach/20 text-accent-peach text-[10px] font-bold uppercase tracking-[0.1em]">Urgent</span>
                         )}
                       </div>
                     </div>
@@ -128,13 +128,15 @@ export function ShoppingClient({ initialItems, initialCategories = ['Essentials'
         )}
         <form onSubmit={addItem} className="flex items-center gap-4 translate-y-2">
           <input 
+            id="shopping-item-input"
+            data-testid="shopping-item-input"
             type="text" 
             placeholder="Stock item name..."
             className="w-full max-w-[240px] px-8 py-5 rounded-full bg-white shadow-2xl border-2 border-primary/10 focus:outline-none focus:border-primary/40 text-sm font-black transition-all"
             value={newItemName}
             onChange={e => setNewItemName(e.target.value)}
           />
-          <button type="submit" className="w-20 h-20 rounded-full bg-primary text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all">
+          <button id="add-shopping-item-btn" data-testid="add-shopping-item-btn" type="submit" className="w-20 h-20 rounded-full bg-primary text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all">
             <span className="material-symbols-outlined text-4xl font-black">add</span>
           </button>
         </form>

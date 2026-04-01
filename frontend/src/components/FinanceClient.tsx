@@ -34,23 +34,23 @@ export function FinanceClient({ initialExpenses }: { initialExpenses: any[] }) {
     <div className="animate-fade-in w-full max-w-2xl mx-auto space-y-12 pb-32">
       
       <header className="px-4">
-        <h2 className="font-headline text-4xl font-black text-on-surface tracking-tighter">Shared Expenses</h2>
+        <h2 className="font-headline text-4xl font-bold text-on-surface tracking-tighter">Shared Expenses</h2>
         <p className="text-on-surface-variant font-bold text-[10px] uppercase tracking-[0.3em] mt-2 opacity-60">Balance the sanctuary books</p>
       </header>
 
       {/* Balance Card */}
       <section className="bg-primary p-12 rounded-[4rem] text-white shadow-2xl relative overflow-hidden transition-all hover:scale-[1.01] cursor-pointer">
         <div className="relative z-10">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-60 mb-3">Total Pool</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.4em] opacity-60 mb-3">Total Pool</p>
           <div className="flex items-baseline gap-3">
-            <span className="text-7xl font-black tracking-tighter">{total.toFixed(2)}</span>
+            <span className="text-7xl font-bold tracking-tighter">{total.toFixed(2)}</span>
             <span className="text-2xl font-bold opacity-40">€</span>
           </div>
           <div className="mt-10 flex gap-4">
-            <button className="btn bg-white/20 backdrop-blur-xl text-white border-none hover:bg-white/30 text-xs py-4 px-8 font-black uppercase tracking-widest">
+            <button className="btn bg-white/20 backdrop-blur-xl text-white border-none hover:bg-white/30 text-xs py-4 px-8 font-bold uppercase tracking-widest">
               Details
             </button>
-            <button className="btn bg-white text-primary border-none hover:scale-105 text-xs py-4 px-8 font-black uppercase tracking-widest">
+            <button className="btn bg-white text-primary border-none hover:scale-105 text-xs py-4 px-8 font-bold uppercase tracking-widest">
               Settle Up
             </button>
           </div>
@@ -75,16 +75,16 @@ export function FinanceClient({ initialExpenses }: { initialExpenses: any[] }) {
                   <span className="material-symbols-outlined text-3xl font-bold">payments</span>
                 </div>
                 <div>
-                  <h4 className="font-black text-xl text-on-surface leading-tight tracking-tight">{exp.description}</h4>
+                  <h4 className="font-bold text-xl text-on-surface leading-tight tracking-tight">{exp.description}</h4>
                   <div className="flex items-center gap-3 mt-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">{exp.paidBy}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">{exp.paidBy}</span>
                     <span className="text-[10px] font-bold text-on-surface-variant opacity-40 uppercase tracking-widest">Logged • Today</span>
                   </div>
                 </div>
               </div>
               <div className="text-right pr-2">
-                <span className="font-headline font-black text-2xl text-on-surface tracking-tighter">-{exp.amount.toFixed(2)}€</span>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant opacity-40 mt-1">Settled</p>
+                <span className="font-headline font-bold text-2xl text-on-surface tracking-tighter">-{exp.amount.toFixed(2)}€</span>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant opacity-40 mt-1">Settled</p>
               </div>
             </div>
           ))}
@@ -130,13 +130,15 @@ export function FinanceClient({ initialExpenses }: { initialExpenses: any[] }) {
         )}
         <form onSubmit={addExpense} className="flex items-center gap-4 translate-y-2">
           <input 
+            id="finance-description-input"
+            data-testid="finance-description-input"
             type="text" 
             placeholder="What was bought?"
             className="w-full max-w-[280px] px-8 py-5 rounded-full bg-white shadow-2xl border-2 border-primary/10 focus:outline-none focus:border-primary/40 text-sm font-black transition-all"
             value={description}
             onChange={e => setDescription(e.target.value)}
           />
-          <button type="submit" className="w-20 h-20 rounded-full bg-primary text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all">
+          <button id="add-expense-btn" data-testid="add-expense-btn" type="submit" className="w-20 h-20 rounded-full bg-primary text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all">
             <span className="material-symbols-outlined text-4xl font-black">receipt_long</span>
           </button>
         </form>

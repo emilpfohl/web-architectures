@@ -21,12 +21,25 @@ export function DashboardClient({ shopping, todos, finances }: { shopping: any[]
     <div className="animate-fade-in w-full space-y-12 pb-20">
       
       {/* Vibe / Hero Section */}
-      <section className="space-y-6">
-        <div>
-          <p className="font-headline text-on-surface-variant uppercase tracking-widest text-[10px] mb-1 font-extrabold">Current Flow</p>
-          <h2 className="font-headline text-4xl font-black tracking-tighter text-on-surface">The flat is <span className="text-primary italic">peaceful</span></h2>
+      <section className="space-y-8 animate-fade-in py-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 rounded-full bg-sage-soft flex items-center justify-center text-primary border border-primary/10 shadow-sm">
+            <span className="material-symbols-outlined font-black">temple_buddhist</span>
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Sanctuary Vibe</span>
         </div>
-        <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+        
+        <div>
+          <h1 className="font-headline text-5xl md:text-7xl font-semibold text-on-surface tracking-tighter leading-[1.05] mb-4">
+            Willkommen Zuhause, <br/>
+            <span className="text-primary italic font-light text-4xl md:text-6xl">Genieße die Ruhe</span>
+          </h1>
+          <p className="text-on-surface-variant font-medium text-lg md:text-xl leading-relaxed opacity-70 max-w-lg">
+            Dein Rückzugsort in der WG. Alles ist im Fluss, alle Aufgaben sind verteilt und die Stimmung ist Zen.
+          </p>
+        </div>
+
+        <div className="flex gap-3 overflow-x-auto pb-4 pt-2 no-scrollbar scroll-smooth">
           {['Chill', 'Focus', 'Cooking'].map((vibe, idx) => (
             <button key={vibe} className={`flex-shrink-0 px-8 py-4 rounded-full font-headline font-bold flex items-center gap-2 transition-all ${idx === 0 ? 'bg-primary text-white chill-shadow' : 'bg-white border border-outline-variant/30 text-on-surface-variant hover:bg-stone-100'}`}>
               <span className="material-symbols-outlined text-[18px]">{idx === 0 ? 'spa' : (idx === 1 ? 'menu_book' : 'restaurant')}</span>
@@ -40,18 +53,18 @@ export function DashboardClient({ shopping, todos, finances }: { shopping: any[]
         {/* Status Grid Left */}
         <div className="space-y-8">
           {/* Who's Home Card */}
-          <div className="glass-panel">
-            <h3 className="font-headline text-xl font-black mb-8 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-primary/40 animate-pulse"></span>
-              Who's Home
+          <div className="glass-panel stagger-1">
+            <h3 className="font-headline text-xl font-semibold mb-8 flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-primary zen-pulse"></span>
+              Wer ist Zuhause
             </h3>
             <div className="flex gap-8">
-              {residents.map(res => (
-                <div key={res.name} className={`flex flex-col items-center gap-3 transition-opacity ${res.home ? 'opacity-100' : 'opacity-30'}`}>
-                  <div className={`w-20 h-20 rounded-full p-1 border-2 ${res.home ? 'border-primary' : 'border-transparent'}`}>
+              {residents.map((res, i) => (
+                <div key={res.name} className={`flex flex-col items-center gap-3 transition-all duration-700 stagger-${i+2} ${res.home ? 'opacity-100 scale-100' : 'opacity-30 scale-95'}`}>
+                  <div className={`w-20 h-20 rounded-full p-1 border-2 transition-all ${res.home ? 'border-primary/60 shadow-lg shadow-primary/5' : 'border-transparent'}`}>
                     <img alt={res.name} className="w-full h-full rounded-full object-cover bg-stone-100" src={res.img}/>
                   </div>
-                  <span className={`font-headline text-[12px] font-black uppercase tracking-widest ${res.home ? 'text-primary' : 'text-on-surface-variant'}`}>{res.name}</span>
+                  <span className={`font-headline text-[12px] font-bold uppercase tracking-widest ${res.home ? 'text-primary' : 'text-on-surface-variant'}`}>{res.name}</span>
                 </div>
               ))}
             </div>
@@ -59,17 +72,17 @@ export function DashboardClient({ shopping, todos, finances }: { shopping: any[]
 
           {/* Activity Feed */}
           <section className="space-y-6">
-            <h3 className="font-headline text-xl font-black flex items-center justify-between px-2">
+            <h3 className="font-headline text-xl font-bold flex items-center justify-between px-2">
               Live Feed
-              <span className="text-[10px] font-headline text-primary uppercase tracking-[0.2em] font-black">3 Updates</span>
+              <span className="text-[10px] font-headline text-primary uppercase tracking-[0.2em] font-bold">3 Updates</span>
             </h3>
             <div className="space-y-8">
-              <div className="flex gap-4">
-                <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border-2 border-white shadow-sm">
+              <div className="flex gap-4 stagger-4 transition-all">
+                <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border-2 border-white shadow-md">
                   <img alt="Sarah" src={residents[0].img}/>
                 </div>
                 <div className="flex-1 space-y-2">
-                  <div className="bg-white p-5 rounded-[2rem] rounded-tl-none border border-outline-variant/30 shadow-sm">
+                  <div className="bg-white p-6 rounded-[2.5rem] rounded-tl-none border border-outline-variant/30 shadow-sm">
                     <p className="text-sm font-bold leading-relaxed text-on-surface">Yo! Just finished deep cleaning the fridge. 🧊 Don't forget my reward beers! 🍻</p>
                   </div>
                   <p className="text-[10px] font-headline font-black text-on-surface-variant uppercase ml-2">Sarah • 12m ago</p>
@@ -77,10 +90,10 @@ export function DashboardClient({ shopping, todos, finances }: { shopping: any[]
               </div>
 
               {finances.length > 0 && (
-                <div className="flex items-center gap-4 py-3 px-6 bg-primary/5 rounded-full border border-primary/10 mx-2">
-                  <span className="material-symbols-outlined text-primary text-[20px]">payments</span>
-                  <p className="text-[12px] font-bold"><span className="text-primary">{finances[0].paidBy}</span> paid for <span className="italic">{finances[0].description}</span></p>
-                  <span className="ml-auto text-[10px] text-on-surface-variant font-black">Recent</span>
+                <div className="flex items-center gap-4 py-4 px-8 bg-primary/5 rounded-full border border-primary/10 mx-2 stagger-5 transition-all">
+                  <span className="material-symbols-outlined text-primary text-[22px]">payments</span>
+                  <p className="text-[13px] font-bold"><span className="text-primary">{finances[0].paidBy}</span> paid for <span className="italic">{finances[0].description}</span></p>
+                  <span className="ml-auto text-[10px] text-on-surface-variant font-black opacity-40">Recent</span>
                 </div>
               )}
             </div>
@@ -99,9 +112,9 @@ export function DashboardClient({ shopping, todos, finances }: { shopping: any[]
                 { name: 'Lila S.', task: 'Trash Master + Kitchen', pts: '2.4k', rank: '01' },
                 { name: 'Felix T.', task: 'Dishwash Hero', pts: '1.8k', rank: '02' }
               ].map((leader, i) => (
-                <div key={leader.name} className={`flex items-center justify-between p-5 rounded-2xl transition-all ${i === 0 ? 'bg-white shadow-sm' : 'bg-white/40'}`}>
+                <div key={leader.name} className={`flex items-center justify-between p-5 rounded-3xl transition-all stagger-${i+3} ${i === 0 ? 'bg-white shadow-lg shadow-sage-soft/20' : 'bg-white/40'}`}>
                   <div className="flex items-center gap-4">
-                    <span className="font-headline text-2xl font-black italic text-primary/10">{leader.rank}</span>
+                    <span className="font-headline text-2xl font-black italic text-primary/20">{leader.rank}</span>
                     <div>
                       <p className="font-black text-sm text-on-surface">{leader.name}</p>
                       <p className="text-[11px] font-medium text-on-surface-variant">{leader.task}</p>
