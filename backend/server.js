@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const data = require('./data');
 const tasksRouter = require('./routes/tasks');
+const messagesRouter = require('./routes/messages');
 
 const app = express();
 const PORT = 3000;
@@ -11,6 +12,7 @@ app.use(express.json());
 
 // Register Routers
 app.use('/api/todos', tasksRouter);
+app.use('/api/messages', messagesRouter);
 
 // -- USERS --
 app.get('/api/users', (req, res) => {
@@ -94,14 +96,36 @@ app.post('/api/shopping', (req, res) => {
   if (!newItem.category) newItem.category = 'Lebensmittel';
   
   data.shopping.push(newItem);
+
+  // Log to feed
+  data.messages.push({
+    id: Date.now() + 1,
+    wgId: parseInt(wgId),
+    type: 'system',
+    content: `Neu auf der Liste: "${name}"`,
+    timestamp: new Date().toISOString()
+  });
+
   res.status(201).json(newItem);
 });
 
 app.put('/api/shopping/:id', (req, res) => {
   const item = data.shopping.find(i => i.id === parseInt(req.params.id));
   if (item) {
+    const wasChecked = item.checked;
     if (req.body.checked !== undefined) item.checked = req.body.checked;
-    // other updates could go here
+    
+    // Log if checked
+    if (item.checked && !wasChecked) {
+      data.messages.push({
+        id: Date.now(),
+        wgId: item.wgId,
+        type: 'system',
+        content: `Eingekauft: "${item.name}"`,
+        timestamp: new Date().toISOString()
+      });
+    }
+
     res.json(item);
   } else res.status(404).send('Not found');
 });
@@ -145,13 +169,24 @@ app.get('/api/finances', (req, res) => {
 });
 
 app.post('/api/finances', (req, res) => {
-  const { wgId, paidById, amount } = req.body;
+  const { wgId, paidById, amount, description } = req.body;
   if (!wgId || !paidById || amount === undefined) {
     return res.status(400).json({ error: 'wgId, paidById, and amount are required' });
   }
 
   const newExpense = { id: Date.now(), ...req.body };
   data.finances.push(newExpense);
+
+  // Log to feed
+  const payer = data.users.find(u => u.id === parseInt(paidById))?.name || 'Jemand';
+  data.messages.push({
+    id: Date.now() + 2,
+    wgId: parseInt(wgId),
+    type: 'system',
+    content: `${payer} hat ${amount}€ für "${description || 'Unbekannt'}" ausgegeben`,
+    timestamp: new Date().toISOString()
+  });
+
   res.status(201).json(newExpense);
 });
 

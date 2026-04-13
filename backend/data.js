@@ -37,6 +37,10 @@ const data = {
   ],
   invitations: [
     { id: 1, wgId: 1, token: "sanctuary-invite-2026", role: "member", usedCount: 0, maxUses: 10 }
+  ],
+  messages: [
+    { id: 1, wgId: 1, type: 'system', content: 'Willkommen im neuen WG-Feed!', timestamp: new Date(Date.now() - 3600000).toISOString() },
+    { id: 2, wgId: 1, type: 'user', senderId: 1, content: 'Hey Leute, hab den Kühlschrank geputzt! 🧊', timestamp: new Date(Date.now() - 720000).toISOString() }
   ]
 };
 

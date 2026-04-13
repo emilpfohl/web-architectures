@@ -29,8 +29,21 @@ router.post('/', (req, res) => {
 router.put('/:id', (req, res) => {
   const item = data.todos.find(i => i.id === parseInt(req.params.id));
   if (item) {
+    const wasCompleted = item.completed;
     if (req.body.completed !== undefined) item.completed = req.body.completed;
     if (req.body.assigneeId !== undefined) item.assigneeId = req.body.assigneeId;
+
+    // Log to messages if just completed
+    if (item.completed && !wasCompleted) {
+      data.messages.push({
+        id: Date.now(),
+        wgId: item.wgId,
+        type: 'system',
+        content: `Aufgabe abgeschlossen: "${item.title}"`,
+        timestamp: new Date().toISOString()
+      });
+    }
+
     res.json(item);
   } else res.status(404).send('Not found');
 });

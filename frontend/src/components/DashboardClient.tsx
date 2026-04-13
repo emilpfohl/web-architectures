@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export function DashboardClient({ shopping, todos, finances, onRefresh }: { shopping: any[], todos: any[], finances: any[], onRefresh: () => void }) {
@@ -24,9 +24,9 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
 
   // Convert residents to state to allow interactive toggling
   const [allResidents, setAllResidents] = useState([
-    { name: 'Sarah', home: true, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCvkAXNPBE9QsxvQpPuUFfuhl6M4N76VlzK32Vam0_PlNbMCAdXpRbi-7tjBytQRpavk5ZkHFuRE-FwXeZ-8xu3GXbqG1zSdYwvTumc4Y0Jzcl-qP3ZGiPRRy_I2h2nV5wf7sT9upJ8qlVPyi1IvwNJ6p374_YzFyBZRF1yL1y81H3xsKvkFE8gr8TflB4-a3PhvRZMRFq3PdDy_7A_qbp_qAF13CMKouPxxvjpylNbK41fVkebcAScbXxLGgq147rMW_uMYGdmwsvN' },
-    { name: 'Marco', home: false, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCvbHRoG9cZyWBnineFNvdGIvxT1afQdInASiVo-7s5yR_Fcn31VudpDzVIVspf-hYK5BVu2drCqTv536luZxxIT_rzIrfZNAxoM7aRe0oxf4maidnry9oqQsUFeYvhwgPiudDeMZvZm63L2-yVPn34hvk4QWiWqieLCQaGUvjv4i9iBBse9zXuqP6KSDI0I80cUErZkfEl3ry7IsaUbna1-JcEHbJamC063kGgVgBSLoOilNLUJtpvW74N9pOYGll8J9sfyNkbckUU' },
-    { name: 'Lila', home: true, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBLbhLHz21hs0e11MO0LJup2GjQInmpw1mS2ZMtX5VIDknvPvyTWgHbF0eHEcgpkzHu71DyCRwNEP82Ffsu4rQoLyISh2Qj3cElf8RGM8k-FL6VODmg90OadXJgwVrvo74K9dLdF0_BimLJa_DM48DtwpHppN6a_-MJyHY1ltDT9UgTziK4sWSh9rdhk5ch9YzvEVKZnb7w4OdDoiDignkizc8B0H3k5WzLO6YLGmEsLsUDojXKs3vFChYB8N807VktZbptwXCtHb0Y' },
+    { id: 1, name: 'Sarah', home: true, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCvkAXNPBE9QsxvQpPuUFfuhl6M4N76VlzK32Vam0_PlNbMCAdXpRbi-7tjBytQRpavk5ZkHFuRE-FwXeZ-8xu3GXbqG1zSdYwvTumc4Y0Jzcl-qP3ZGiPRRy_I2h2nV5wf7sT9upJ8qlVPyi1IvwNJ6p374_YzFyBZRF1yL1y81H3xsKvkFE8gr8TflB4-a3PhvRZMRFq3PdDy_7A_qbp_qAF13CMKouPxxvjpylNbK41fVkebcAScbXxLGgq147rMW_uMYGdmwsvN' },
+    { id: 2, name: 'Marco', home: false, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCvbHRoG9cZyWBnineFNvdGIvxT1afQdInASiVo-7s5yR_Fcn31VudpDzVIVspf-hYK5BVu2drCqTv536luZxxIT_rzIrfZNAxoM7aRe0oxf4maidnry9oqQsUFeYvhwgPiudDeMZvZm63L2-yVPn34hvk4QWiWqieLCQaGUvjv4i9iBBse9zXuqP6KSDI0I80cUErZkfEl3ry7IsaUbna1-JcEHbJamC063kGgVgBSLoOilNLUJtpvW74N9pOYGll8J9sfyNkbckUU' },
+    { id: 3, name: 'Lila', home: true, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBLbhLHz21hs0e11MO0LJup2GjQInmpw1mS2ZMtX5VIDknvPvyTWgHbF0eHEcgpkzHu71DyCRwNEP82Ffsu4rQoLyISh2Qj3cElf8RGM8k-FL6VODmg90OadXJgwVrvo74K9dLdF0_BimLJa_DM48DtwpHppN6a_-MJyHY1ltDT9UgTziK4sWSh9rdhk5ch9YzvEVKZnb7w4OdDoiDignkizc8B0H3k5WzLO6YLGmEsLsUDojXKs3vFChYB8N807VktZbptwXCtHb0Y' },
   ]);
 
   const toggleLilaHome = () => {
@@ -36,6 +36,51 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
   };
 
   const isLilaHome = allResidents.find(r => r.name === 'Lila')?.home;
+
+  const [messages, setMessages] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+
+  // Fetch messages with polling
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const res = await fetch('http://localhost:3000/api/messages?wgId=1');
+        const data = await res.json();
+        setMessages(data);
+      } catch (err) {
+        console.error('Error fetching messages:', err);
+      }
+    };
+
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+
+    try {
+      const res = await fetch('http://localhost:3000/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wgId: 1,
+          content: newMessage,
+          senderId: 3, // Lila
+          type: 'user'
+        })
+      });
+      if (res.ok) {
+        setNewMessage('');
+        const msg = await res.json();
+        setMessages(prev => [...prev, msg]);
+      }
+    } catch (err) {
+      console.error('Error sending message:', err);
+    }
+  };
 
   return (
     <div className="animate-fade-in w-full space-y-12 pb-20">
@@ -136,37 +181,63 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
                 <span className="text-[10px] font-headline text-slate-400 uppercase tracking-[0.2em] font-bold">Latest Notes</span>
               </div>
               
-              <div className="space-y-6 relative z-10">
-                <div className="flex gap-4 group">
-                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-slate-700/50 shadow-md">
-                    <img alt="Sarah" src={allResidents[0].img}/>
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-relaxed text-slate-200 italic">"Yo! Just finished deep cleaning the fridge. 🧊 Don't forget my reward beers! 🍻"</p>
-                    <p className="text-[10px] font-headline font-bold text-slate-500 uppercase">Sarah • 12m ago</p>
-                  </div>
-                </div>
- 
-                <div className="flex gap-4 group">
-                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-slate-700/50 shadow-md">
-                    <img alt="Marco" src={allResidents[1].img}/>
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-relaxed text-slate-200 italic">"Need the kitchen table for a study group tonight from 18:00 to 20:00! Thanks! 📚"</p>
-                    <p className="text-[10px] font-headline font-bold text-slate-500 uppercase">Marco • 2h ago</p>
-                  </div>
-                </div>
- 
-                {finances.length > 0 && (
-                  <div className="mt-6 pt-6 border-t border-slate-700/50 border-dashed">
-                    <div className="flex items-center gap-3">
-                      <span className="material-symbols-outlined text-slate-300 text-[18px]">payments</span>
-                      <p className="text-[13px] font-medium text-slate-200 italic"><span className="text-white font-bold">{finances[0].paidBy}</span> paid for <span className="underline decoration-slate-600 underline-offset-4">{finances[0].description}</span></p>
-                      <span className="ml-auto text-[10px] font-headline text-slate-500 font-bold uppercase">Recent</span>
-                    </div>
-                  </div>
+              <div className="space-y-6 relative z-10 max-h-[400px] overflow-y-auto no-scrollbar scroll-smooth pr-2">
+                {messages.length === 0 && (
+                  <p className="text-slate-500 italic text-sm text-center py-10">Keine Nachrichten vorhanden...</p>
                 )}
+                {messages.map((msg: any) => {
+                  if (msg.type === 'system') {
+                    return (
+                      <div key={msg.id} className="flex justify-center">
+                        <div className="bg-slate-800/50 px-4 py-1.5 rounded-full border border-slate-700/50">
+                          <p className="text-[11px] text-slate-400 italic">
+                            <span className="material-symbols-outlined text-[12px] align-middle mr-1">info</span>
+                            {msg.content}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  const sender = allResidents.find(r => r.id === msg.senderId) || allResidents.find(r => r.name === (msg.senderId === 1 ? 'Sarah' : msg.senderId === 2 ? 'Marco' : 'Lila'));
+                  const isMe = msg.senderId === 3;
+                  
+                  return (
+                    <div key={msg.id} className={`flex gap-3 group ${isMe ? 'flex-row-reverse' : ''}`}>
+                      <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-slate-700/50 shadow-md">
+                        <img alt="User" src={sender?.img || 'https://www.gravatar.com/avatar?d=mp'}/>
+                      </div>
+                      <div className={`max-w-[80%] space-y-1 ${isMe ? 'items-end' : ''}`}>
+                        <div className={`px-4 py-2 rounded-2xl text-sm ${isMe ? 'bg-primary text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none border border-slate-700/50'}`}>
+                          {msg.content}
+                        </div>
+                        <p className={`text-[9px] font-headline font-bold text-slate-500 uppercase ${isMe ? 'text-right' : ''}`}>
+                          {sender?.name || 'Unbekannt'} • {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
+
+              {/* Chat Input */}
+              <form onSubmit={sendMessage} className="mt-8 relative z-10">
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Nachricht an die WG..." 
+                    className="w-full bg-slate-800/80 border-2 border-slate-700/50 rounded-2xl py-3 pl-4 pr-12 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-primary/50 transition-all text-sm"
+                  />
+                  <button 
+                    type="submit"
+                    className="absolute right-2 top-1.5 w-9 h-9 bg-primary text-white rounded-xl flex items-center justify-center hover:scale-105 transition-transform active:scale-95"
+                  >
+                    <span className="material-symbols-outlined text-xl">send</span>
+                  </button>
+                </div>
+              </form>
             </div>
           </section>
         </div>
