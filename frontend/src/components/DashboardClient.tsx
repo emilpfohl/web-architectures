@@ -22,12 +22,20 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
     'Lila': 'Chill'
   });
 
-  // Mock data for new sections based on Stitch design
-  const residents = [
+  // Convert residents to state to allow interactive toggling
+  const [allResidents, setAllResidents] = useState([
     { name: 'Sarah', home: true, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCvkAXNPBE9QsxvQpPuUFfuhl6M4N76VlzK32Vam0_PlNbMCAdXpRbi-7tjBytQRpavk5ZkHFuRE-FwXeZ-8xu3GXbqG1zSdYwvTumc4Y0Jzcl-qP3ZGiPRRy_I2h2nV5wf7sT9upJ8qlVPyi1IvwNJ6p374_YzFyBZRF1yL1y81H3xsKvkFE8gr8TflB4-a3PhvRZMRFq3PdDy_7A_qbp_qAF13CMKouPxxvjpylNbK41fVkebcAScbXxLGgq147rMW_uMYGdmwsvN' },
     { name: 'Marco', home: false, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCvbHRoG9cZyWBnineFNvdGIvxT1afQdInASiVo-7s5yR_Fcn31VudpDzVIVspf-hYK5BVu2drCqTv536luZxxIT_rzIrfZNAxoM7aRe0oxf4maidnry9oqQsUFeYvhwgPiudDeMZvZm63L2-yVPn34hvk4QWiWqieLCQaGUvjv4i9iBBse9zXuqP6KSDI0I80cUErZkfEl3ry7IsaUbna1-JcEHbJamC063kGgVgBSLoOilNLUJtpvW74N9pOYGll8J9sfyNkbckUU' },
     { name: 'Lila', home: true, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBLbhLHz21hs0e11MO0LJup2GjQInmpw1mS2ZMtX5VIDknvPvyTWgHbF0eHEcgpkzHu71DyCRwNEP82Ffsu4rQoLyISh2Qj3cElf8RGM8k-FL6VODmg90OadXJgwVrvo74K9dLdF0_BimLJa_DM48DtwpHppN6a_-MJyHY1ltDT9UgTziK4sWSh9rdhk5ch9YzvEVKZnb7w4OdDoiDignkizc8B0H3k5WzLO6YLGmEsLsUDojXKs3vFChYB8N807VktZbptwXCtHb0Y' },
-  ];
+  ]);
+
+  const toggleLilaHome = () => {
+    setAllResidents(prev => prev.map(res => 
+      res.name === 'Lila' ? { ...res, home: !res.home } : res
+    ));
+  };
+
+  const isLilaHome = allResidents.find(r => r.name === 'Lila')?.home;
 
   return (
     <div className="animate-fade-in w-full space-y-12 pb-20">
@@ -51,20 +59,36 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
           </p>
         </div>
 
-        <div className="flex gap-3 overflow-x-auto pb-4 pt-2 no-scrollbar scroll-smooth">
+        <div className="flex gap-4 overflow-x-auto pb-8 pt-4 px-4 -mx-4 no-scrollbar scroll-smooth items-center">
           {availableMoods.map((moodObj) => {
             const isActive = residentMoods['Lila'] === moodObj.name;
             return (
               <button 
                 key={moodObj.name} 
                 onClick={() => setResidentMoods({...residentMoods, 'Lila': moodObj.name})}
-                className={`flex-shrink-0 px-8 py-4 rounded-full font-headline font-bold flex items-center gap-2 transition-all ${isActive ? 'bg-primary text-white chill-shadow scale-105' : 'bg-white border border-outline-variant/30 text-on-surface-variant hover:bg-stone-100'}`}
+                className={`flex-shrink-0 px-8 py-4 rounded-full font-headline font-bold flex items-center gap-2 transition-all h-[60px] ${isActive ? 'bg-primary text-white chill-shadow scale-105' : 'bg-white border border-outline-variant/30 text-on-surface-variant hover:bg-stone-100'}`}
               >
                 <span className="material-symbols-outlined text-[18px]">{moodObj.icon}</span>
                 {moodObj.name}
               </button>
             );
           })}
+
+          <div className="w-[1px] h-8 bg-outline-variant/30 flex-shrink-0 mx-2" />
+
+          {/* Apple-Style Home Switch Integrated - Fixed layout shifts */}
+          <div className="flex-shrink-0 flex items-center gap-4 bg-white border border-outline-variant/30 px-6 py-3 rounded-full shadow-sm transition-all hover:bg-stone-50 h-[60px]">
+             <div className="flex flex-col -space-y-1 w-20">
+                <span className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant opacity-50">Status</span>
+                <span className="text-[12px] font-bold text-on-surface whitespace-nowrap">{isLilaHome ? 'Zuhause' : 'Unterwegs'}</span>
+             </div>
+             <button 
+                onClick={toggleLilaHome}
+                className={`w-11 h-6 rounded-full transition-all duration-300 relative flex-shrink-0 ${isLilaHome ? 'bg-primary' : 'bg-stone-300'}`}
+             >
+                <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-300 transform ${isLilaHome ? 'translate-x-5' : 'translate-x-0'}`} />
+             </button>
+          </div>
         </div>
       </section>
 
@@ -78,17 +102,27 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
               Wer ist Zuhause
             </h3>
             <div className="flex gap-8">
-              {residents.map((res, i) => (
-                <div key={res.name} className={`flex flex-col items-center gap-3 transition-all duration-700 stagger-${i+2} ${res.home ? 'opacity-100 scale-100' : 'opacity-30 scale-95'}`}>
-                  <div className={`w-20 h-20 rounded-full p-1 border-2 transition-all ${res.home ? 'border-primary/60 shadow-lg shadow-primary/5' : 'border-transparent'}`}>
-                    <img alt={res.name} className="w-full h-full rounded-full object-cover bg-stone-100" src={res.img}/>
+              {allResidents.map((res, i) => {
+                const moodName = residentMoods[res.name] || 'Chill';
+                const moodObj = availableMoods.find(m => m.name === moodName) || availableMoods[0];
+                return (
+                  <div key={res.name} className={`flex flex-col items-center gap-3 transition-all duration-700 stagger-${i+2} ${res.home ? 'opacity-100 scale-100' : 'opacity-30 scale-95'}`}>
+                    <div className={`w-20 h-20 rounded-full p-1 border-2 transition-all ${res.home ? 'border-primary/60 shadow-lg shadow-primary/5' : 'border-transparent'}`}>
+                      <img alt={res.name} className="w-full h-full rounded-full object-cover bg-stone-100" src={res.img}/>
+                    </div>
+                    <div className="text-center space-y-1">
+                      <span className={`font-headline text-[12px] font-bold uppercase tracking-widest ${res.home ? 'text-primary' : 'text-on-surface-variant'}`}>{res.name}</span>
+                      <div className="flex items-center justify-center gap-1.5 opacity-60">
+                        <span className="material-symbols-outlined text-[14px]">{moodObj.icon}</span>
+                        <span className="text-[9px] font-bold uppercase tracking-tighter">{moodObj.name}</span>
+                      </div>
+                    </div>
                   </div>
-                  <span className={`font-headline text-[12px] font-bold uppercase tracking-widest ${res.home ? 'text-primary' : 'text-on-surface-variant'}`}>{res.name}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
-
+ 
           {/* Blackboard */}
           <section className="mt-4 stagger-4 transition-all">
             <div className="bg-slate-900 rounded-[2rem] p-8 pb-10 border-[6px] border-stone-800 shadow-2xl relative overflow-hidden">
@@ -105,24 +139,24 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
               <div className="space-y-6 relative z-10">
                 <div className="flex gap-4 group">
                   <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-slate-700/50 shadow-md">
-                    <img alt="Sarah" src={residents[0].img}/>
+                    <img alt="Sarah" src={allResidents[0].img}/>
                   </div>
                   <div className="flex-1 space-y-1">
                     <p className="text-sm font-medium leading-relaxed text-slate-200 italic">"Yo! Just finished deep cleaning the fridge. 🧊 Don't forget my reward beers! 🍻"</p>
                     <p className="text-[10px] font-headline font-bold text-slate-500 uppercase">Sarah • 12m ago</p>
                   </div>
                 </div>
-
+ 
                 <div className="flex gap-4 group">
                   <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-slate-700/50 shadow-md">
-                    <img alt="Marco" src={residents[1].img}/>
+                    <img alt="Marco" src={allResidents[1].img}/>
                   </div>
                   <div className="flex-1 space-y-1">
                     <p className="text-sm font-medium leading-relaxed text-slate-200 italic">"Need the kitchen table for a study group tonight from 18:00 to 20:00! Thanks! 📚"</p>
                     <p className="text-[10px] font-headline font-bold text-slate-500 uppercase">Marco • 2h ago</p>
                   </div>
                 </div>
-
+ 
                 {finances.length > 0 && (
                   <div className="mt-6 pt-6 border-t border-slate-700/50 border-dashed">
                     <div className="flex items-center gap-3">
@@ -136,44 +170,9 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
             </div>
           </section>
         </div>
-
+ 
         {/* Status Grid Right */}
         <div className="space-y-8">
-          {/* Current Moods */}
-          <div className="bg-white rounded-[3rem] p-8 border border-outline-variant/30 shadow-sm animate-fade-in">
-            <h3 className="font-headline text-xl font-black mb-6">Current Moods</h3>
-            <div className="space-y-6">
-              {residents.map((res, i) => {
-                const moodName = residentMoods[res.name] || 'Chill';
-                const moodObj = availableMoods.find(m => m.name === moodName) || availableMoods[0];
-                return (
-                  <div key={res.name} className={`flex items-center justify-between stagger-${i+2}`}>
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-sage-soft/30 flex items-center justify-center text-primary shadow-sm">
-                        <span className="material-symbols-outlined text-[20px]">{moodObj.icon}</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-on-surface">
-                          <span className="font-black">{res.name}</span> is in <br/><span className="font-extrabold text-primary">{moodObj.name} Mood</span>
-                        </p>
-                      </div>
-                    </div>
-                    {/* Account selectable dropdown */}
-                    <select 
-                      value={moodName}
-                      onChange={(e) => setResidentMoods({...residentMoods, [res.name]: e.target.value})}
-                      className="text-[11px] bg-stone-100 hover:bg-stone-200 transition-colors border max-w-[95px] border-outline-variant/10 rounded-full px-2 py-1.5 outline-none text-on-surface-variant cursor-pointer font-bold p-1 text-center"
-                    >
-                      {availableMoods.map(m => (
-                        <option key={m.name} value={m.name}>{m.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
           {/* Vibe Leaders */}
           <div className="bg-sage-soft/20 rounded-[3rem] p-8 border border-sage-soft/30">
             <h3 className="font-headline text-xl font-black mb-1">Vibe Leaders</h3>

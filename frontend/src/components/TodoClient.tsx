@@ -16,7 +16,8 @@ export function TodoClient({ initialTodos, onRefresh }: { initialTodos: any[], o
       body: JSON.stringify({ 
         title: newTodoTitle.trim(), 
         assignee: assignee.trim(),
-        completed: false 
+        completed: false,
+        wgId: 1
       })
     });
     setNewTodoTitle('');

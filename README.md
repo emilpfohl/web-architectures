@@ -110,28 +110,3 @@ Not found
   "error": "title parameter is required"
 }
 ```
-
-
-3. Die API testen – ohne Frontend
-
-Fehlermeldung 1:
-
-{
-  "error": "wgId parameter is required"
-}
-
-Fehlermeldung 2
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>Error</title>
-</head>
-<body>
-<pre>Cannot GET /api/todos/999</pre>
-</body>
-</html>
-
-Fehlermeldung 3:
-

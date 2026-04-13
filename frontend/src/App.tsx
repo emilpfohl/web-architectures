@@ -27,9 +27,9 @@ function App() {
         
         if (currentTab === 'dashboard' || currentTab === 'shopping') {
           promises.push(
-            fetch('/api/shopping')
+            fetch('/api/shopping?wgId=1')
               .then(r => r.json())
-              .then(d => setShopping(d))
+              .then(d => Array.isArray(d) ? setShopping(d) : setShopping([]))
           );
           promises.push(
             fetch('/api/shopping/categories')
@@ -40,17 +40,17 @@ function App() {
         
         if (currentTab === 'dashboard' || currentTab === 'todos') {
           promises.push(
-            fetch('/api/todos')
+            fetch('/api/todos?wgId=1')
               .then(r => r.json())
-              .then(d => setTodos(d))
+              .then(d => Array.isArray(d) ? setTodos(d) : setTodos([]))
           );
         }
         
         if (currentTab === 'dashboard' || currentTab === 'finance') {
           promises.push(
-            fetch('/api/finances')
+            fetch('/api/finances?wgId=1')
               .then(r => r.json())
-              .then(d => setFinances(d))
+              .then(d => Array.isArray(d) ? setFinances(d) : setFinances([]))
           );
         }
 

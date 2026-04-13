@@ -23,7 +23,7 @@ export function ShoppingClient({ initialItems, initialCategories = ['Lebensmitte
     await fetch('/api/shopping', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newItemName.trim(), category: activeCategory })
+      body: JSON.stringify({ name: newItemName.trim(), category: activeCategory, wgId: 1 })
     });
     setNewItemName('');
     onRefresh();

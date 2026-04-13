@@ -19,7 +19,9 @@ export function FinanceClient({ initialExpenses, onRefresh }: { initialExpenses:
       body: JSON.stringify({ 
         description: description.trim(), 
         amount: parseFloat(amount), 
-        paidBy: paidBy.trim() 
+        paidBy: paidBy.trim(),
+        paidById: 1,
+        wgId: 1
       })
     });
     setDescription('');
