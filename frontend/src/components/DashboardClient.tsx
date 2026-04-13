@@ -8,6 +8,20 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
   const openTodos = todos.filter((i: any) => !i.completed);
   const totalFinances = finances.reduce((sum: number, exp: any) => sum + exp.amount, 0);
 
+  const availableMoods = [
+    { name: 'Chill', icon: 'spa' },
+    { name: 'Focus', icon: 'menu_book' },
+    { name: 'Cooking', icon: 'restaurant' },
+    { name: 'Cleaning', icon: 'cleaning_services' },
+    { name: 'Rest', icon: 'bedtime' }
+  ];
+
+  const [residentMoods, setResidentMoods] = useState<Record<string, string>>({
+    'Sarah': 'Cleaning',
+    'Marco': 'Focus',
+    'Lila': 'Chill'
+  });
+
   // Mock data for new sections based on Stitch design
   const residents = [
     { name: 'Sarah', home: true, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCvkAXNPBE9QsxvQpPuUFfuhl6M4N76VlzK32Vam0_PlNbMCAdXpRbi-7tjBytQRpavk5ZkHFuRE-FwXeZ-8xu3GXbqG1zSdYwvTumc4Y0Jzcl-qP3ZGiPRRy_I2h2nV5wf7sT9upJ8qlVPyi1IvwNJ6p374_YzFyBZRF1yL1y81H3xsKvkFE8gr8TflB4-a3PhvRZMRFq3PdDy_7A_qbp_qAF13CMKouPxxvjpylNbK41fVkebcAScbXxLGgq147rMW_uMYGdmwsvN' },
@@ -38,12 +52,19 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
         </div>
 
         <div className="flex gap-3 overflow-x-auto pb-4 pt-2 no-scrollbar scroll-smooth">
-          {['Chill', 'Focus', 'Cooking'].map((vibe, idx) => (
-            <button key={vibe} className={`flex-shrink-0 px-8 py-4 rounded-full font-headline font-bold flex items-center gap-2 transition-all ${idx === 0 ? 'bg-primary text-white chill-shadow' : 'bg-white border border-outline-variant/30 text-on-surface-variant hover:bg-stone-100'}`}>
-              <span className="material-symbols-outlined text-[18px]">{idx === 0 ? 'spa' : (idx === 1 ? 'menu_book' : 'restaurant')}</span>
-              {vibe}
-            </button>
-          ))}
+          {availableMoods.map((moodObj) => {
+            const isActive = residentMoods['Lila'] === moodObj.name;
+            return (
+              <button 
+                key={moodObj.name} 
+                onClick={() => setResidentMoods({...residentMoods, 'Lila': moodObj.name})}
+                className={`flex-shrink-0 px-8 py-4 rounded-full font-headline font-bold flex items-center gap-2 transition-all ${isActive ? 'bg-primary text-white chill-shadow scale-105' : 'bg-white border border-outline-variant/30 text-on-surface-variant hover:bg-stone-100'}`}
+              >
+                <span className="material-symbols-outlined text-[18px]">{moodObj.icon}</span>
+                {moodObj.name}
+              </button>
+            );
+          })}
         </div>
       </section>
 
@@ -68,38 +89,91 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
             </div>
           </div>
 
-          {/* Activity Feed */}
-          <section className="space-y-6">
-            <h3 className="font-headline text-xl font-bold flex items-center justify-between px-2">
-              Live Feed
-              <span className="text-[10px] font-headline text-primary uppercase tracking-[0.2em] font-bold">3 Updates</span>
-            </h3>
-            <div className="space-y-8">
-              <div className="flex gap-4 stagger-4 transition-all">
-                <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border-2 border-white shadow-md">
-                  <img alt="Sarah" src={residents[0].img}/>
-                </div>
-                <div className="flex-1 space-y-2">
-                  <div className="bg-white p-6 rounded-[2.5rem] rounded-tl-none border border-outline-variant/30 shadow-sm">
-                    <p className="text-sm font-bold leading-relaxed text-on-surface">Yo! Just finished deep cleaning the fridge. 🧊 Don't forget my reward beers! 🍻</p>
-                  </div>
-                  <p className="text-[10px] font-headline font-black text-on-surface-variant uppercase ml-2">Sarah • 12m ago</p>
-                </div>
+          {/* Blackboard */}
+          <section className="mt-4 stagger-4 transition-all">
+            <div className="bg-slate-900 rounded-[2rem] p-8 pb-10 border-[6px] border-stone-800 shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-screen"></div>
+              
+              <div className="flex items-center justify-between mb-8 relative z-10 border-b-2 border-slate-700/50 pb-4">
+                <h3 className="font-headline text-2xl font-black text-slate-100 flex items-center gap-3 italic">
+                  <span className="material-symbols-outlined text-slate-300">edit_note</span>
+                  Blackboard
+                </h3>
+                <span className="text-[10px] font-headline text-slate-400 uppercase tracking-[0.2em] font-bold">Latest Notes</span>
               </div>
-
-              {finances.length > 0 && (
-                <div className="flex items-center gap-4 py-4 px-8 bg-primary/5 rounded-full border border-primary/10 mx-2 stagger-5 transition-all">
-                  <span className="material-symbols-outlined text-primary text-[22px]">payments</span>
-                  <p className="text-[13px] font-bold"><span className="text-primary">{finances[0].paidBy}</span> paid for <span className="italic">{finances[0].description}</span></p>
-                  <span className="ml-auto text-[10px] text-on-surface-variant font-black opacity-40">Recent</span>
+              
+              <div className="space-y-6 relative z-10">
+                <div className="flex gap-4 group">
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-slate-700/50 shadow-md">
+                    <img alt="Sarah" src={residents[0].img}/>
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium leading-relaxed text-slate-200 italic">"Yo! Just finished deep cleaning the fridge. 🧊 Don't forget my reward beers! 🍻"</p>
+                    <p className="text-[10px] font-headline font-bold text-slate-500 uppercase">Sarah • 12m ago</p>
+                  </div>
                 </div>
-              )}
+
+                <div className="flex gap-4 group">
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-slate-700/50 shadow-md">
+                    <img alt="Marco" src={residents[1].img}/>
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium leading-relaxed text-slate-200 italic">"Need the kitchen table for a study group tonight from 18:00 to 20:00! Thanks! 📚"</p>
+                    <p className="text-[10px] font-headline font-bold text-slate-500 uppercase">Marco • 2h ago</p>
+                  </div>
+                </div>
+
+                {finances.length > 0 && (
+                  <div className="mt-6 pt-6 border-t border-slate-700/50 border-dashed">
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-slate-300 text-[18px]">payments</span>
+                      <p className="text-[13px] font-medium text-slate-200 italic"><span className="text-white font-bold">{finances[0].paidBy}</span> paid for <span className="underline decoration-slate-600 underline-offset-4">{finances[0].description}</span></p>
+                      <span className="ml-auto text-[10px] font-headline text-slate-500 font-bold uppercase">Recent</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </section>
         </div>
 
         {/* Status Grid Right */}
         <div className="space-y-8">
+          {/* Current Moods */}
+          <div className="bg-white rounded-[3rem] p-8 border border-outline-variant/30 shadow-sm animate-fade-in">
+            <h3 className="font-headline text-xl font-black mb-6">Current Moods</h3>
+            <div className="space-y-6">
+              {residents.map((res, i) => {
+                const moodName = residentMoods[res.name] || 'Chill';
+                const moodObj = availableMoods.find(m => m.name === moodName) || availableMoods[0];
+                return (
+                  <div key={res.name} className={`flex items-center justify-between stagger-${i+2}`}>
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-sage-soft/30 flex items-center justify-center text-primary shadow-sm">
+                        <span className="material-symbols-outlined text-[20px]">{moodObj.icon}</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-on-surface">
+                          <span className="font-black">{res.name}</span> is in <br/><span className="font-extrabold text-primary">{moodObj.name} Mood</span>
+                        </p>
+                      </div>
+                    </div>
+                    {/* Account selectable dropdown */}
+                    <select 
+                      value={moodName}
+                      onChange={(e) => setResidentMoods({...residentMoods, [res.name]: e.target.value})}
+                      className="text-[11px] bg-stone-100 hover:bg-stone-200 transition-colors border max-w-[95px] border-outline-variant/10 rounded-full px-2 py-1.5 outline-none text-on-surface-variant cursor-pointer font-bold p-1 text-center"
+                    >
+                      {availableMoods.map(m => (
+                        <option key={m.name} value={m.name}>{m.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Vibe Leaders */}
           <div className="bg-sage-soft/20 rounded-[3rem] p-8 border border-sage-soft/30">
             <h3 className="font-headline text-xl font-black mb-1">Vibe Leaders</h3>

@@ -6,7 +6,7 @@ export function TabsNav() {
   const currentTab = searchParams.get('tab') || 'dashboard';
 
   const tabs = [
-    { id: 'dashboard', label: 'Vibe', icon: 'home_app_logo' },
+    { id: 'dashboard', label: 'Home', icon: 'home_app_logo' },
     { id: 'todos', label: 'Tasks', icon: 'assignment' },
     { id: 'finance', label: 'Money', icon: 'payments' },
     { id: 'shopping', label: 'Stock', icon: 'shopping_basket' },

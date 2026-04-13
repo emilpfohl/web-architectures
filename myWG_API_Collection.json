@@ -1,0 +1,300 @@
+{
+	"info": {
+		"_postman_id": "c6a23b4e-864a-4d7a-8f6b-3a7c6e5123d4",
+		"name": "myWG API Collection",
+		"description": "Postman/HoppScotch Collection for the myWG WG-Management Application. Base URL: http://localhost:3000",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"users"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Users by WG",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/users?wgId=1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"users"
+							],
+							"query": [
+								{
+									"key": "wgId",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"New Mate\",\n  \"email\": \"mate@example.com\"\n}"
+						},
+						"url": "http://localhost:3000/api/users"
+					}
+				}
+			]
+		},
+		{
+			"name": "WGs",
+			"item": [
+				{
+					"name": "Get All WGs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:3000/api/wgs"
+					}
+				},
+				{
+					"name": "Get WGs of User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/wgs?userId=3",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"wgs"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "3"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Todos (Tasks)",
+			"item": [
+				{
+					"name": "Get Todos for WG",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/todos?wgId=1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"todos"
+							],
+							"query": [
+								{
+									"key": "wgId",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Todos by AssigneeId",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/todos?assigneeId=2",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"todos"
+							],
+							"query": [
+								{
+									"key": "assigneeId",
+									"value": "2"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Todo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"wgId\": 1,\n  \"title\": \"Kitchen Floor Cleaning\",\n  \"assigneeId\": 2\n}"
+						},
+						"url": "http://localhost:3000/api/todos"
+					}
+				}
+			]
+		},
+		{
+			"name": "Stock (Shopping)",
+			"item": [
+				{
+					"name": "Get Shopping List for WG",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/shopping?wgId=1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"shopping"
+							],
+							"query": [
+								{
+									"key": "wgId",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Toggle Item Check status",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"checked\": true\n}"
+						},
+						"url": "http://localhost:3000/api/shopping/1"
+					}
+				}
+			]
+		},
+		{
+			"name": "Finances",
+			"item": [
+				{
+					"name": "Get WG Finances",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/finances?wgId=1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"finances"
+							],
+							"query": [
+								{
+									"key": "wgId",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Invitations",
+			"item": [
+				{
+					"name": "Verify Token",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:3000/api/invitations/sanctuary-invite-2026"
+					}
+				},
+				{
+					"name": "Join WG via Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": 4\n}"
+						},
+						"url": "http://localhost:3000/api/invitations/sanctuary-invite-2026/join"
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		}
+	]
+}
