@@ -12,10 +12,17 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@prisma/adapter-better-sqlite3": "^6.19.3",
+    "@prisma/client": "^6.19.3",
+    "better-sqlite3": "^12.9.0",
     "cors": "^2.8.6",
     "express": "^5.2.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "prisma": "^6.19.3"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   }
 }

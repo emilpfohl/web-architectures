@@ -1,17 +1,32 @@
 const express = require('express');
 const router = express.Router();
 const data = require('../data');
+const prisma = require('../lib/prisma');
 
 // -- TODOS --
 // GET /api/todos
-router.get('/', (req, res) => {
-  const { wgId, assigneeId } = req.query;
-  if (!wgId) return res.status(400).json({ error: 'wgId parameter is required' });
+router.get('/', async (req, res) => {
+  try {
+    const { wgId, assigneeId } = req.query;
+    if (!wgId) return res.status(400).json({ error: 'wgId parameter is required' });
 
-  let items = data.todos;
-  if (wgId) items = items.filter(i => i.wgId === parseInt(wgId));
-  if (assigneeId) items = items.filter(i => i.assigneeId === parseInt(assigneeId));
-  res.json(items);
+    const where = {
+      wgId: parseInt(wgId)
+    };
+
+    if (assigneeId) {
+      where.assigneeId = parseInt(assigneeId);
+    }
+
+    const items = await prisma.todo.findMany({
+      where
+    });
+
+    res.json(items);
+  } catch (error) {
+    console.error('Error fetching todos:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // POST /api/todos

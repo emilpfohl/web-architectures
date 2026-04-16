@@ -8,6 +8,7 @@
 
 ---
 
+
 ## Aufgabe 2: CRUD-API Beschreibung & Generierung
 
 ### Interpretation für unser Projekt (myWG)
@@ -110,3 +111,23 @@ Not found
   "error": "title parameter is required"
 }
 ```
+
+---
+
+# 04 - Datenhaltung & Persistenz
+
+## Datenmodell (Prisma / SQLite)
+
+Wir verwenden Prisma als ORM mit einer SQLite-Datenbank. Das Modell ist relational aufgebaut und unterstützt WG-Strukturen mit mehreren Mitgliedern.
+
+| Model | Felder | Beschreibung |
+| :--- | :--- | :--- |
+| **User** | id, name, email | Registrierte Nutzer der Plattform. |
+| **WG** | id, name, createdAt | Wohngemeinschaften als zentrale Organisationseinheit. |
+| **Membership** | userId, wgId, role | Verknüpft Nutzer mit WGs (n:m Beziehung mit Rollen). |
+| **ShoppingItem** | id, wgId, name, checked, category | Artikel auf der Einkaufsliste einer WG. |
+| **Todo** | id, wgId, title, assigneeId, completed | Aufgaben innerhalb einer WG. |
+| **CalendarEvent** | id, wgId, date, title | Termine und Events einer WG. |
+| **FinanceItem** | id, wgId, amount, description, paidById | Ausgaben und Finanzen. |
+| **Invitation** | id, wgId, token, role, usedCount, maxUses | Einladungs-Links für neue Mitglieder. |
+| **Message** | id, wgId, type, content, senderId, timestamp | System- und User-Nachrichten im WG-Feed. |
