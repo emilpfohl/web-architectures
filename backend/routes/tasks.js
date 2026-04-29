@@ -44,10 +44,16 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/todos
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   const { wgId, title } = req.body;
   if (!wgId) return res.status(400).json({ error: 'wgId parameter is required' });
   if (!title) return res.status(400).json({ error: 'title parameter is required' });
+
+  // Ownership Check
+  const isMember = await prisma.membership.findUnique({
+    where: { userId_wgId: { userId: req.user.userId, wgId: parseInt(wgId) } }
+  });
+  if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
 
   const newTodo = { id: Date.now(), ...req.body, completed: false };
   data.todos.push(newTodo);
@@ -55,9 +61,14 @@ router.post('/', (req, res) => {
 });
 
 // PUT /api/todos/:id
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
   const item = data.todos.find(i => i.id === parseInt(req.params.id));
   if (item) {
+    // Ownership Check
+    const isMember = await prisma.membership.findUnique({
+      where: { userId_wgId: { userId: req.user.userId, wgId: item.wgId } }
+    });
+    if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
     const wasCompleted = item.completed;
     if (req.body.completed !== undefined) item.completed = req.body.completed;
     if (req.body.assigneeId !== undefined) item.assigneeId = req.body.assigneeId;

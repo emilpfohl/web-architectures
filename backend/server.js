@@ -7,6 +7,7 @@ const authRouter = require('./routes/auth');
 const authenticate = require('./middleware/authenticate');
 const tasksRouter = require('./routes/tasks');
 const messagesRouter = require('./routes/messages');
+const prisma = require('./lib/prisma');
 
 const app = express();
 const PORT = 3000;
@@ -26,14 +27,28 @@ app.use('/api/todos', tasksRouter);
 app.use('/api/messages', messagesRouter);
 
 // -- USERS --
-app.get('/api/users', (req, res) => {
+app.get('/api/users', async (req, res) => {
   const { wgId } = req.query;
   if (wgId) {
     const wId = parseInt(wgId);
+    // Check if requester is member of this specific WG
+    const membership = await prisma.membership.findUnique({
+      where: { userId_wgId: { userId: req.user.userId, wgId: wId } }
+    });
+    if (!membership) return res.status(403).json({ error: 'Zugriff verweigert' });
+
     const memberIds = data.memberships.filter(m => m.wgId === wId).map(m => m.userId);
     return res.json(data.users.filter(u => memberIds.includes(u.id)));
   }
-  res.json(data.users);
+  
+  // If no wgId, return only users from WGs the requester belongs to (Privacy)
+  const myWgIds = (await prisma.membership.findMany({
+    where: { userId: req.user.userId },
+    select: { wgId: true }
+  })).map(m => m.wgId);
+  
+  const accessibleUserIds = new Set(data.memberships.filter(m => myWgIds.includes(m.wgId)).map(m => m.userId));
+  res.json(data.users.filter(u => accessibleUserIds.has(u.id)));
 });
 
 app.get('/api/users/:id', (req, res) => {
@@ -88,11 +103,13 @@ app.post('/api/shopping/categories', (req, res) => {
   res.status(201).json(data.shoppingCategories);
 });
 
-app.get('/api/shopping', (req, res) => {
+app.get('/api/shopping', async (req, res) => {
   const { wgId, category } = req.query;
   if (!wgId) return res.status(400).json({ error: 'wgId parameter is required' });
   
-  const isMember = data.memberships.find(m => m.userId === req.user.userId && m.wgId === parseInt(wgId));
+  const isMember = await prisma.membership.findUnique({
+    where: { userId_wgId: { userId: req.user.userId, wgId: parseInt(wgId) } }
+  });
   if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
   
   let items = data.shopping;
@@ -106,7 +123,9 @@ app.post('/api/shopping', (req, res) => {
   if (!wgId) return res.status(400).json({ error: 'wgId parameter is required' });
   if (!name) return res.status(400).json({ error: 'name parameter is required' });
   
-  const isMember = data.memberships.find(m => m.userId === req.user.userId && m.wgId === parseInt(wgId));
+  const isMember = await prisma.membership.findUnique({
+    where: { userId_wgId: { userId: req.user.userId, wgId: parseInt(wgId) } }
+  });
   if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
   
   const newItem = { id: Date.now(), ...req.body, checked: false };
@@ -126,9 +145,14 @@ app.post('/api/shopping', (req, res) => {
   res.status(201).json(newItem);
 });
 
-app.put('/api/shopping/:id', (req, res) => {
+app.put('/api/shopping/:id', async (req, res) => {
   const item = data.shopping.find(i => i.id === parseInt(req.params.id));
   if (item) {
+    const isMember = await prisma.membership.findUnique({
+      where: { userId_wgId: { userId: req.user.userId, wgId: item.wgId } }
+    });
+    if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
+
     const wasChecked = item.checked;
     if (req.body.checked !== undefined) item.checked = req.body.checked;
     
@@ -147,7 +171,15 @@ app.put('/api/shopping/:id', (req, res) => {
   } else res.status(404).send('Not found');
 });
 
-app.delete('/api/shopping/:id', (req, res) => {
+app.delete('/api/shopping/:id', async (req, res) => {
+  const item = data.shopping.find(i => i.id === parseInt(req.params.id));
+  if (!item) return res.status(404).json({ error: 'Not found' });
+
+  const isMember = await prisma.membership.findUnique({
+    where: { userId_wgId: { userId: req.user.userId, wgId: item.wgId } }
+  });
+  if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
+
   data.shopping = data.shopping.filter(i => i.id !== parseInt(req.params.id));
   res.status(204).send();
 });
@@ -156,18 +188,28 @@ app.delete('/api/shopping/:id', (req, res) => {
 // Moved to routes/tasks.js
 
 // -- CALENDAR --
-app.get('/api/calendar', (req, res) => {
+app.get('/api/calendar', async (req, res) => {
   const { wgId } = req.query;
   if (!wgId) return res.status(400).json({ error: 'wgId parameter is required' });
+
+  const isMember = await prisma.membership.findUnique({
+    where: { userId_wgId: { userId: req.user.userId, wgId: parseInt(wgId) } }
+  });
+  if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
 
   let items = data.calendar;
   if (wgId) items = items.filter(i => i.wgId === parseInt(wgId));
   res.json(items);
 });
 
-app.post('/api/calendar', (req, res) => {
+app.post('/api/calendar', async (req, res) => {
   const { wgId } = req.body;
   if (!wgId) return res.status(400).json({ error: 'wgId parameter is required' });
+
+  const isMember = await prisma.membership.findUnique({
+    where: { userId_wgId: { userId: req.user.userId, wgId: parseInt(wgId) } }
+  });
+  if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
 
   const newEvent = { id: Date.now(), ...req.body };
   data.calendar.push(newEvent);
@@ -175,9 +217,14 @@ app.post('/api/calendar', (req, res) => {
 });
 
 // -- FINANCES --
-app.get('/api/finances', (req, res) => {
+app.get('/api/finances', async (req, res) => {
   const { wgId, paidById } = req.query;
   if (!wgId) return res.status(400).json({ error: 'wgId parameter is required' });
+
+  const isMember = await prisma.membership.findUnique({
+    where: { userId_wgId: { userId: req.user.userId, wgId: parseInt(wgId) } }
+  });
+  if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
 
   let items = data.finances;
   if (wgId) items = items.filter(i => i.wgId === parseInt(wgId));
@@ -185,11 +232,16 @@ app.get('/api/finances', (req, res) => {
   res.json(items);
 });
 
-app.post('/api/finances', (req, res) => {
+app.post('/api/finances', async (req, res) => {
   const { wgId, paidById, amount, description } = req.body;
   if (!wgId || !paidById || amount === undefined) {
     return res.status(400).json({ error: 'wgId, paidById, and amount are required' });
   }
+
+  const isMember = await prisma.membership.findUnique({
+    where: { userId_wgId: { userId: req.user.userId, wgId: parseInt(wgId) } }
+  });
+  if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
 
   const newExpense = { id: Date.now(), ...req.body };
   data.finances.push(newExpense);

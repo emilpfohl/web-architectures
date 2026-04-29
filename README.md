@@ -155,3 +155,14 @@ Sobald dieser manipulierte Token an den Server gesendet wird, schlägt die `jwt.
 Ein JWT besteht aus drei Teilen: *Header*, *Payload* (Daten) und der *Signature* (Signatur).
 Die Signatur wird vom Server mittels eines geheimen Schlüssels (in unserem Fall `JWT_SECRET`) kryptografisch aus dem Header und dem Payload berechnet. 
 Wenn ein Nutzer nun den Payload (also zum Beispiel eine ID) manuell ändert, passt die angehängte Signatur nicht mehr zu den geänderten Daten. Da der Nutzer den geheimen Serverschlüssel (`JWT_SECRET`) nicht besitzt, kann er unmöglich eine neue, passende Signatur für den manipulierten Payload berechnen. Der Server bemerkt beim Validierungsprozess sofort den Unterschied zwischen der berechneten und der mitgelieferten Signatur und erkennt den Token dadurch eindeutig als manipuliert.
+
+# 06 - Sicherheits-Audit (OWASP Top 10)
+
+Nachfolgend sind die Ergebnisse des Sicherheits-Audits vom 29.04.2026 zusammengefasst. Alle festgestellten Lücken wurden unmittelbar geschlossen.
+
+| Kategorie | Status | Befund | Fix |
+| :--- | :--- | :--- | :--- |
+| **A01: Broken Access Control** | ✅ Behoben | Fehlende Ownership-Checks (IDOR) bei WG-Ressourcen & User-Leak. | Alle Endpunkte prüfen nun via Prisma die WG-Mitgliedschaft (`userId_wgId`). |
+| **A02: Cryptographic Failures** | ✅ Behoben | JWT-Secret hatte statischen Fallback; Passwörter waren bereits sicher (bcrypt). | Statischer Fallback entfernt; App erzwingt nun `.env` Definition. |
+| **A03: Injection** | ✅ Abgedeckt | Dank Prisma (Prepared Statements) keine SQL-Injection möglich. | Keine Aktion erforderlich; XSS-Schutz via Frontend/React sichergestellt. |
+| **A07: Authentication Failures** | ✅ Behoben | Keine Anforderung an Passwortstärke beim Register. | Passwort-Validierung (min. 8 Zeichen) in `auth.js` hinzugefügt. |

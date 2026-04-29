@@ -4,7 +4,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_if_env_missing';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET is not defined in .env');
+  process.exit(1);
+}
 
 // GET /api/auth/me
 // Returns current logged in user based on the cookie
@@ -36,6 +40,10 @@ router.post('/register', async (req, res) => {
 
     if (!email || !password || !name) {
       return res.status(400).json({ error: 'Email, Passwort und Name sind erforderlich.' });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Das Passwort muss mindestens 8 Zeichen lang sein.' });
     }
 
     const existingUser = await prisma.user.findUnique({
