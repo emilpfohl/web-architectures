@@ -134,6 +134,16 @@ Wir verwenden Prisma als ORM mit einer SQLite-Datenbank. Das Modell ist relation
 
 # 05 - Authentifizierung
 
+## Test-Zugangsdaten (Development)
+
+| Nutzer | E-Mail | Passwort |
+| :--- | :--- | :--- |
+| **Allgemeiner Test-Nutzer** | `test@example.com` | `password123` |
+| **Sarah** | `sarah@example.com` | `password123` |
+| **Marco** | `marco@example.com` | `password123` |
+
+---
+
 Aufgabe 1
 
 Wenn wir die GET- und DELETE-Handler aus unserem ersten API-Entwurf (Session 03/04) betrachten, fallen kritische Sicherheitslücken auf. Ein vollkommen anonymer Nutzer kann aktuell drei Dinge tun, die in einer sicheren API nicht möglich sein dürften:
