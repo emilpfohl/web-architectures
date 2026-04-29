@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authFetch } from '../utils/authFetch';
 
 export function FinanceClient({ initialExpenses, onRefresh }: { initialExpenses: any[], onRefresh: () => void }) {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export function FinanceClient({ initialExpenses, onRefresh }: { initialExpenses:
     e.preventDefault();
     if (!description.trim() || !amount || !paidBy.trim()) return;
 
-    await fetch('/api/finances', {
+    await authFetch('/api/finances', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 

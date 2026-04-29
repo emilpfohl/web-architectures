@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authFetch } from '../utils/authFetch';
 
 export function ShoppingClient({ initialItems, initialCategories = ['Lebensmittel', 'Haushalt', 'Wishlist'], onRefresh }: { initialItems: any[], initialCategories: string[], onRefresh: () => void }) {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export function ShoppingClient({ initialItems, initialCategories = ['Lebensmitte
     e.preventDefault();
     if (!newItemName.trim()) return;
 
-    await fetch('/api/shopping', {
+    await authFetch('/api/shopping', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: newItemName.trim(), category: activeCategory, wgId: 1 })
@@ -30,7 +31,7 @@ export function ShoppingClient({ initialItems, initialCategories = ['Lebensmitte
   };
 
   const toggleItem = async (id: number, currentChecked: boolean) => {
-    await fetch(`/api/shopping/${id}`, {
+    await authFetch(`/api/shopping/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ checked: !currentChecked })

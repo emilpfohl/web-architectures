@@ -1,16 +1,27 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const data = require('./data');
+const authRouter = require('./routes/auth');
+const authenticate = require('./middleware/authenticate');
 const tasksRouter = require('./routes/tasks');
 const messagesRouter = require('./routes/messages');
 
 const app = express();
 const PORT = 3000;
 
-app.use(cors());
+app.use(cors({ origin: 'http://localhost:5173', credentials: true })); // default Vite port, but adjust if needed
 app.use(express.json());
+app.use(cookieParser());
 
-// Register Routers
+// Register Auth Router (NOT protected)
+app.use('/api/auth', authRouter);
+
+// Protect all other routes
+app.use(authenticate);
+
+// Register Protected Routers
 app.use('/api/todos', tasksRouter);
 app.use('/api/messages', messagesRouter);
 
@@ -81,6 +92,9 @@ app.get('/api/shopping', (req, res) => {
   const { wgId, category } = req.query;
   if (!wgId) return res.status(400).json({ error: 'wgId parameter is required' });
   
+  const isMember = data.memberships.find(m => m.userId === req.user.userId && m.wgId === parseInt(wgId));
+  if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
+  
   let items = data.shopping;
   if (wgId) items = items.filter(i => i.wgId === parseInt(wgId));
   if (category) items = items.filter(i => i.category === category);
@@ -91,6 +105,9 @@ app.post('/api/shopping', (req, res) => {
   const { wgId, name } = req.body;
   if (!wgId) return res.status(400).json({ error: 'wgId parameter is required' });
   if (!name) return res.status(400).json({ error: 'name parameter is required' });
+  
+  const isMember = data.memberships.find(m => m.userId === req.user.userId && m.wgId === parseInt(wgId));
+  if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
   
   const newItem = { id: Date.now(), ...req.body, checked: false };
   if (!newItem.category) newItem.category = 'Lebensmittel';

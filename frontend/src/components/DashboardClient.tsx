@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authFetch } from '../utils/authFetch';
 
 export function DashboardClient({ shopping, todos, finances, onRefresh }: { shopping: any[], todos: any[], finances: any[], onRefresh: () => void }) {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await fetch('http://localhost:3000/api/messages?wgId=1');
+        const res = await authFetch('/api/messages?wgId=1');
         const data = await res.json();
         setMessages(data);
       } catch (err) {
@@ -62,7 +63,7 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
     if (!newMessage.trim()) return;
 
     try {
-      const res = await fetch('http://localhost:3000/api/messages', {
+      const res = await authFetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

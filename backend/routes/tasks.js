@@ -10,6 +10,20 @@ router.get('/', async (req, res) => {
     const { wgId, assigneeId } = req.query;
     if (!wgId) return res.status(400).json({ error: 'wgId parameter is required' });
 
+    // Validate if the requesting user is part of the requested WG
+    const membership = await prisma.membership.findUnique({
+      where: {
+        userId_wgId: {
+          userId: req.user.userId,
+          wgId: parseInt(wgId)
+        }
+      }
+    });
+
+    if (!membership) {
+      return res.status(403).json({ error: 'Zugriff verweigert: Du bist kein Mitglied dieser WG' });
+    }
+
     const where = {
       wgId: parseInt(wgId)
     };

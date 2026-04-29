@@ -131,3 +131,27 @@ Wir verwenden Prisma als ORM mit einer SQLite-Datenbank. Das Modell ist relation
 | **FinanceItem** | id, wgId, amount, description, paidById | Ausgaben und Finanzen. |
 | **Invitation** | id, wgId, token, role, usedCount, maxUses | Einladungs-Links für neue Mitglieder. |
 | **Message** | id, wgId, type, content, senderId, timestamp | System- und User-Nachrichten im WG-Feed. |
+
+# 05 - Authentifizierung
+
+Aufgabe 1
+
+Wenn wir die GET- und DELETE-Handler aus unserem ersten API-Entwurf (Session 03/04) betrachten, fallen kritische Sicherheitslücken auf. Ein vollkommen anonymer Nutzer kann aktuell drei Dinge tun, die in einer sicheren API nicht möglich sein dürften:
+
+1. **Fremde WG-Daten auslesen (Information Disclosure):** Ein anonymer Nutzer kann einfach den `wgId`-Parameter in der URL anpassen (z. B. `GET /api/todos?wgId=42`) und dadurch private ToDos einer beliebigen anderen WG einsehen. Es fehlt eine Autorisierungsprüfung, ob der Nutzer überhaupt Mitglied der abgefragten WG ist.
+2. **Fremde Einträge löschen (Unauthorized Data Destruction):** Durch Aufrufen des DELETE-Endpunkts mit einer ausgedachten oder iterierten ID (z. B. `DELETE /api/todos/15`) kann jemand Aufgaben einer völlig fremden Personen endgültig löschen. Der Server prüft weder, wer die Anfrage sendet, noch ob dieser berechtigt ist (z.B. Admin-Rechte oder Ersteller der Aufgabe).
+3. **Ohne Account identitätslose Requests senden (Fehlende Authentifizierung):** Man muss sich derzeit gar nicht erst einloggen oder registrieren, um mit der API zu interagieren. Jedes beliebige Skript im Internet kann direkt Anfragen senden. Es gibt kein Token, das einen "anonymen Nutzer" aus dem System aussperrt – das macht die API anfällig für automatisches Scrapen oder Massenlöschungen ohne Identitätsnachweis.
+
+Aufgabe 2
+
+**Frage:** Was passiert, wenn jemand versucht, den JWT-Payload manuell zu verändern (z. B. die `userId` auf eine fremde zu ändern)? Warum funktioniert das nicht?
+
+Ein Angreifer könnte den Base64-codierten Payload des Tokens im Frontend dekodieren, die `userId` zu der eines Administrators oder einer fremden Person ändern und den Token wieder ins Cookie einsetzen.
+
+**Was passiert?**
+Sobald dieser manipulierte Token an den Server gesendet wird, schlägt die `jwt.verify(token, JWT_SECRET)` Methode in unserer Authentifizierungs-Middleware fehlt. Die Route wird abgebrochen und der Server wirft einen Fehler (`401 Nicht authentifiziert`).
+
+**Warum funktioniert das nicht?**
+Ein JWT besteht aus drei Teilen: *Header*, *Payload* (Daten) und der *Signature* (Signatur).
+Die Signatur wird vom Server mittels eines geheimen Schlüssels (in unserem Fall `JWT_SECRET`) kryptografisch aus dem Header und dem Payload berechnet. 
+Wenn ein Nutzer nun den Payload (also zum Beispiel eine ID) manuell ändert, passt die angehängte Signatur nicht mehr zu den geänderten Daten. Da der Nutzer den geheimen Serverschlüssel (`JWT_SECRET`) nicht besitzt, kann er unmöglich eine neue, passende Signatur für den manipulierten Payload berechnen. Der Server bemerkt beim Validierungsprozess sofort den Unterschied zwischen der berechneten und der mitgelieferten Signatur und erkennt den Token dadurch eindeutig als manipuliert.

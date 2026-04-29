@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authFetch } from '../utils/authFetch';
 
 export function TodoClient({ initialTodos, onRefresh }: { initialTodos: any[], onRefresh: () => void }) {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ export function TodoClient({ initialTodos, onRefresh }: { initialTodos: any[], o
     e.preventDefault();
     if (!newTodoTitle.trim() || !assignee.trim()) return;
 
-    await fetch('/api/todos', {
+    await authFetch('/api/todos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
@@ -26,7 +27,7 @@ export function TodoClient({ initialTodos, onRefresh }: { initialTodos: any[], o
   };
 
   const toggleTodo = async (id: number, currentCompleted: boolean) => {
-    await fetch(`/api/todos/${id}`, {
+    await authFetch(`/api/todos/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ completed: !currentCompleted })
