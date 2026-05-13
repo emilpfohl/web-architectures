@@ -40,13 +40,13 @@ app.get('/api/users', async (req, res) => {
     const memberIds = data.memberships.filter(m => m.wgId === wId).map(m => m.userId);
     return res.json(data.users.filter(u => memberIds.includes(u.id)));
   }
-  
+
   // If no wgId, return only users from WGs the requester belongs to (Privacy)
   const myWgIds = (await prisma.membership.findMany({
     where: { userId: req.user.userId },
     select: { wgId: true }
   })).map(m => m.wgId);
-  
+
   const accessibleUserIds = new Set(data.memberships.filter(m => myWgIds.includes(m.wgId)).map(m => m.userId));
   res.json(data.users.filter(u => accessibleUserIds.has(u.id)));
 });
@@ -83,7 +83,7 @@ app.get('/api/wgs/:id', (req, res) => {
 app.post('/api/wgs', (req, res) => {
   const newWg = { id: Date.now(), createdAt: new Date().toISOString(), ...req.body };
   data.wgs.push(newWg);
-  
+
   // Implicitly add creating user if userId is provided
   if (req.body.userId) {
     data.memberships.push({ userId: parseInt(req.body.userId), wgId: newWg.id, role: 'admin' });
@@ -106,31 +106,31 @@ app.post('/api/shopping/categories', (req, res) => {
 app.get('/api/shopping', async (req, res) => {
   const { wgId, category } = req.query;
   if (!wgId) return res.status(400).json({ error: 'wgId parameter is required' });
-  
+
   const isMember = await prisma.membership.findUnique({
     where: { userId_wgId: { userId: req.user.userId, wgId: parseInt(wgId) } }
   });
   if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
-  
+
   let items = data.shopping;
   if (wgId) items = items.filter(i => i.wgId === parseInt(wgId));
   if (category) items = items.filter(i => i.category === category);
   res.json(items);
 });
 
-app.post('/api/shopping', (req, res) => {
+app.post('/api/shopping', async (req, res) => {
   const { wgId, name } = req.body;
   if (!wgId) return res.status(400).json({ error: 'wgId parameter is required' });
   if (!name) return res.status(400).json({ error: 'name parameter is required' });
-  
+
   const isMember = await prisma.membership.findUnique({
     where: { userId_wgId: { userId: req.user.userId, wgId: parseInt(wgId) } }
   });
   if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
-  
+
   const newItem = { id: Date.now(), ...req.body, checked: false };
   if (!newItem.category) newItem.category = 'Lebensmittel';
-  
+
   data.shopping.push(newItem);
 
   // Log to feed
@@ -155,7 +155,7 @@ app.put('/api/shopping/:id', async (req, res) => {
 
     const wasChecked = item.checked;
     if (req.body.checked !== undefined) item.checked = req.body.checked;
-    
+
     // Log if checked
     if (item.checked && !wasChecked) {
       data.messages.push({
@@ -263,7 +263,7 @@ app.post('/api/finances', async (req, res) => {
 app.get('/api/invitations/:token', (req, res) => {
   const invite = data.invitations.find(i => i.token === req.params.token);
   if (!invite) return res.status(404).json({ error: 'Invalid or expired invitation token' });
-  
+
   const wg = data.wgs.find(w => w.id === invite.wgId);
   res.json({ ...invite, wgName: wg ? wg.name : 'Unknown WG' });
 });
@@ -281,7 +281,7 @@ app.post('/api/wgs/:id/invitations', (req, res) => {
     usedCount: 0,
     maxUses: req.body.maxUses || 5
   };
-  
+
   data.invitations.push(newInvite);
   res.status(201).json(newInvite);
 });
@@ -292,9 +292,9 @@ app.post('/api/invitations/:token/join', (req, res) => {
 
   const inviteIndex = data.invitations.findIndex(i => i.token === req.params.token);
   if (inviteIndex === -1) return res.status(404).json({ error: 'Invitation not found' });
-  
+
   const invite = data.invitations[inviteIndex];
-  
+
   // Check if invitation is still valid
   if (invite.maxUses !== -1 && invite.usedCount >= invite.maxUses) {
     return res.status(410).json({ error: 'Invitation has reached maximum uses' });

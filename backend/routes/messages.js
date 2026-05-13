@@ -6,7 +6,7 @@ const prisma = require('../lib/prisma');
 // -- MESSAGES / CHAT --
 
 // GET /api/messages
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   const { wgId } = req.query;
   if (!wgId) return res.status(400).json({ error: 'wgId parameter is required' });
 
@@ -19,14 +19,14 @@ router.get('/', (req, res) => {
   const items = data.messages
     .filter(m => m.wgId === parseInt(wgId))
     .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)); // Chronological
-  
+
   res.json(items);
 });
 
 // POST /api/messages
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   const { wgId, content, senderId, type } = req.body;
-  
+
   if (!wgId || !content) {
     return res.status(400).json({ error: 'wgId and content are required' });
   }

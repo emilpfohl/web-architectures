@@ -36,11 +36,13 @@ router.get('/me', async (req, res) => {
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name } = req.body;
+    let { email, password, name } = req.body;
 
     if (!email || !password || !name) {
       return res.status(400).json({ error: 'Email, Passwort und Name sind erforderlich.' });
     }
+
+    email = email.toLowerCase().trim();
 
     if (password.length < 8) {
       return res.status(400).json({ error: 'Das Passwort muss mindestens 8 Zeichen lang sein.' });
@@ -74,23 +76,29 @@ router.post('/register', async (req, res) => {
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-    
+    let { email, password } = req.body;
+
     if (!email || !password) {
-      return res.status(401).json({ error: 'E-Mail oder Passwort ungültig.' }); // Important to keep identical msg
+      console.log('Login failed: Missing email or password');
+      return res.status(401).json({ error: 'E-Mail oder Passwort ungültig.' });
     }
+
+    email = email.toLowerCase().trim();
+    console.log('Login attempt for:', email);
 
     const user = await prisma.user.findUnique({
       where: { email }
     });
 
     if (!user) {
+      console.log('Login failed: User not found:', email);
       return res.status(401).json({ error: 'E-Mail oder Passwort ungültig.' });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    
+
     if (!isPasswordValid) {
+      console.log('Login failed: Invalid password for:', email);
       return res.status(401).json({ error: 'E-Mail oder Passwort ungültig.' });
     }
 
@@ -109,9 +117,10 @@ router.post('/login', async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     });
 
-    res.status(200).json({ 
-      message: 'Login erfolgreich', 
-      user: { id: user.id, name: user.name, email: user.email } 
+    console.log('Login successful for:', email);
+    res.status(200).json({
+      message: 'Login erfolgreich',
+      user: { id: user.id, name: user.name, email: user.email }
     });
   } catch (error) {
     console.error('Login error:', error);
