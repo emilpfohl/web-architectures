@@ -3,7 +3,6 @@
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -39,8 +38,10 @@ model Membership {
   userId Int
   wgId   Int
   role   String
-  user   User   @relation(fields: [userId], references: [id])
-  wg     WG     @relation(fields: [wgId], references: [id])
+  isHome Boolean @default(true)
+  mood   String  @default("Chill")
+  user   User    @relation(fields: [userId], references: [id])
+  wg     WG      @relation(fields: [wgId], references: [id])
 
   @@id([userId, wgId])
 }

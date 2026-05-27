@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
+const authenticate = require('../middleware/authenticate');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
@@ -68,8 +69,13 @@ router.post('/register', async (req, res) => {
 
     res.status(201).json({ message: 'Registrierung erfolgreich', userId: newUser.id });
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Interner Serverfehler' });
+    console.error('Registration error details:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      meta: error.meta
+    });
+    res.status(500).json({ error: 'Interner Serverfehler', details: error.message });
   }
 });
 
@@ -123,8 +129,13 @@ router.post('/login', async (req, res) => {
       user: { id: user.id, name: user.name, email: user.email }
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Interner Serverfehler' });
+    console.error('Login error details:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      meta: error.meta
+    });
+    res.status(500).json({ error: 'Interner Serverfehler', details: error.message });
   }
 });
 
@@ -132,6 +143,27 @@ router.post('/login', async (req, res) => {
 router.post('/logout', (req, res) => {
   res.clearCookie('token');
   res.status(200).json({ message: 'Erfolgreich abgemeldet' });
+});
+
+// PUT /api/auth/profile
+router.put('/profile', authenticate, async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Name ist erforderlich' });
+    }
+
+    const uId = parseInt(req.user.userId);
+    const updatedUser = await prisma.user.update({
+      where: { id: uId },
+      data: { name: name.trim() }
+    });
+
+    res.json({ id: updatedUser.id, name: updatedUser.name, email: updatedUser.email });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ error: 'Interner Serverfehler' });
+  }
 });
 
 module.exports = router;

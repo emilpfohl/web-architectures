@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const data = require('../data');
 const prisma = require('../lib/prisma');
 
 // -- TODOS --
@@ -10,13 +9,13 @@ router.get('/', async (req, res) => {
     const { wgId, assigneeId } = req.query;
     if (!wgId) return res.status(400).json({ error: 'wgId parameter is required' });
 
+    const uId = parseInt(req.user.userId);
+    const wId = parseInt(wgId);
+
     // Validate if the requesting user is part of the requested WG
     const membership = await prisma.membership.findUnique({
       where: {
-        userId_wgId: {
-          userId: req.user.userId,
-          wgId: parseInt(wgId)
-        }
+        userId_wgId: { userId: uId, wgId: wId }
       }
     });
 
@@ -24,19 +23,20 @@ router.get('/', async (req, res) => {
       return res.status(403).json({ error: 'Zugriff verweigert: Du bist kein Mitglied dieser WG' });
     }
 
-    const where = {
-      wgId: parseInt(wgId)
-    };
-
+    const where = { wgId: wId };
     if (assigneeId) {
       where.assigneeId = parseInt(assigneeId);
     }
 
     const items = await prisma.todo.findMany({
-      where
+      where,
+      include: { assignee: { select: { name: true } } }
     });
 
-    res.json(items);
+    res.json(items.map(t => ({
+      ...t,
+      assignee: t.assignee ? t.assignee.name : 'Niemand'
+    })));
   } catch (error) {
     console.error('Error fetching todos:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -45,47 +45,90 @@ router.get('/', async (req, res) => {
 
 // POST /api/todos
 router.post('/', async (req, res) => {
-  const { wgId, title } = req.body;
-  if (!wgId) return res.status(400).json({ error: 'wgId parameter is required' });
-  if (!title) return res.status(400).json({ error: 'title parameter is required' });
+  try {
+    const { wgId, title, assigneeId } = req.body;
+    if (!wgId || !title) return res.status(400).json({ error: 'wgId und title sind erforderlich' });
 
-  // Ownership Check
-  const isMember = await prisma.membership.findUnique({
-    where: { userId_wgId: { userId: req.user.userId, wgId: parseInt(wgId) } }
-  });
-  if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
+    const uId = parseInt(req.user.userId);
+    const wId = parseInt(wgId);
 
-  const newTodo = { id: Date.now(), ...req.body, completed: false };
-  data.todos.push(newTodo);
-  res.status(201).json(newTodo);
+    // Ownership Check
+    const isMember = await prisma.membership.findUnique({
+      where: { userId_wgId: { userId: uId, wgId: wId } }
+    });
+    if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
+
+    let finalAssigneeId = null;
+    if (req.body.assignee) {
+      const nameLower = req.body.assignee.trim().toLowerCase();
+      const memberships = await prisma.membership.findMany({
+        where: { wgId: wId },
+        include: { user: true }
+      });
+      const match = memberships.find(m => m.user.name.trim().toLowerCase() === nameLower);
+      if (match) {
+        finalAssigneeId = match.userId;
+      }
+    } else if (assigneeId) {
+      finalAssigneeId = parseInt(assigneeId);
+    }
+
+    const newTodo = await prisma.todo.create({
+      data: {
+        wgId: wId,
+        title,
+        assigneeId: finalAssigneeId,
+        completed: false
+      }
+    });
+
+    res.status(201).json(newTodo);
+  } catch (error) {
+    console.error('Error creating todo:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // PUT /api/todos/:id
 router.put('/:id', async (req, res) => {
-  const item = data.todos.find(i => i.id === parseInt(req.params.id));
-  if (item) {
+  try {
+    const id = parseInt(req.params.id);
+    const todo = await prisma.todo.findUnique({ where: { id } });
+    if (!todo) return res.status(404).json({ error: 'Aufgabe nicht gefunden' });
+
+    const uId = parseInt(req.user.userId);
+    
     // Ownership Check
     const isMember = await prisma.membership.findUnique({
-      where: { userId_wgId: { userId: req.user.userId, wgId: item.wgId } }
+      where: { userId_wgId: { userId: uId, wgId: todo.wgId } }
     });
     if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
-    const wasCompleted = item.completed;
-    if (req.body.completed !== undefined) item.completed = req.body.completed;
-    if (req.body.assigneeId !== undefined) item.assigneeId = req.body.assigneeId;
+
+    const updatedTodo = await prisma.todo.update({
+      where: { id },
+      data: {
+        completed: req.body.completed !== undefined ? req.body.completed : todo.completed,
+        assigneeId: req.body.assigneeId !== undefined ? (req.body.assigneeId ? parseInt(req.body.assigneeId) : null) : todo.assigneeId
+      }
+    });
 
     // Log to messages if just completed
-    if (item.completed && !wasCompleted) {
-      data.messages.push({
-        id: Date.now(),
-        wgId: item.wgId,
-        type: 'system',
-        content: `Aufgabe abgeschlossen: "${item.title}"`,
-        timestamp: new Date().toISOString()
+    if (updatedTodo.completed && !todo.completed) {
+      await prisma.message.create({
+        data: {
+          wgId: todo.wgId,
+          type: 'system',
+          content: `Aufgabe abgeschlossen: "${todo.title}"`,
+          timestamp: new Date().toISOString()
+        }
       });
     }
 
-    res.json(item);
-  } else res.status(404).send('Not found');
+    res.json(updatedTodo);
+  } catch (error) {
+    console.error('Error updating todo:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 module.exports = router;

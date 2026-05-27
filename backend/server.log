@@ -1,0 +1,81 @@
+Backend is running on http://localhost:3000
+Login attempt for: testlive@example.com
+Login successful for: testlive@example.com
+Login attempt for: testlive@example.com
+Login failed: Invalid password for: testlive@example.com
+Login attempt for: juliusteichmann@gmail.com
+Login successful for: juliusteichmann@gmail.com
+Login attempt for: test@example.com
+Login successful for: test@example.com
+Login attempt for: juliusteichmann@gmail.com
+Login successful for: juliusteichmann@gmail.com
+Login attempt for: juliusteichmann@gmail.com
+Login successful for: juliusteichmann@gmail.com
+Login attempt for: test@example.com
+Login successful for: test@example.com
+Login attempt for: test@example.com
+Login successful for: test@example.com
+Login attempt for: test@example.com
+Login successful for: test@example.com
+Login attempt for: test@example.com
+Login successful for: test@example.com
+Login attempt for: test@test.com
+Login failed: User not found: test@test.com
+Login attempt for: test@test.com
+Login failed: User not found: test@test.com
+Login attempt for: test@test.com
+Login failed: User not found: test@test.com
+Login attempt for: test@test.com
+Login successful for: test@test.com
+Login attempt for: test@example.com
+Login successful for: test@example.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login failed: Invalid password for: test@chef.com
+Login attempt for: test@chef.com
+Login successful for: test@chef.com

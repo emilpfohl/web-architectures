@@ -2,52 +2,78 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authFetch } from '../utils/authFetch';
 
-export function DashboardClient({ shopping, todos, finances, onRefresh }: { shopping: any[], todos: any[], finances: any[], onRefresh: () => void }) {
+export function DashboardClient({ wgId, user, wgName }: { shopping: any[], todos: any[], finances: any[], onRefresh: () => void, wgId: number, user: any, wgName?: string }) {
   const navigate = useNavigate();
 
-  const missingItems = shopping.filter((i: any) => !i.checked);
-  const openTodos = todos.filter((i: any) => !i.completed);
-  const totalFinances = finances.reduce((sum: number, exp: any) => sum + exp.amount, 0);
-
   const availableMoods = [
-    { name: 'Chill', icon: 'spa' },
-    { name: 'Focus', icon: 'menu_book' },
-    { name: 'Cooking', icon: 'restaurant' },
-    { name: 'Cleaning', icon: 'cleaning_services' },
-    { name: 'Rest', icon: 'bedtime' }
+    { name: 'Entspannt', icon: 'spa' },
+    { name: 'Fokussiert', icon: 'menu_book' },
+    { name: 'Kochen', icon: 'restaurant' },
+    { name: 'Putzen', icon: 'cleaning_services' },
+    { name: 'Ausruhen', icon: 'bedtime' }
   ];
 
-  const [residentMoods, setResidentMoods] = useState<Record<string, string>>({
-    'Sarah': 'Cleaning',
-    'Marco': 'Focus',
-    'Lila': 'Chill'
-  });
+  const [allResidents, setAllResidents] = useState<any[]>([]);
 
-  // Convert residents to state to allow interactive toggling
-  const [allResidents, setAllResidents] = useState([
-    { id: 1, name: 'Sarah', home: true, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCvkAXNPBE9QsxvQpPuUFfuhl6M4N76VlzK32Vam0_PlNbMCAdXpRbi-7tjBytQRpavk5ZkHFuRE-FwXeZ-8xu3GXbqG1zSdYwvTumc4Y0Jzcl-qP3ZGiPRRy_I2h2nV5wf7sT9upJ8qlVPyi1IvwNJ6p374_YzFyBZRF1yL1y81H3xsKvkFE8gr8TflB4-a3PhvRZMRFq3PdDy_7A_qbp_qAF13CMKouPxxvjpylNbK41fVkebcAScbXxLGgq147rMW_uMYGdmwsvN' },
-    { id: 2, name: 'Marco', home: false, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCvbHRoG9cZyWBnineFNvdGIvxT1afQdInASiVo-7s5yR_Fcn31VudpDzVIVspf-hYK5BVu2drCqTv536luZxxIT_rzIrfZNAxoM7aRe0oxf4maidnry9oqQsUFeYvhwgPiudDeMZvZm63L2-yVPn34hvk4QWiWqieLCQaGUvjv4i9iBBse9zXuqP6KSDI0I80cUErZkfEl3ry7IsaUbna1-JcEHbJamC063kGgVgBSLoOilNLUJtpvW74N9pOYGll8J9sfyNkbckUU' },
-    { id: 3, name: 'Lila', home: true, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBLbhLHz21hs0e11MO0LJup2GjQInmpw1mS2ZMtX5VIDknvPvyTWgHbF0eHEcgpkzHu71DyCRwNEP82Ffsu4rQoLyISh2Qj3cElf8RGM8k-FL6VODmg90OadXJgwVrvo74K9dLdF0_BimLJa_DM48DtwpHppN6a_-MJyHY1ltDT9UgTziK4sWSh9rdhk5ch9YzvEVKZnb7w4OdDoiDignkizc8B0H3k5WzLO6YLGmEsLsUDojXKs3vFChYB8N807VktZbptwXCtHb0Y' },
-  ]);
-
-  const toggleLilaHome = () => {
-    setAllResidents(prev => prev.map(res => 
-      res.name === 'Lila' ? { ...res, home: !res.home } : res
-    ));
+  // Fetch Residents of this WG
+  const fetchResidents = async () => {
+    if (!wgId) return;
+    try {
+      const res = await authFetch(`/api/users?wgId=${wgId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setAllResidents(data.map((u: any) => ({ 
+            ...u, 
+            img: `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random` 
+          })));
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching residents:', err);
+    }
   };
 
-  const isLilaHome = allResidents.find(r => r.name === 'Lila')?.home;
+  useEffect(() => {
+    fetchResidents();
+  }, [wgId]);
+
+  const updateStatus = async (isHome?: boolean, mood?: string) => {
+    if (!wgId) return;
+    try {
+      const res = await authFetch('/api/users/status', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wgId, isHome, mood })
+      });
+      if (res.ok) {
+        fetchResidents(); 
+      }
+    } catch (err) {
+      console.error('Error updating status:', err);
+    }
+  };
+
+  const currentUserData = allResidents.find(r => r.id === user?.id);
+  const isUserHome = currentUserData?.isHome ?? true;
+  const userMood = currentUserData?.mood ?? 'Chill';
 
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
 
   // Fetch messages with polling
   useEffect(() => {
+    if (!wgId) {
+      setMessages([]);
+      return;
+    }
+
     const fetchMessages = async () => {
       try {
-        const res = await authFetch('/api/messages?wgId=1');
+        const res = await authFetch(`/api/messages?wgId=${wgId}`);
+        if (!res.ok) return; 
         const data = await res.json();
-        setMessages(data);
+        setMessages(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Error fetching messages:', err);
       }
@@ -56,7 +82,7 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
     fetchMessages();
     const interval = setInterval(fetchMessages, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [wgId]);
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,9 +93,8 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          wgId: 1,
+          wgId,
           content: newMessage,
-          senderId: 3, // Lila
           type: 'user'
         })
       });
@@ -92,12 +117,12 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
           <div className="w-12 h-12 rounded-full bg-sage-soft flex items-center justify-center text-primary border border-primary/10 shadow-sm">
             <span className="material-symbols-outlined font-black">temple_buddhist</span>
           </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Sanctuary Vibe</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">WG Stimmung</span>
         </div>
         
         <div>
           <h1 className="font-headline text-5xl md:text-7xl font-semibold text-on-surface tracking-tighter leading-[1.05] mb-4">
-            Willkommen Zuhause, <br/>
+            {wgName ? <>{wgName} <br/></> : <>Willkommen Zuhause, <br/></>}
             <span className="text-primary italic font-light text-4xl md:text-6xl">Genieße die Ruhe</span>
           </h1>
           <p className="text-on-surface-variant font-medium text-lg md:text-xl leading-relaxed opacity-70 max-w-lg">
@@ -107,11 +132,11 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
 
         <div className="flex gap-4 overflow-x-auto pb-8 pt-4 px-4 -mx-4 no-scrollbar scroll-smooth items-center">
           {availableMoods.map((moodObj) => {
-            const isActive = residentMoods['Lila'] === moodObj.name;
+            const isActive = userMood === moodObj.name;
             return (
               <button 
                 key={moodObj.name} 
-                onClick={() => setResidentMoods({...residentMoods, 'Lila': moodObj.name})}
+                onClick={() => updateStatus(undefined, moodObj.name)}
                 className={`flex-shrink-0 px-8 py-4 rounded-full font-headline font-bold flex items-center gap-2 transition-all h-[60px] ${isActive ? 'bg-primary text-white chill-shadow scale-105' : 'bg-white border border-outline-variant/30 text-on-surface-variant hover:bg-stone-100'}`}
               >
                 <span className="material-symbols-outlined text-[18px]">{moodObj.icon}</span>
@@ -122,17 +147,17 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
 
           <div className="w-[1px] h-8 bg-outline-variant/30 flex-shrink-0 mx-2" />
 
-          {/* Apple-Style Home Switch Integrated - Fixed layout shifts */}
+          {/* Apple-Style Home Switch Integrated */}
           <div className="flex-shrink-0 flex items-center gap-4 bg-white border border-outline-variant/30 px-6 py-3 rounded-full shadow-sm transition-all hover:bg-stone-50 h-[60px]">
              <div className="flex flex-col -space-y-1 w-20">
                 <span className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant opacity-50">Status</span>
-                <span className="text-[12px] font-bold text-on-surface whitespace-nowrap">{isLilaHome ? 'Zuhause' : 'Unterwegs'}</span>
+                <span className="text-[12px] font-bold text-on-surface whitespace-nowrap">{isUserHome ? 'Zuhause' : 'Unterwegs'}</span>
              </div>
              <button 
-                onClick={toggleLilaHome}
-                className={`w-11 h-6 rounded-full transition-all duration-300 relative flex-shrink-0 ${isLilaHome ? 'bg-primary' : 'bg-stone-300'}`}
+                onClick={() => updateStatus(!isUserHome)}
+                className={`w-11 h-6 rounded-full transition-all duration-300 relative flex-shrink-0 ${isUserHome ? 'bg-primary' : 'bg-stone-300'}`}
              >
-                <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-300 transform ${isLilaHome ? 'translate-x-5' : 'translate-x-0'}`} />
+                <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-300 transform ${isUserHome ? 'translate-x-5' : 'translate-x-0'}`} />
              </button>
           </div>
         </div>
@@ -149,15 +174,14 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
             </h3>
             <div className="flex gap-8">
               {allResidents.map((res, i) => {
-                const moodName = residentMoods[res.name] || 'Chill';
-                const moodObj = availableMoods.find(m => m.name === moodName) || availableMoods[0];
+                const moodObj = availableMoods.find(m => m.name === res.mood) || availableMoods[0];
                 return (
-                  <div key={res.name} className={`flex flex-col items-center gap-3 transition-all duration-700 stagger-${i+2} ${res.home ? 'opacity-100 scale-100' : 'opacity-30 scale-95'}`}>
-                    <div className={`w-20 h-20 rounded-full p-1 border-2 transition-all ${res.home ? 'border-primary/60 shadow-lg shadow-primary/5' : 'border-transparent'}`}>
+                  <div key={res.id} className={`flex flex-col items-center gap-3 transition-all duration-700 stagger-${i+2} ${res.isHome ? 'opacity-100 scale-100' : 'opacity-30 scale-95'}`}>
+                    <div className={`w-20 h-20 rounded-full p-1 border-2 transition-all ${res.isHome ? 'border-primary/60 shadow-lg shadow-primary/5' : 'border-transparent'}`}>
                       <img alt={res.name} className="w-full h-full rounded-full object-cover bg-stone-100" src={res.img}/>
                     </div>
                     <div className="text-center space-y-1">
-                      <span className={`font-headline text-[12px] font-bold uppercase tracking-widest ${res.home ? 'text-primary' : 'text-on-surface-variant'}`}>{res.name}</span>
+                      <span className={`font-headline text-[12px] font-bold uppercase tracking-widest ${res.isHome ? 'text-primary' : 'text-on-surface-variant'}`}>{res.name}</span>
                       <div className="flex items-center justify-center gap-1.5 opacity-60">
                         <span className="material-symbols-outlined text-[14px]">{moodObj.icon}</span>
                         <span className="text-[9px] font-bold uppercase tracking-tighter">{moodObj.name}</span>
@@ -179,7 +203,7 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
                   <span className="material-symbols-outlined text-slate-300">edit_note</span>
                   Blackboard
                 </h3>
-                <span className="text-[10px] font-headline text-slate-400 uppercase tracking-[0.2em] font-bold">Latest Notes</span>
+                <span className="text-[10px] font-headline text-slate-400 uppercase tracking-[0.2em] font-bold">Neueste Einträge</span>
               </div>
               
               <div className="space-y-6 relative z-10 max-h-[400px] overflow-y-auto no-scrollbar scroll-smooth pr-2">
@@ -200,20 +224,20 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
                     );
                   }
 
-                  const sender = allResidents.find(r => r.id === msg.senderId) || allResidents.find(r => r.name === (msg.senderId === 1 ? 'Sarah' : msg.senderId === 2 ? 'Marco' : 'Lila'));
-                  const isMe = msg.senderId === 3;
+                  const sender = allResidents.find(r => r.id === msg.senderId);
+                  const isMe = msg.senderId === user?.id;
                   
                   return (
                     <div key={msg.id} className={`flex gap-3 group ${isMe ? 'flex-row-reverse' : ''}`}>
                       <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-slate-700/50 shadow-md">
-                        <img alt="User" src={sender?.img || 'https://www.gravatar.com/avatar?d=mp'}/>
+                        <img alt="User" src={sender?.img || `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.senderName || 'U')}&background=random`}/>
                       </div>
                       <div className={`max-w-[80%] space-y-1 ${isMe ? 'items-end' : ''}`}>
                         <div className={`px-4 py-2 rounded-2xl text-sm ${isMe ? 'bg-primary text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none border border-slate-700/50'}`}>
                           {msg.content}
                         </div>
                         <p className={`text-[9px] font-headline font-bold text-slate-500 uppercase ${isMe ? 'text-right' : ''}`}>
-                          {sender?.name || 'Unbekannt'} • {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {msg.senderName || 'Unbekannt'} • {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
                     </div>
@@ -247,13 +271,13 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
         <div className="space-y-8">
           {/* Vibe Leaders */}
           <div className="bg-sage-soft/20 rounded-[3rem] p-8 border border-sage-soft/30">
-            <h3 className="font-headline text-xl font-black mb-1">Vibe Leaders</h3>
-            <p className="font-headline text-on-surface-variant text-[10px] uppercase tracking-widest font-black mb-8 opacity-60">Chore Streak Rewards</p>
+            <h3 className="font-headline text-xl font-black mb-1">WG Rangliste</h3>
+            <p className="font-headline text-on-surface-variant text-[10px] uppercase tracking-widest font-black mb-8 opacity-60">Aufgaben-Serien Belohnungen</p>
             
             <div className="space-y-4">
               {[
-                { name: 'Lila S.', task: 'Trash Master + Kitchen', pts: '2.4k', rank: '01' },
-                { name: 'Felix T.', task: 'Dishwash Hero', pts: '1.8k', rank: '02' }
+                { name: 'Lila S.', task: 'Müll + Küche', pts: '2.4k', rank: '01' },
+                { name: 'Felix T.', task: 'Abwasch-Held', pts: '1.8k', rank: '02' }
               ].map((leader, i) => (
                 <div key={leader.name} className={`flex items-center justify-between p-5 rounded-3xl transition-all stagger-${i+3} ${i === 0 ? 'bg-white shadow-lg shadow-sage-soft/20' : 'bg-white/40'}`}>
                   <div className="flex items-center gap-4">
@@ -265,7 +289,7 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
                   </div>
                   <div className="text-right">
                     <span className="text-primary font-headline font-extrabold text-lg">{leader.pts}</span>
-                    <p className="text-[9px] uppercase font-headline font-black text-on-surface-variant">Pts</p>
+                    <p className="text-[9px] uppercase font-headline font-black text-on-surface-variant">Pkt</p>
                   </div>
                 </div>
               ))}
@@ -276,13 +300,13 @@ export function DashboardClient({ shopping, todos, finances, onRefresh }: { shop
           <section className="grid grid-cols-2 gap-4">
             <div onClick={() => navigate('/?tab=shopping')} className="p-6 rounded-[2rem] bg-white border border-outline-variant/30 hover:bg-sage-soft/10 transition-all group cursor-pointer shadow-sm">
               <span className="material-symbols-outlined text-primary mb-3 text-3xl group-hover:scale-110 transition-transform">shopping_basket</span>
-              <p className="font-headline font-black text-lg">Add Stock</p>
-              <p className="text-[10px] text-on-surface-variant font-bold opacity-60">Milk, Eggs, Vibes...</p>
+              <p className="font-headline font-black text-lg">Einkaufen</p>
+              <p className="text-[10px] text-on-surface-variant font-bold opacity-60">Milch, Eier, Snacks...</p>
             </div>
             <div onClick={() => navigate('/?tab=todos')} className="p-6 rounded-[2rem] bg-white border border-outline-variant/30 hover:bg-sage-soft/10 transition-all group cursor-pointer shadow-sm">
               <span className="material-symbols-outlined text-primary mb-3 text-3xl group-hover:scale-110 transition-transform">task_alt</span>
-              <p className="font-headline font-black text-lg">Did Task</p>
-              <p className="text-[10px] text-on-surface-variant font-bold opacity-60">Log your points</p>
+              <p className="font-headline font-black text-lg">Aufgabe erledigt</p>
+              <p className="text-[10px] text-on-surface-variant font-bold opacity-60">Punkte sammeln</p>
             </div>
           </section>
         </div>

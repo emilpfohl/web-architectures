@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { authFetch } from '../utils/authFetch';
 
-export function ShoppingClient({ initialItems, initialCategories = ['Lebensmittel', 'Haushalt', 'Wishlist'], onRefresh }: { initialItems: any[], initialCategories: string[], onRefresh: () => void }) {
-  const navigate = useNavigate();
+export function ShoppingClient({ initialItems, initialCategories = ['Lebensmittel', 'Haushalt', 'Wishlist'], onRefresh, wgId }: { initialItems: any[], initialCategories: string[], onRefresh: () => void, wgId: number }) {
   const [newItemName, setNewItemName] = useState('');
   const [activeCategory, setActiveCategory] = useState(initialCategories[0] || 'Essentials');
   const [isAtStore, setIsAtStore] = useState(false);
@@ -19,12 +17,12 @@ export function ShoppingClient({ initialItems, initialCategories = ['Lebensmitte
 
   const addItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newItemName.trim()) return;
+    if (!newItemName.trim() || !wgId) return;
 
     await authFetch('/api/shopping', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newItemName.trim(), category: activeCategory, wgId: 1 })
+      body: JSON.stringify({ name: newItemName.trim(), category: activeCategory, wgId })
     });
     setNewItemName('');
     onRefresh();
@@ -46,8 +44,8 @@ export function ShoppingClient({ initialItems, initialCategories = ['Lebensmitte
       <section className="p-8 rounded-[2.5rem] bg-sage-soft/20 border border-sage-soft/30 chill-shadow">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="font-headline text-2xl font-bold text-primary mb-1">Stocking Up?</h2>
-            <p className="text-on-surface-variant text-sm font-bold opacity-70 uppercase tracking-widest">Let the flat know you're at the store</p>
+            <h2 className="font-headline text-2xl font-bold text-primary mb-1">Einkaufen?</h2>
+            <p className="text-on-surface-variant text-sm font-bold opacity-70 uppercase tracking-widest">Lass die WG wissen, dass du einkaufen bist</p>
           </div>
           <button 
             onClick={() => setIsAtStore(!isAtStore)}
@@ -70,7 +68,7 @@ export function ShoppingClient({ initialItems, initialCategories = ['Lebensmitte
                   <h3 className="font-headline text-3xl font-bold tracking-tighter text-on-surface">{cat}</h3>
                 </div>
                 <span className="text-[12px] font-bold text-primary uppercase tracking-[0.2em] opacity-40">
-                  {catItems.length.toString().padStart(2, '0')} Items
+                  {catItems.length.toString().padStart(2, '0')} Artikel
                 </span>
               </div>
 
@@ -84,7 +82,7 @@ export function ShoppingClient({ initialItems, initialCategories = ['Lebensmitte
                       <div className={item.checked ? 'opacity-40' : ''}>
                         <h4 className={`font-bold text-xl text-on-surface leading-tight ${item.checked ? 'line-through' : ''}`}>{item.name}</h4>
                         {!item.checked && item.id % 4 === 0 && (
-                          <span className="inline-block mt-1 px-3 py-1 rounded-full bg-accent-peach/20 text-accent-peach text-[10px] font-bold uppercase tracking-[0.1em]">Urgent</span>
+                          <span className="inline-block mt-1 px-3 py-1 rounded-full bg-accent-peach/20 text-accent-peach text-[10px] font-bold uppercase tracking-[0.1em]">Dringend</span>
                         )}
                       </div>
                     </div>
@@ -98,7 +96,7 @@ export function ShoppingClient({ initialItems, initialCategories = ['Lebensmitte
 
                 {catItems.length === 0 && (
                   <div className="text-center py-12 bg-stone-100/50 rounded-[2.5rem] border-2 border-dashed border-stone-200">
-                    <p className="text-on-surface-variant font-bold text-sm tracking-tight opacity-40 uppercase">Inventory full for {cat}</p>
+                    <p className="text-on-surface-variant font-bold text-sm tracking-tight opacity-40 uppercase">Alles da für {cat}</p>
                   </div>
                 )}
               </div>
@@ -111,7 +109,7 @@ export function ShoppingClient({ initialItems, initialCategories = ['Lebensmitte
       <div className="fixed bottom-32 right-8 z-50 flex flex-col items-end gap-6">
         {newItemName && (
           <div className="bg-white/90 backdrop-blur-xl p-5 rounded-[2rem] shadow-2xl border border-outline-variant/30 animate-fade-in flex flex-col gap-3">
-            <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant px-2">Category</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant px-2">Kategorie</p>
             <div className="flex gap-2">
               {initialCategories.map(c => (
                 <button 
@@ -130,7 +128,7 @@ export function ShoppingClient({ initialItems, initialCategories = ['Lebensmitte
             id="shopping-item-input"
             data-testid="shopping-item-input"
             type="text" 
-            placeholder="Stock item name..."
+            placeholder="Artikelname..."
             className="w-full max-w-[240px] px-8 py-5 rounded-full bg-white shadow-2xl border-2 border-primary/10 focus:outline-none focus:border-primary/40 text-sm font-black transition-all"
             value={newItemName}
             onChange={e => setNewItemName(e.target.value)}

@@ -1,18 +1,22 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { authFetch } from '../utils/authFetch';
 
-export function FinanceClient({ initialExpenses, onRefresh }: { initialExpenses: any[], onRefresh: () => void }) {
-  const navigate = useNavigate();
+export function FinanceClient({ initialExpenses, onRefresh, wgId, user }: { initialExpenses: any[], onRefresh: () => void, wgId: number, user: any }) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [paidBy, setPaidBy] = useState('');
+  const [paidBy, setPaidBy] = useState(user?.name || '');
+
+  useEffect(() => {
+    if (user?.name && !paidBy) {
+      setPaidBy(user.name);
+    }
+  }, [user]);
 
   const total = initialExpenses.reduce((sum, exp) => sum + exp.amount, 0);
 
   const addExpense = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!description.trim() || !amount || !paidBy.trim()) return;
+    if (!description.trim() || !amount || !wgId) return;
 
     await authFetch('/api/finances', {
       method: 'POST',
@@ -20,14 +24,14 @@ export function FinanceClient({ initialExpenses, onRefresh }: { initialExpenses:
       body: JSON.stringify({ 
         description: description.trim(), 
         amount: parseFloat(amount), 
-        paidBy: paidBy.trim(),
-        paidById: 1,
-        wgId: 1
+        paidBy: paidBy.trim() || user?.name || '',
+        paidById: user?.id || 1,
+        wgId
       })
     });
     setDescription('');
     setAmount('');
-    setPaidBy('');
+    setPaidBy(user?.name || '');
     onRefresh();
   };
 
@@ -35,14 +39,14 @@ export function FinanceClient({ initialExpenses, onRefresh }: { initialExpenses:
     <div className="animate-fade-in w-full max-w-2xl mx-auto space-y-12 pb-32">
       
       <header className="px-4">
-        <h2 className="font-headline text-4xl font-bold text-on-surface tracking-tighter">Shared Expenses</h2>
-        <p className="text-on-surface-variant font-bold text-[10px] uppercase tracking-[0.3em] mt-2 opacity-60">Balance the sanctuary books</p>
+        <h2 className="font-headline text-4xl font-bold text-on-surface tracking-tighter">Gemeinsame Ausgaben</h2>
+        <p className="text-on-surface-variant font-bold text-[10px] uppercase tracking-[0.3em] mt-2 opacity-60">WG-Finanzen im Überblick</p>
       </header>
 
       {/* Balance Card */}
       <section className="bg-primary p-12 rounded-[4rem] text-white shadow-2xl relative overflow-hidden transition-all hover:scale-[1.01] cursor-pointer">
         <div className="relative z-10">
-          <p className="text-[10px] font-bold uppercase tracking-[0.4em] opacity-60 mb-3">Total Pool</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.4em] opacity-60 mb-3">Gesamtausgaben</p>
           <div className="flex items-baseline gap-3">
             <span className="text-7xl font-bold tracking-tighter">{total.toFixed(2)}</span>
             <span className="text-2xl font-bold opacity-40">€</span>
@@ -52,7 +56,7 @@ export function FinanceClient({ initialExpenses, onRefresh }: { initialExpenses:
               Details
             </button>
             <button className="btn bg-white text-primary border-none hover:scale-105 text-xs py-4 px-8 font-bold uppercase tracking-widest">
-              Settle Up
+              Abrechnen
             </button>
           </div>
         </div>
@@ -64,8 +68,8 @@ export function FinanceClient({ initialExpenses, onRefresh }: { initialExpenses:
       {/* Transaction List */}
       <section className="space-y-6">
         <div className="flex items-center justify-between px-6">
-          <h3 className="font-headline text-xl font-black text-on-surface">Live Ledger</h3>
-          <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">{initialExpenses.length} Entries</span>
+          <h3 className="font-headline text-xl font-black text-on-surface">Buchungen</h3>
+          <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">{initialExpenses.length} Einträge</span>
         </div>
         
         <div className="space-y-4">
@@ -79,13 +83,13 @@ export function FinanceClient({ initialExpenses, onRefresh }: { initialExpenses:
                   <h4 className="font-bold text-xl text-on-surface leading-tight tracking-tight">{exp.description}</h4>
                   <div className="flex items-center gap-3 mt-2">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">{exp.paidBy}</span>
-                    <span className="text-[10px] font-bold text-on-surface-variant opacity-40 uppercase tracking-widest">Logged • Today</span>
+                    <span className="text-[10px] font-bold text-on-surface-variant opacity-40 uppercase tracking-widest">Eingetragen • Heute</span>
                   </div>
                 </div>
               </div>
               <div className="text-right pr-2">
                 <span className="font-headline font-bold text-2xl text-on-surface tracking-tighter">-{exp.amount.toFixed(2)}€</span>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant opacity-40 mt-1">Settled</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant opacity-40 mt-1">Beglichen</p>
               </div>
             </div>
           ))}
@@ -93,7 +97,7 @@ export function FinanceClient({ initialExpenses, onRefresh }: { initialExpenses:
           {initialExpenses.length === 0 && (
             <div className="text-center py-24 bg-stone-100/50 rounded-[4rem] border-2 border-dashed border-stone-200">
               <span className="material-symbols-outlined text-7xl text-stone-300 mb-6 block">account_balance_wallet</span>
-              <p className="text-on-surface-variant font-bold text-sm tracking-widest opacity-40 uppercase">Books are balanced</p>
+              <p className="text-on-surface-variant font-bold text-sm tracking-widest opacity-40 uppercase">Keine Ausgaben vorhanden</p>
             </div>
           )}
         </div>
@@ -103,10 +107,10 @@ export function FinanceClient({ initialExpenses, onRefresh }: { initialExpenses:
       <div className="fixed bottom-32 right-8 z-50 flex flex-col items-end gap-6">
         {description && (
           <div className="bg-white/90 backdrop-blur-xl p-8 rounded-[3rem] shadow-2xl border border-outline-variant/30 animate-fade-in flex flex-col gap-5 min-w-[320px]">
-            <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant px-2">Log Transaction</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant px-2">Ausgabe eintragen</p>
             <div className="flex gap-3">
               <div className="flex-1 space-y-2">
-                <label className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant opacity-50 px-2">Amount (€)</label>
+                <label className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant opacity-50 px-2">Betrag (€)</label>
                 <input 
                   type="number" 
                   placeholder="0.00"
@@ -117,10 +121,10 @@ export function FinanceClient({ initialExpenses, onRefresh }: { initialExpenses:
                 />
               </div>
               <div className="flex-1 space-y-2">
-                <label className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant opacity-50 px-2">Who Paid?</label>
+                <label className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant opacity-50 px-2">Wer hat bezahlt?</label>
                 <input 
                   type="text" 
-                  placeholder="Payer"
+                  placeholder="Zahler"
                   className="w-full px-6 py-4 rounded-2xl bg-stone-100 border-none text-sm font-black focus:ring-2 focus:ring-primary/20 transition-all"
                   value={paidBy}
                   onChange={e => setPaidBy(e.target.value)}
@@ -134,7 +138,7 @@ export function FinanceClient({ initialExpenses, onRefresh }: { initialExpenses:
             id="finance-description-input"
             data-testid="finance-description-input"
             type="text" 
-            placeholder="What was bought?"
+            placeholder="Was wurde gekauft?"
             className="w-full max-w-[280px] px-8 py-5 rounded-full bg-white shadow-2xl border-2 border-primary/10 focus:outline-none focus:border-primary/40 text-sm font-black transition-all"
             value={description}
             onChange={e => setDescription(e.target.value)}
