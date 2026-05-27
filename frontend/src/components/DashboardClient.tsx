@@ -123,7 +123,7 @@ export function DashboardClient({ wgId, user, wgName }: { shopping: any[], todos
         <div>
           <h1 className="font-headline text-5xl md:text-7xl font-semibold text-on-surface tracking-tighter leading-[1.05] mb-4">
             {wgName ? <>{wgName} <br/></> : <>Willkommen Zuhause, <br/></>}
-            <span className="text-primary italic font-light text-4xl md:text-6xl">Genieße die Ruhe</span>
+            <span className="text-primary italic font-light text-4xl md:text-6xl">Alles im Griff</span>
           </h1>
           <p className="text-on-surface-variant font-medium text-lg md:text-xl leading-relaxed opacity-70 max-w-lg">
             Dein Rückzugsort in der WG. Alles ist im Fluss, alle Aufgaben sind verteilt und die Stimmung ist Zen.

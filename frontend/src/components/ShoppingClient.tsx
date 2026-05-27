@@ -1,31 +1,40 @@
 import { useState } from 'react';
 import { authFetch } from '../utils/authFetch';
 
-export function ShoppingClient({ initialItems, initialCategories = ['Lebensmittel', 'Haushalt', 'Wishlist'], onRefresh, wgId }: { initialItems: any[], initialCategories: string[], onRefresh: () => void, wgId: number }) {
-  const [newItemName, setNewItemName] = useState('');
-  const [activeCategory, setActiveCategory] = useState(initialCategories[0] || 'Essentials');
+export function ShoppingClient({ initialItems, onRefresh, wgId }: { initialItems: any[], initialCategories: string[], onRefresh: () => void, wgId: number }) {
+  const [newItemNames, setNewItemNames] = useState<{ [key: string]: string }>({});
   const [isAtStore, setIsAtStore] = useState(false);
+  const [localCategories, setLocalCategories] = useState<string[]>(['Lebensmittel', 'Haushalt', 'Wishlist']);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   const categoryColors: { [key: string]: string } = {
-    'Essentials': 'bg-primary',
-    'Snacks': 'bg-secondary',
-    'Household': 'bg-accent-peach',
     'Lebensmittel': 'bg-primary',
     'Haushalt': 'bg-secondary',
     'Wishlist': 'bg-accent-peach'
   };
 
-  const addItem = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newItemName.trim() || !wgId) return;
+  const addItem = async (cat: string) => {
+    const itemName = newItemNames[cat];
+    if (!itemName?.trim() || !wgId) return;
 
     await authFetch('/api/shopping', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newItemName.trim(), category: activeCategory, wgId })
+      body: JSON.stringify({ name: itemName.trim(), category: cat, wgId })
     });
-    setNewItemName('');
+    setNewItemNames(prev => ({ ...prev, [cat]: '' }));
     onRefresh();
+  };
+
+  const addCategory = () => {
+    if (newCategoryName.trim() && !localCategories.includes(newCategoryName.trim())) {
+      setLocalCategories([...localCategories, newCategoryName.trim()]);
+      setNewCategoryName('');
+    }
+  };
+
+  const deleteCategory = (cat: string) => {
+    setLocalCategories(localCategories.filter(c => c !== cat));
   };
 
   const toggleItem = async (id: number, currentChecked: boolean) => {
@@ -35,6 +44,16 @@ export function ShoppingClient({ initialItems, initialCategories = ['Lebensmitte
       body: JSON.stringify({ checked: !currentChecked })
     });
     onRefresh();
+  };
+
+  const deleteItem = async (e: React.MouseEvent, id: number) => {
+    e.stopPropagation(); // Verhindert das togglen beim Löschen
+    if (window.confirm('Artikel wirklich löschen?')) {
+      await authFetch(`/api/shopping/${id}`, {
+        method: 'DELETE'
+      });
+      onRefresh();
+    }
   };
 
   return (
@@ -56,23 +75,49 @@ export function ShoppingClient({ initialItems, initialCategories = ['Lebensmitte
         </div>
       </section>
 
+      {/* Add Category Section */}
+      <section className="flex gap-4 px-2">
+        <input 
+          type="text" 
+          placeholder="Neue Liste (z.B. Baumarkt)..."
+          className="flex-1 px-6 py-4 rounded-2xl bg-white border border-outline-variant/20 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
+          value={newCategoryName}
+          onChange={e => setNewCategoryName(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && addCategory()}
+        />
+        <button 
+          onClick={addCategory}
+          className="px-8 py-4 bg-primary text-white rounded-2xl font-bold uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg"
+        >
+          Liste erstellen
+        </button>
+      </section>
+
       {/* Categories Grid */}
       <div className="space-y-16">
-        {initialCategories.map(cat => {
-          const catItems = initialItems.filter(i => (i.category || 'Essentials') === cat);
+        {localCategories.map(cat => {
+          const catItems = initialItems.filter(i => (i.category || 'Lebensmittel') === cat);
           return (
-            <section key={cat} className="animate-fade-in">
+            <section key={cat} className="animate-fade-in bg-white/50 p-8 rounded-[3.5rem] border border-outline-variant/10 shadow-sm relative">
+              <button 
+                onClick={() => deleteCategory(cat)}
+                className="absolute top-8 right-8 text-on-surface-variant/30 hover:text-red-500 transition-colors"
+                title="Liste löschen"
+              >
+                <span className="material-symbols-outlined text-[20px]">delete</span>
+              </button>
+
               <div className="flex items-center justify-between mb-8 px-2">
                 <div className="flex items-center gap-4">
-                  <div className={`w-3 h-10 ${categoryColors[cat] || 'bg-primary'} rounded-full`} />
+                  <div className={`w-3 h-10 ${categoryColors[cat] || 'bg-stone-300'} rounded-full`} />
                   <h3 className="font-headline text-3xl font-bold tracking-tighter text-on-surface">{cat}</h3>
                 </div>
-                <span className="text-[12px] font-bold text-primary uppercase tracking-[0.2em] opacity-40">
+                <span className="text-[12px] font-bold text-primary uppercase tracking-[0.2em] opacity-40 mr-8">
                   {catItems.length.toString().padStart(2, '0')} Artikel
                 </span>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-4 mb-8">
                 {catItems.map(item => (
                   <div key={item.id} className="bg-white p-6 rounded-[2.5rem] flex items-center justify-between group chill-shadow border border-outline-variant/10 hover:scale-[1.02] transition-transform cursor-pointer" onClick={() => toggleItem(item.id, item.checked)}>
                     <div className="flex items-center gap-6">
@@ -86,59 +131,44 @@ export function ShoppingClient({ initialItems, initialCategories = ['Lebensmitte
                         )}
                       </div>
                     </div>
-                    
-                    <div className="flex items-center -space-x-3 opacity-80">
-                      <img className="w-10 h-10 rounded-full border-2 border-white object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZJEUoIHFV4RkKBkaZUOOO14SoJ8Lm_KK7S4fmuL6OpQKgnKlWtFvHXasTPSEBf4B7x4sURs-Zh_q5_u9KZ5jXv3LRMgq8hIDHr1mwHYmcHPyc1xe-QSVWwoKxkaWGObnQQ1xSTzPPCuD3n014KT2-jzYr597GzlfHzFaKmPyklEZX17z_rSOCzAieFVEfiQWnn0VLXtCaDYa-Xv8Xrz9eZ49hcrS0tczS2yh6JIiWamSYVLJwMIwErBaDIKz6rxUrGcAqXD64fvIW" alt="assigned"/>
-                      <div className="w-10 h-10 rounded-full bg-sage-soft border-2 border-white flex items-center justify-center text-[10px] font-black text-primary">+1</div>
-                    </div>
+
+                    <button 
+                      onClick={(e) => deleteItem(e, item.id)}
+                      className="w-10 h-10 rounded-full border border-outline-variant/10 flex items-center justify-center text-on-surface-variant/20 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">close</span>
+                    </button>
                   </div>
                 ))}
 
                 {catItems.length === 0 && (
-                  <div className="text-center py-12 bg-stone-100/50 rounded-[2.5rem] border-2 border-dashed border-stone-200">
-                    <p className="text-on-surface-variant font-bold text-sm tracking-tight opacity-40 uppercase">Alles da für {cat}</p>
+                  <div className="text-center py-12 bg-stone-100/30 rounded-[2.5rem] border-2 border-dashed border-stone-200/50">
+                    <p className="text-on-surface-variant font-bold text-sm tracking-tight opacity-30 uppercase">Alles da für {cat}</p>
                   </div>
                 )}
+              </div>
+
+              {/* Individual Add Button per List */}
+              <div className="flex gap-2 p-2 bg-stone-100/50 rounded-full">
+                <input 
+                  type="text" 
+                  placeholder={`${cat} hinzufügen...`}
+                  className="flex-1 px-6 py-3 rounded-full bg-transparent border-none text-sm font-bold focus:ring-0 transition-all"
+                  value={newItemNames[cat] || ''}
+                  onChange={(e) => setNewItemNames(prev => ({ ...prev, [cat]: e.target.value }))}
+                  onKeyDown={(e) => e.key === 'Enter' && addItem(cat)}
+                />
+                <button 
+                  onClick={() => addItem(cat)}
+                  className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all"
+                >
+                  <span className="material-symbols-outlined">add</span>
+                </button>
               </div>
             </section>
           );
         })}
       </div>
-
-      {/* Custom Addition FAB Interface */}
-      <div className="fixed bottom-32 right-8 z-50 flex flex-col items-end gap-6">
-        {newItemName && (
-          <div className="bg-white/90 backdrop-blur-xl p-5 rounded-[2rem] shadow-2xl border border-outline-variant/30 animate-fade-in flex flex-col gap-3">
-            <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant px-2">Kategorie</p>
-            <div className="flex gap-2">
-              {initialCategories.map(c => (
-                <button 
-                  key={c}
-                  onClick={() => setActiveCategory(c)}
-                  className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${activeCategory === c ? 'bg-primary text-white' : 'bg-stone-100 text-on-surface-variant hover:bg-stone-200'}`}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        <form onSubmit={addItem} className="flex items-center gap-4 translate-y-2">
-          <input 
-            id="shopping-item-input"
-            data-testid="shopping-item-input"
-            type="text" 
-            placeholder="Artikelname..."
-            className="w-full max-w-[240px] px-8 py-5 rounded-full bg-white shadow-2xl border-2 border-primary/10 focus:outline-none focus:border-primary/40 text-sm font-black transition-all"
-            value={newItemName}
-            onChange={e => setNewItemName(e.target.value)}
-          />
-          <button id="add-shopping-item-btn" data-testid="add-shopping-item-btn" type="submit" className="w-20 h-20 rounded-full bg-primary text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all">
-            <span className="material-symbols-outlined text-4xl font-black">add</span>
-          </button>
-        </form>
-      </div>
-
     </div>
   );
 }

@@ -14,6 +14,15 @@ export function FinanceClient({ initialExpenses, onRefresh, wgId, user }: { init
 
   const total = initialExpenses.reduce((sum, exp) => sum + exp.amount, 0);
 
+  // Group by user to show balance
+  const userBalances = initialExpenses.reduce((acc: any, exp: any) => {
+    acc[exp.paidBy] = (acc[exp.paidBy] || 0) + exp.amount;
+    return acc;
+  }, {});
+
+  const members = Object.keys(userBalances);
+  const averagePerPerson = members.length > 0 ? total / members.length : 0;
+
   const addExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!description.trim() || !amount || !wgId) return;
@@ -51,12 +60,36 @@ export function FinanceClient({ initialExpenses, onRefresh, wgId, user }: { init
             <span className="text-7xl font-bold tracking-tighter">{total.toFixed(2)}</span>
             <span className="text-2xl font-bold opacity-40">€</span>
           </div>
+          
+          <div className="mt-8 space-y-2 border-t border-white/10 pt-6">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-60 mb-4">Einzelbilanzen (Soll: {averagePerPerson.toFixed(2)}€ p.P.)</p>
+            {members.map(m => {
+              const diff = userBalances[m] - averagePerPerson;
+              return (
+                <div key={m} className="flex justify-between items-center bg-white/5 px-6 py-3 rounded-2xl">
+                  <span className="font-bold text-sm tracking-tight">{m}</span>
+                  <span className={`font-headline font-bold text-lg ${diff >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                    {diff >= 0 ? '+' : ''}{diff.toFixed(2)}€
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
           <div className="mt-10 flex gap-4">
             <button className="btn bg-white/20 backdrop-blur-xl text-white border-none hover:bg-white/30 text-xs py-4 px-8 font-bold uppercase tracking-widest">
               Details
             </button>
-            <button className="btn bg-white text-primary border-none hover:scale-105 text-xs py-4 px-8 font-bold uppercase tracking-widest">
-              Abrechnen
+            <button 
+              className="btn bg-white text-primary border-none hover:scale-105 text-xs py-4 px-8 font-bold uppercase tracking-widest"
+              onClick={async () => {
+                if (window.confirm('Möchtest du wirklich alle Ausgaben für alle abrechnen?')) {
+                  await authFetch(`/api/finances/settle?wgId=${wgId}`, { method: 'POST' });
+                  onRefresh();
+                }
+              }}
+            >
+              Für alle abrechnen
             </button>
           </div>
         </div>

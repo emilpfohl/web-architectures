@@ -64,8 +64,8 @@ export function TodoClient({ initialTodos, onRefresh, wgId, user }: { initialTod
               <div>
                 <h4 className={`font-bold text-2xl text-on-surface leading-tight ${todo.completed ? 'line-through' : ''}`}>{todo.title}</h4>
                 <div className="flex items-center gap-3 mt-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">{todo.assignee}</span>
-                  <span className="text-[10px] font-bold text-on-surface-variant opacity-40 uppercase tracking-widest">Aktiv • {todo.id % 2 === 0 ? 'Dringend' : 'Routine'}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">{todo.assignee || 'Keiner'}</span>
+                  <span className="text-[10px] font-bold text-on-surface-variant opacity-40 uppercase tracking-widest">{todo.isRoutine ? 'Routine' : 'Aktiv'} • {todo.id % 2 === 0 ? 'Dringend' : ''}</span>
                 </div>
               </div>
             </div>

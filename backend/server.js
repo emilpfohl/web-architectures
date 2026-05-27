@@ -435,6 +435,38 @@ app.post('/api/finances', async (req, res) => {
   }
 });
 
+app.post('/api/finances/settle', async (req, res) => {
+  try {
+    const { wgId } = req.query;
+    if (!wgId) return res.status(400).json({ error: 'wgId parameter ist erforderlich' });
+
+    const isMember = await prisma.membership.findUnique({
+      where: { userId_wgId: { userId: req.user.userId, wgId: parseInt(wgId) } }
+    });
+    if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
+
+    // Mark current expenses as settled by deleting them (simplified settlement)
+    await prisma.financeItem.deleteMany({
+      where: { wgId: parseInt(wgId) }
+    });
+
+    // Log to feed
+    await prisma.message.create({
+      data: {
+        wgId: parseInt(wgId),
+        type: 'system',
+        content: `Abrechnung abgeschlossen: Alle Konten auf 0 gesetzt.`,
+        timestamp: new Date().toISOString()
+      }
+    });
+
+    res.json({ message: 'Erfolgreich abgerechnet' });
+  } catch (error) {
+    console.error('Error settling finances:', error);
+    res.status(500).json({ error: 'Interner Serverfehler' });
+  }
+});
+
 // -- INVITATIONS --
 app.get('/api/invitations/:token', async (req, res) => {
   try {
