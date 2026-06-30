@@ -148,6 +148,12 @@ body {
   z-index: -1;
 }
 
+.shopping-mode .bg-flare {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.14) 0%, transparent 45%),
+    radial-gradient(circle at 100% 100%, rgba(4, 120, 87, 0.18) 0%, transparent 45%);
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

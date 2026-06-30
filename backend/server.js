@@ -1,7 +1,9 @@
 require('dotenv').config();
+const http = require('http');
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const { Server } = require('socket.io');
 const authRouter = require('./routes/auth');
 const authenticate = require('./middleware/authenticate');
 const tasksRouter = require('./routes/tasks');
@@ -10,8 +12,21 @@ const prisma = require('./lib/prisma');
 
 const app = express();
 const PORT = 3000;
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    credentials: true
+  }
+});
 
-app.use(cors({ origin: 'http://localhost:5173', credentials: true })); // default Vite port, but adjust if needed
+io.on('connection', (socket) => {
+  socket.on('chat eintrag', (entryData) => {
+    socket.broadcast.emit('chat eintrag', entryData);
+  });
+});
+
+app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5174'], credentials: true })); // allow dev vite ports
 app.use(express.json());
 app.use(cookieParser());
 
@@ -182,6 +197,32 @@ app.post('/api/wgs', async (req, res) => {
     res.status(201).json(newWg);
   } catch (error) {
     console.error('Error creating WG:', error);
+    res.status(500).json({ error: 'Interner Serverfehler' });
+  }
+});
+
+app.put('/api/wgs/:id', async (req, res) => {
+  try {
+    const wgId = parseInt(req.params.id);
+    const { name } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Name ist erforderlich' });
+    }
+
+    const isMember = await prisma.membership.findUnique({
+      where: { userId_wgId: { userId: parseInt(req.user.userId), wgId } }
+    });
+    if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
+
+    const updatedWg = await prisma.wG.update({
+      where: { id: wgId },
+      data: { name: name.trim() }
+    });
+
+    res.json(updatedWg);
+  } catch (error) {
+    console.error('Error updating WG:', error);
     res.status(500).json({ error: 'Interner Serverfehler' });
   }
 });
@@ -550,6 +591,6 @@ app.post('/api/invitations/join', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Backend is running on http://localhost:${PORT}`);
 });

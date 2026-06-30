@@ -1,6 +1,8 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { validatePasswordInput } from '../utils/logic';
+import { authFetch } from '../utils/authFetch';
 
 export function Register() {
   const [name, setName] = useState('');
@@ -14,15 +16,22 @@ export function Register() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+
+    const passwordCheck = validatePasswordInput(password);
+    if (!passwordCheck.isValid) {
+      setError(passwordCheck.error || 'Ungültiges Passwort');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await authFetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password: passwordCheck.value }),
       });
 
       if (response.ok) {

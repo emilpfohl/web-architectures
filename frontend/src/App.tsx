@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { MainLayout } from './components/MainLayout';
 import { Login } from './components/Login';
 import { Register } from './components/Register';
+import { authFetch } from './utils/authFetch';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -11,7 +12,7 @@ function App() {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('/api/auth/me');
+      const response = await authFetch('/api/auth/me');
       if (response.ok) {
         setIsAuthenticated(true);
         if (location.pathname === '/login' || location.pathname === '/register') {

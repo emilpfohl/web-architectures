@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authFetch } from '../utils/authFetch';
+import { buildLeaderboard } from '../utils/leaderboard';
+import { formatMessageTimestamp } from '../utils/logic';
 
-export function DashboardClient({ wgId, user, wgName }: { shopping: any[], todos: any[], finances: any[], onRefresh: () => void, wgId: number, user: any, wgName?: string }) {
+export function DashboardClient({ wgId, user, wgName, todos = [], onRenameWg }: { shopping: any[], todos: any[], finances: any[], onRefresh: () => void, wgId: number, user: any, wgName?: string, onRenameWg?: (newName: string) => Promise<boolean> }) {
   const navigate = useNavigate();
 
   const availableMoods = [
@@ -14,6 +16,22 @@ export function DashboardClient({ wgId, user, wgName }: { shopping: any[], todos
   ];
 
   const [allResidents, setAllResidents] = useState<any[]>([]);
+
+  const applyResidentStatusUpdate = (isHome?: boolean, mood?: string) => {
+    if (!user?.id) return;
+
+    setAllResidents(prevResidents =>
+      prevResidents.map(resident => {
+        if (resident.id !== user.id) return resident;
+
+        return {
+          ...resident,
+          ...(isHome !== undefined ? { isHome } : {}),
+          ...(mood !== undefined ? { mood } : {})
+        };
+      })
+    );
+  };
 
   // Fetch Residents of this WG
   const fetchResidents = async () => {
@@ -40,6 +58,10 @@ export function DashboardClient({ wgId, user, wgName }: { shopping: any[], todos
 
   const updateStatus = async (isHome?: boolean, mood?: string) => {
     if (!wgId) return;
+
+    const previousResidents = allResidents;
+    applyResidentStatusUpdate(isHome, mood);
+
     try {
       const res = await authFetch('/api/users/status', {
         method: 'PUT',
@@ -48,8 +70,11 @@ export function DashboardClient({ wgId, user, wgName }: { shopping: any[], todos
       });
       if (res.ok) {
         fetchResidents(); 
+      } else {
+        setAllResidents(previousResidents);
       }
     } catch (err) {
+      setAllResidents(previousResidents);
       console.error('Error updating status:', err);
     }
   };
@@ -57,6 +82,14 @@ export function DashboardClient({ wgId, user, wgName }: { shopping: any[], todos
   const currentUserData = allResidents.find(r => r.id === user?.id);
   const isUserHome = currentUserData?.isHome ?? true;
   const userMood = currentUserData?.mood ?? 'Chill';
+  const leaderboard = buildLeaderboard(allResidents, todos);
+  const [isEditingWgName, setIsEditingWgName] = useState(false);
+  const [wgNameDraft, setWgNameDraft] = useState(wgName || '');
+  const [isSavingWgName, setIsSavingWgName] = useState(false);
+
+  useEffect(() => {
+    setWgNameDraft(wgName || '');
+  }, [wgName]);
 
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -108,6 +141,31 @@ export function DashboardClient({ wgId, user, wgName }: { shopping: any[], todos
     }
   };
 
+  const submitWgNameUpdate = async () => {
+    const nextName = wgNameDraft.trim();
+    if (!onRenameWg || !nextName) {
+      setWgNameDraft(wgName || '');
+      setIsEditingWgName(false);
+      return;
+    }
+
+    if (nextName === (wgName || '').trim()) {
+      setIsEditingWgName(false);
+      return;
+    }
+
+    setIsSavingWgName(true);
+    const ok = await onRenameWg(nextName);
+    setIsSavingWgName(false);
+
+    if (ok) {
+      setIsEditingWgName(false);
+      return;
+    }
+
+    setWgNameDraft(wgName || '');
+  };
+
   return (
     <div className="animate-fade-in w-full space-y-12 pb-20">
       
@@ -122,7 +180,49 @@ export function DashboardClient({ wgId, user, wgName }: { shopping: any[], todos
         
         <div>
           <h1 className="font-headline text-5xl md:text-7xl font-semibold text-on-surface tracking-tighter leading-[1.05] mb-4">
-            {wgName ? <>{wgName} <br/></> : <>Willkommen Zuhause, <br/></>}
+            {wgName ? (
+              <>
+                {isEditingWgName ? (
+                  <span className="inline-flex items-center gap-2 flex-wrap">
+                    <input
+                      type="text"
+                      value={wgNameDraft}
+                      onChange={(e) => setWgNameDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          submitWgNameUpdate();
+                        }
+                        if (e.key === 'Escape') {
+                          setWgNameDraft(wgName || '');
+                          setIsEditingWgName(false);
+                        }
+                      }}
+                      className="text-3xl md:text-6xl px-4 py-2 rounded-2xl bg-white/80 border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={submitWgNameUpdate}
+                      disabled={isSavingWgName || !wgNameDraft.trim()}
+                      className="px-4 py-2 rounded-full bg-primary text-white text-xs md:text-sm uppercase tracking-wider disabled:opacity-50"
+                    >
+                      {isSavingWgName ? 'Speichern...' : 'Speichern'}
+                    </button>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingWgName(true)}
+                    className="text-left transition-opacity hover:opacity-70"
+                    title="WG-Namen bearbeiten"
+                  >
+                    {wgName}
+                  </button>
+                )}
+                <br/>
+              </>
+            ) : <>Willkommen Zuhause, <br/></>}
             <span className="text-primary italic font-light text-4xl md:text-6xl">Alles im Griff</span>
           </h1>
           <p className="text-on-surface-variant font-medium text-lg md:text-xl leading-relaxed opacity-70 max-w-lg">
@@ -135,6 +235,7 @@ export function DashboardClient({ wgId, user, wgName }: { shopping: any[], todos
             const isActive = userMood === moodObj.name;
             return (
               <button 
+                type="button"
                 key={moodObj.name} 
                 onClick={() => updateStatus(undefined, moodObj.name)}
                 className={`flex-shrink-0 px-8 py-4 rounded-full font-headline font-bold flex items-center gap-2 transition-all h-[60px] ${isActive ? 'bg-primary text-white chill-shadow scale-105' : 'bg-white border border-outline-variant/30 text-on-surface-variant hover:bg-stone-100'}`}
@@ -154,6 +255,7 @@ export function DashboardClient({ wgId, user, wgName }: { shopping: any[], todos
                 <span className="text-[12px] font-bold text-on-surface whitespace-nowrap">{isUserHome ? 'Zuhause' : 'Unterwegs'}</span>
              </div>
              <button 
+               type="button"
                 onClick={() => updateStatus(!isUserHome)}
                 className={`w-11 h-6 rounded-full transition-all duration-300 relative flex-shrink-0 ${isUserHome ? 'bg-primary' : 'bg-stone-300'}`}
              >
@@ -237,7 +339,7 @@ export function DashboardClient({ wgId, user, wgName }: { shopping: any[], todos
                           {msg.content}
                         </div>
                         <p className={`text-[9px] font-headline font-bold text-slate-500 uppercase ${isMe ? 'text-right' : ''}`}>
-                          {msg.senderName || 'Unbekannt'} • {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {msg.senderName || 'Unbekannt'} • {formatMessageTimestamp(msg.timestamp)}
                         </p>
                       </div>
                     </div>
@@ -275,24 +377,25 @@ export function DashboardClient({ wgId, user, wgName }: { shopping: any[], todos
             <p className="font-headline text-on-surface-variant text-[10px] uppercase tracking-widest font-black mb-8 opacity-60">Aufgaben-Serien Belohnungen</p>
             
             <div className="space-y-4">
-              {[
-                { name: 'Lila S.', task: 'Müll + Küche', pts: '2.4k', rank: '01' },
-                { name: 'Felix T.', task: 'Abwasch-Held', pts: '1.8k', rank: '02' }
-              ].map((leader, i) => (
-                <div key={leader.name} className={`flex items-center justify-between p-5 rounded-3xl transition-all stagger-${i+3} ${i === 0 ? 'bg-white shadow-lg shadow-sage-soft/20' : 'bg-white/40'}`}>
+              {leaderboard.length > 0 ? leaderboard.map((leader, i) => (
+                <div key={leader.id} className={`flex items-center justify-between p-5 rounded-3xl transition-all stagger-${i+3} ${i === 0 ? 'bg-white shadow-lg shadow-sage-soft/20' : 'bg-white/40'}`}>
                   <div className="flex items-center gap-4">
-                    <span className="font-headline text-2xl font-black italic text-primary/20">{leader.rank}</span>
+                    <span className="font-headline text-2xl font-black italic text-primary/20">{String(i + 1).padStart(2, '0')}</span>
                     <div>
                       <p className="font-black text-sm text-on-surface">{leader.name}</p>
-                      <p className="text-[11px] font-medium text-on-surface-variant">{leader.task}</p>
+                      <p className="text-[11px] font-medium text-on-surface-variant">{leader.taskLabel}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-primary font-headline font-extrabold text-lg">{leader.pts}</span>
-                    <p className="text-[9px] uppercase font-headline font-black text-on-surface-variant">Pkt</p>
+                    <span className="text-primary font-headline font-extrabold text-lg">{leader.pointsLabel}</span>
+                    <p className="text-[9px] uppercase font-headline font-black text-on-surface-variant">{leader.rankLabel} Aufgaben</p>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="bg-white/60 p-5 rounded-3xl text-sm font-medium text-on-surface-variant">
+                  Noch keine Aufgaben für eine Rangliste vorhanden.
+                </div>
+              )}
             </div>
           </div>
 

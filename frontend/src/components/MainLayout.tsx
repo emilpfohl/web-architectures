@@ -11,6 +11,7 @@ import { authFetch } from '../utils/authFetch';
 export function MainLayout() {
   const [searchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'dashboard';
+  const isShoppingMode = currentTab === 'shopping';
 
   const [user, setUser] = useState<any>(null);
   const [wgs, setWgs] = useState<any[]>([]);
@@ -115,6 +116,8 @@ export function MainLayout() {
   const [inviteToken, setInviteToken] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showJoinForm, setShowJoinForm] = useState(false);
+  const [isShoppingActive, setIsShoppingActive] = useState(false);
+  const isShoppingDarkMode = isShoppingMode && isShoppingActive;
 
   if (!loading && wgs.length === 0) {
     return (
@@ -123,7 +126,7 @@ export function MainLayout() {
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse" />
         <div className="absolute top-1/2 -right-24 w-96 h-96 bg-accent-peach/5 rounded-full blur-3xl" />
         
-        <TabsNav wgs={wgs} selectedWgId={selectedWgId} onSelectWg={setSelectedWgId} user={user} onOpenProfile={() => setShowProfileModal(true)} />
+        <TabsNav wgs={wgs} selectedWgId={selectedWgId} onSelectWg={setSelectedWgId} user={user} onOpenProfile={() => setShowProfileModal(true)} isDarkMode={isShoppingDarkMode} />
         <main className="flex-1 flex items-start justify-center p-6 pt-4 animate-fade-in relative z-10">
           <div className="max-w-md w-full space-y-12 text-center">
             <header className="space-y-4">
@@ -247,10 +250,10 @@ export function MainLayout() {
   }
 
   return (
-    <div className="font-body h-full min-h-screen flex flex-col bg-background">
+    <div className={`font-body h-full min-h-screen flex flex-col ${isShoppingDarkMode ? 'shopping-mode bg-[#0f2a1f] text-emerald-50' : 'bg-background'}`}>
       <div className="bg-flare" />
-      <TabsNav wgs={wgs} selectedWgId={selectedWgId} onSelectWg={setSelectedWgId} user={user} onOpenProfile={() => setShowProfileModal(true)} />
-      <main className="flex-1 p-6 md:p-16 lg:p-24 overflow-x-hidden animate-fade-in">
+      <TabsNav wgs={wgs} selectedWgId={selectedWgId} onSelectWg={setSelectedWgId} user={user} onOpenProfile={() => setShowProfileModal(true)} isDarkMode={isShoppingDarkMode} />
+      <main className={`flex-1 p-6 md:p-16 lg:p-24 overflow-x-hidden animate-fade-in ${isShoppingDarkMode ? 'bg-gradient-to-b from-emerald-950/80 to-emerald-900/80' : ''}`}>
         <div className="w-full max-w-6xl mx-auto space-y-12">
           {loading ? (
             <div className="flex items-center justify-center min-h-[400px]">
@@ -260,8 +263,24 @@ export function MainLayout() {
             <>
               {selectedWgId ? (
                 <>
-                  {currentTab === 'dashboard' && <DashboardClient shopping={shopping} todos={todos} finances={finances} onRefresh={refresh} wgId={selectedWgId} user={user} wgName={wgs.find(w => w.id === selectedWgId)?.name} />}
-                  {currentTab === 'shopping' && <ShoppingClient initialItems={shopping} initialCategories={categories} onRefresh={refresh} wgId={selectedWgId} />}
+                  {currentTab === 'dashboard' && <DashboardClient shopping={shopping} todos={todos} finances={finances} onRefresh={refresh} wgId={selectedWgId} user={user} wgName={wgs.find(w => w.id === selectedWgId)?.name} onRenameWg={async (newName) => {
+                    try {
+                      const res = await authFetch(`/api/wgs/${selectedWgId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: newName })
+                      });
+
+                      if (!res.ok) return false;
+                      const updatedWg = await res.json();
+                      setWgs(prev => prev.map(wg => wg.id === updatedWg.id ? updatedWg : wg));
+                      return true;
+                    } catch (err) {
+                      console.error('Error updating WG name:', err);
+                      return false;
+                    }
+                  }} />}
+                  {currentTab === 'shopping' && <ShoppingClient initialItems={shopping} initialCategories={categories} onRefresh={refresh} wgId={selectedWgId} isDarkMode={isShoppingDarkMode} onStoreStatusChange={setIsShoppingActive} />}
                   {currentTab === 'todos' && <TodoClient initialTodos={todos} onRefresh={refresh} wgId={selectedWgId} user={user} />}
                   {currentTab === 'finance' && <FinanceClient initialExpenses={finances} onRefresh={refresh} wgId={selectedWgId} user={user} />}
                 </>

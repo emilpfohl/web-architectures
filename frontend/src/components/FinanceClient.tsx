@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { authFetch } from '../utils/authFetch';
+import { calculateFinanceSummary } from '../utils/logic';
 
 export function FinanceClient({ initialExpenses, onRefresh, wgId, user }: { initialExpenses: any[], onRefresh: () => void, wgId: number, user: any }) {
   const [description, setDescription] = useState('');
@@ -12,16 +13,7 @@ export function FinanceClient({ initialExpenses, onRefresh, wgId, user }: { init
     }
   }, [user]);
 
-  const total = initialExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-
-  // Group by user to show balance
-  const userBalances = initialExpenses.reduce((acc: any, exp: any) => {
-    acc[exp.paidBy] = (acc[exp.paidBy] || 0) + exp.amount;
-    return acc;
-  }, {});
-
-  const members = Object.keys(userBalances);
-  const averagePerPerson = members.length > 0 ? total / members.length : 0;
+  const { total, averagePerPerson, balances: userBalances, members } = calculateFinanceSummary(initialExpenses);
 
   const addExpense = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { authFetch } from '../utils/authFetch';
+import { buildTodoDisplayState } from '../utils/logic';
 
 export function TodoClient({ initialTodos, onRefresh, wgId, user }: { initialTodos: any[], onRefresh: () => void, wgId: number, user: any }) {
   const [newTodoTitle, setNewTodoTitle] = useState('');
@@ -49,8 +50,11 @@ export function TodoClient({ initialTodos, onRefresh, wgId, user }: { initialTod
 
       <div className="space-y-6">
         {initialTodos.map((todo: any) => (
+          (() => {
+            const displayTodo = buildTodoDisplayState(todo);
+            return (
           <div 
-            key={todo.id} 
+            key={displayTodo.id || todo.id} 
             onClick={() => toggleTodo(todo.id, todo.completed)}
             className={`
               bg-white p-8 rounded-[3.5rem] flex items-center justify-between group chill-shadow border border-outline-variant/10 transition-all cursor-pointer
@@ -62,19 +66,21 @@ export function TodoClient({ initialTodos, onRefresh, wgId, user }: { initialTod
                 {todo.completed ? <span className="material-symbols-outlined text-3xl font-bold">check</span> : <span className="material-symbols-outlined text-stone-300 text-3xl">assignment</span>}
               </div>
               <div>
-                <h4 className={`font-bold text-2xl text-on-surface leading-tight ${todo.completed ? 'line-through' : ''}`}>{todo.title}</h4>
+                <h4 className={`font-bold text-2xl text-on-surface leading-tight ${displayTodo.isCompleted ? 'line-through' : ''}`}>{displayTodo.title}</h4>
                 <div className="flex items-center gap-3 mt-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">{todo.assignee || 'Keiner'}</span>
-                  <span className="text-[10px] font-bold text-on-surface-variant opacity-40 uppercase tracking-widest">{todo.isRoutine ? 'Routine' : 'Aktiv'} • {todo.id % 2 === 0 ? 'Dringend' : ''}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">{displayTodo.assignee}</span>
+                  <span className="text-[10px] font-bold text-on-surface-variant opacity-40 uppercase tracking-widest">{displayTodo.isCompleted ? 'Routine' : 'Aktiv'} • {displayTodo.urgencyLabel}</span>
                 </div>
               </div>
             </div>
             
             <div className="text-right pr-2">
-              <span className="text-primary font-headline font-bold text-2xl tracking-tighter">{(todo.id * 150 + 400).toString()}</span>
+              <span className="text-primary font-headline font-bold text-2xl tracking-tighter">{displayTodo.points.toString()}</span>
               <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant opacity-40">Pkt</p>
             </div>
           </div>
+            );
+          })()
         ))}
 
         {initialTodos.length === 0 && (

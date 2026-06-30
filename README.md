@@ -176,3 +176,9 @@ Nachfolgend sind die Ergebnisse des Sicherheits-Audits vom 29.04.2026 zusammenge
 | **A02: Cryptographic Failures** | ✅ Behoben | JWT-Secret hatte statischen Fallback; Passwörter waren bereits sicher (bcrypt). | Statischer Fallback entfernt; App erzwingt nun `.env` Definition. |
 | **A03: Injection** | ✅ Abgedeckt | Dank Prisma (Prepared Statements) keine SQL-Injection möglich. | Keine Aktion erforderlich; XSS-Schutz via Frontend/React sichergestellt. |
 | **A07: Authentication Failures** | ✅ Behoben | Keine Anforderung an Passwortstärke beim Register. | Passwort-Validierung (min. 8 Zeichen) in `auth.js` hinzugefügt. |
+
+
+Ebene           Was testen wir bei uns            Tool
+Unit                                       
+Integration
+E2E

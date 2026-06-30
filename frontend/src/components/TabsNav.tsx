@@ -1,5 +1,6 @@
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { getAccountInitials } from '../utils/logic';
 
 interface TabsNavProps {
   wgs?: any[];
@@ -7,9 +8,10 @@ interface TabsNavProps {
   onSelectWg?: (id: number) => void;
   user?: any;
   onOpenProfile?: () => void;
+  isDarkMode?: boolean;
 }
 
-export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile }: TabsNavProps) {
+export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile, isDarkMode = false }: TabsNavProps) {
   const [searchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'dashboard';
   const navigate = useNavigate();
@@ -33,31 +35,24 @@ export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile }: 
   const selectedWg = wgs?.find(w => w.id === selectedWgId);
 
   // Get user initials from user name
-  const getUserInitials = () => {
-    if (!user?.name) return '?';
-    const parts = user.name.trim().split(/\s+/);
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return parts[0].substring(0, 2).toUpperCase();
-  };
-
   return (
-    <nav className="relative flex items-center justify-between w-full border-b border-outline-variant/20 mb-0 pt-4 md:pt-7 px-4 md:px-8">
+    <nav className={`relative flex items-center justify-between w-full border-b mb-0 pt-4 md:pt-7 px-4 md:px-8 ${isDarkMode ? 'border-emerald-700/30 bg-emerald-950/30' : 'border-outline-variant/20'}`}>
       {/* Left side: WG Switcher */}
       <div className="flex items-center gap-2 pb-4 min-w-[140px]">
         {wgs && wgs.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-[20px] [font-variation-settings:'FILL'_1,'wght'_300]">
+            <span className={`material-symbols-outlined text-[20px] [font-variation-settings:'FILL'_1,'wght'_300] ${isDarkMode ? 'text-emerald-200' : 'text-primary'}`}>
               home
             </span>
             {wgs.length === 1 ? (
-              <span className="font-headline text-[11px] md:text-[12px] font-semibold uppercase tracking-[0.15em] text-on-surface">
+              <span className={`font-headline text-[11px] md:text-[12px] font-semibold uppercase tracking-[0.15em] ${isDarkMode ? 'text-emerald-50' : 'text-on-surface'}`}>
                 {selectedWg?.name || 'WG'}
               </span>
             ) : (
               <select
                 value={selectedWgId || ''}
                 onChange={(e) => onSelectWg?.(Number(e.target.value))}
-                className="font-headline text-[11px] md:text-[12px] font-semibold uppercase tracking-[0.15em] text-on-surface bg-transparent border-none cursor-pointer focus:outline-none focus:ring-0 pr-4"
+                className={`font-headline text-[11px] md:text-[12px] font-semibold uppercase tracking-[0.15em] bg-transparent border-none cursor-pointer focus:outline-none focus:ring-0 pr-4 ${isDarkMode ? 'text-emerald-50' : 'text-on-surface'}`}
               >
                 {wgs.map(wg => (
                   <option key={wg.id} value={wg.id}>{wg.name}</option>
@@ -78,7 +73,7 @@ export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile }: 
               to={`/?tab=${tab.id}`}
               className={`
                 relative flex items-center gap-2 transition-all duration-300 px-2 group
-                ${isActive ? 'text-primary' : 'text-on-surface-variant/40 hover:text-on-surface-variant'}
+                ${isActive ? (isDarkMode ? 'text-emerald-200' : 'text-primary') : (isDarkMode ? 'text-emerald-200/50 hover:text-emerald-100' : 'text-on-surface-variant/40 hover:text-on-surface-variant')}
               `}
             >
               <span className={`material-symbols-outlined text-[18px] md:text-[20px] transition-all duration-500 ${isActive ? "[font-variation-settings:'FILL'_1,'wght'_300]" : "[font-variation-settings:'FILL'_0,'wght'_200]"}`}>
@@ -91,7 +86,7 @@ export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile }: 
               {isActive && (
                 <motion.div
                   layoutId="activeUnderline"
-                  className="absolute -bottom-[12px] left-0 right-0 h-[2px] bg-primary rounded-full shadow-lg shadow-primary/10"
+                  className={`absolute -bottom-[12px] left-0 right-0 h-[2px] rounded-full shadow-lg ${isDarkMode ? 'bg-emerald-300 shadow-emerald-500/20' : 'bg-primary shadow-primary/10'}`}
                   transition={{
                     type: 'spring',
                     stiffness: 260,
@@ -111,12 +106,12 @@ export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile }: 
           <button
             onClick={onOpenProfile}
             title="Profil bearbeiten"
-            className="flex items-center gap-2 px-3 py-2 rounded-full text-on-surface-variant hover:bg-sage-soft/30 transition-all duration-300 group border border-transparent hover:border-primary/10"
+            className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all duration-300 group border ${isDarkMode ? 'text-emerald-200 hover:bg-emerald-800/40 border-transparent hover:border-emerald-600/40' : 'text-on-surface-variant hover:bg-sage-soft/30 border-transparent hover:border-primary/10'}`}
           >
-            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary uppercase">
-              {getUserInitials()}
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black uppercase ${isDarkMode ? 'bg-emerald-300/20 text-emerald-100' : 'bg-primary/10 text-primary'}`}>
+              {getAccountInitials(user?.name)}
             </div>
-            <span className="hidden md:inline font-headline text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">
+            <span className={`hidden md:inline font-headline text-[10px] font-bold uppercase tracking-[0.15em] ${isDarkMode ? 'text-emerald-100/80' : 'text-on-surface-variant'}`}>
               {user.name}
             </span>
           </button>

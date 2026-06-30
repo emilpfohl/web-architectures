@@ -1,11 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { authFetch } from '../utils/authFetch';
+import { prepareShoppingItemInput } from '../utils/logic';
+import { socket } from '../utils/socket';
 
-export function ShoppingClient({ initialItems, onRefresh, wgId }: { initialItems: any[], initialCategories: string[], onRefresh: () => void, wgId: number }) {
+export function ShoppingClient({ initialItems, onRefresh, wgId, isDarkMode = false, onStoreStatusChange }: { initialItems: any[], initialCategories: string[], onRefresh: () => void, wgId: number, isDarkMode?: boolean, onStoreStatusChange?: (isAtStore: boolean) => void }) {
   const [newItemNames, setNewItemNames] = useState<{ [key: string]: string }>({});
   const [isAtStore, setIsAtStore] = useState(false);
   const [localCategories, setLocalCategories] = useState<string[]>(['Lebensmittel', 'Haushalt', 'Wishlist']);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const activeInputRef = useRef<HTMLInputElement | null>(null);
 
   const categoryColors: { [key: string]: string } = {
     'Lebensmittel': 'bg-primary',
@@ -15,16 +19,49 @@ export function ShoppingClient({ initialItems, onRefresh, wgId }: { initialItems
 
   const addItem = async (cat: string) => {
     const itemName = newItemNames[cat];
-    if (!itemName?.trim() || !wgId) return;
+    const preparedItem = prepareShoppingItemInput(itemName, cat);
+    if (!preparedItem.isValid || !wgId) return;
 
-    await authFetch('/api/shopping', {
+    const response = await authFetch('/api/shopping', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: itemName.trim(), category: cat, wgId })
+      body: JSON.stringify({ name: preparedItem.name, category: preparedItem.category, wgId })
     });
+    if (!response.ok) return;
+
+    const newEntry = await response.json();
+    socket.emit('chat eintrag', {
+      wgId,
+      entry: newEntry
+    });
+
     setNewItemNames(prev => ({ ...prev, [cat]: '' }));
+    setActiveCategory(null);
     onRefresh();
   };
+
+  useEffect(() => {
+    if (activeCategory) {
+      activeInputRef.current?.focus();
+    }
+  }, [activeCategory]);
+
+  useEffect(() => {
+    onStoreStatusChange?.(isAtStore);
+  }, [isAtStore, onStoreStatusChange]);
+
+  useEffect(() => {
+    const handleChatEintrag = (payload: { wgId?: number }) => {
+      if (!payload?.wgId || payload.wgId !== wgId) return;
+      onRefresh();
+    };
+
+    socket.on('chat eintrag', handleChatEintrag);
+
+    return () => {
+      socket.off('chat eintrag', handleChatEintrag);
+    };
+  }, [wgId, onRefresh]);
 
   const addCategory = () => {
     if (newCategoryName.trim() && !localCategories.includes(newCategoryName.trim())) {
@@ -57,18 +94,18 @@ export function ShoppingClient({ initialItems, onRefresh, wgId }: { initialItems
   };
 
   return (
-    <div className="animate-fade-in w-full max-w-2xl mx-auto space-y-12 pb-32">
+    <div className={`animate-fade-in w-full max-w-2xl mx-auto space-y-12 pb-32 ${isDarkMode ? 'text-emerald-50' : ''}`}>
       
       {/* Live Status Toggle */}
-      <section className="p-8 rounded-[2.5rem] bg-sage-soft/20 border border-sage-soft/30 chill-shadow">
+      <section className={`p-8 rounded-[2.5rem] border chill-shadow ${isDarkMode ? 'bg-emerald-900/70 border-emerald-700/40' : 'bg-sage-soft/20 border-sage-soft/30'}`}>
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="font-headline text-2xl font-bold text-primary mb-1">Einkaufen?</h2>
-            <p className="text-on-surface-variant text-sm font-bold opacity-70 uppercase tracking-widest">Lass die WG wissen, dass du einkaufen bist</p>
+            <h2 className={`font-headline text-2xl font-bold mb-1 ${isDarkMode ? 'text-emerald-100' : 'text-primary'}`}>Einkaufen?</h2>
+            <p className={`text-sm font-bold opacity-70 uppercase tracking-widest ${isDarkMode ? 'text-emerald-200' : 'text-on-surface-variant'}`}>Lass die WG wissen, dass du einkaufen bist</p>
           </div>
           <button 
-            onClick={() => setIsAtStore(!isAtStore)}
-            className={`w-16 h-10 rounded-full transition-all relative ${isAtStore ? 'bg-primary' : 'bg-stone-200'}`}
+            onClick={() => setIsAtStore(prev => !prev)}
+            className={`w-16 h-10 rounded-full transition-all relative ${isAtStore ? 'bg-primary' : isDarkMode ? 'bg-emerald-950' : 'bg-stone-200'}`}
           >
             <div className={`absolute top-1 w-8 h-8 rounded-full bg-white shadow-sm transition-all ${isAtStore ? 'left-7' : 'left-1'}`} />
           </button>
@@ -80,14 +117,14 @@ export function ShoppingClient({ initialItems, onRefresh, wgId }: { initialItems
         <input 
           type="text" 
           placeholder="Neue Liste (z.B. Baumarkt)..."
-          className="flex-1 px-6 py-4 rounded-2xl bg-white border border-outline-variant/20 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
+          className={`flex-1 px-6 py-4 rounded-2xl border text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all shadow-sm ${isDarkMode ? 'bg-emerald-950/80 border-emerald-700/40 text-emerald-100 placeholder:text-emerald-300/50' : 'bg-white border-outline-variant/20'}`}
           value={newCategoryName}
           onChange={e => setNewCategoryName(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && addCategory()}
         />
         <button 
           onClick={addCategory}
-          className="px-8 py-4 bg-primary text-white rounded-2xl font-bold uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg"
+          className={`px-8 py-4 rounded-2xl font-bold uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg ${isDarkMode ? 'bg-emerald-500 text-emerald-950' : 'bg-primary text-white'}`}
         >
           Liste erstellen
         </button>
@@ -97,11 +134,15 @@ export function ShoppingClient({ initialItems, onRefresh, wgId }: { initialItems
       <div className="space-y-16">
         {localCategories.map(cat => {
           const catItems = initialItems.filter(i => (i.category || 'Lebensmittel') === cat);
+          const isActive = activeCategory === cat;
           return (
-            <section key={cat} className="animate-fade-in bg-white/50 p-8 rounded-[3.5rem] border border-outline-variant/10 shadow-sm relative">
+            <section
+              key={cat}
+              className={`animate-fade-in p-8 rounded-[3.5rem] border shadow-sm relative ${isDarkMode ? 'bg-emerald-950/70 border-emerald-700/30' : 'bg-white/50 border-outline-variant/10'}`}
+            >
               <button 
                 onClick={() => deleteCategory(cat)}
-                className="absolute top-8 right-8 text-on-surface-variant/30 hover:text-red-500 transition-colors"
+                className={`absolute top-8 right-8 transition-colors ${isDarkMode ? 'text-emerald-200/40 hover:text-red-300' : 'text-on-surface-variant/30 hover:text-red-500'}`}
                 title="Liste löschen"
               >
                 <span className="material-symbols-outlined text-[20px]">delete</span>
@@ -110,22 +151,22 @@ export function ShoppingClient({ initialItems, onRefresh, wgId }: { initialItems
               <div className="flex items-center justify-between mb-8 px-2">
                 <div className="flex items-center gap-4">
                   <div className={`w-3 h-10 ${categoryColors[cat] || 'bg-stone-300'} rounded-full`} />
-                  <h3 className="font-headline text-3xl font-bold tracking-tighter text-on-surface">{cat}</h3>
+                  <h3 className={`font-headline text-3xl font-bold tracking-tighter ${isDarkMode ? 'text-emerald-50' : 'text-on-surface'}`}>{cat}</h3>
                 </div>
-                <span className="text-[12px] font-bold text-primary uppercase tracking-[0.2em] opacity-40 mr-8">
+                <span className={`text-[12px] font-bold uppercase tracking-[0.2em] mr-8 ${isDarkMode ? 'text-emerald-200/60' : 'text-primary opacity-40'}`}>
                   {catItems.length.toString().padStart(2, '0')} Artikel
                 </span>
               </div>
 
-              <div className="space-y-4 mb-8">
+              <div className="space-y-4 mb-6">
                 {catItems.map(item => (
-                  <div key={item.id} className="bg-white p-6 rounded-[2.5rem] flex items-center justify-between group chill-shadow border border-outline-variant/10 hover:scale-[1.02] transition-transform cursor-pointer" onClick={() => toggleItem(item.id, item.checked)}>
+                  <div key={item.id} className={`p-6 rounded-[2.5rem] flex items-center justify-between group chill-shadow border hover:scale-[1.02] transition-transform cursor-pointer ${isDarkMode ? 'bg-emerald-900/90 border-emerald-700/40' : 'bg-white border-outline-variant/10'}`} onClick={() => toggleItem(item.id, item.checked)}>
                     <div className="flex items-center gap-6">
-                      <div className={`w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center ${item.checked ? 'bg-primary border-primary text-white scale-90' : 'border-stone-200 bg-stone-50'}`}>
+                      <div className={`w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center ${item.checked ? 'bg-primary border-primary text-white scale-90' : isDarkMode ? 'border-emerald-700 bg-emerald-950/70' : 'border-stone-200 bg-stone-50'}`}>
                         {item.checked && <span className="material-symbols-outlined text-[20px] font-bold">check</span>}
                       </div>
                       <div className={item.checked ? 'opacity-40' : ''}>
-                        <h4 className={`font-bold text-xl text-on-surface leading-tight ${item.checked ? 'line-through' : ''}`}>{item.name}</h4>
+                        <h4 className={`font-bold text-xl leading-tight ${isDarkMode ? 'text-emerald-50' : 'text-on-surface'} ${item.checked ? 'line-through' : ''}`}>{item.name}</h4>
                         {!item.checked && item.id % 4 === 0 && (
                           <span className="inline-block mt-1 px-3 py-1 rounded-full bg-accent-peach/20 text-accent-peach text-[10px] font-bold uppercase tracking-[0.1em]">Dringend</span>
                         )}
@@ -134,7 +175,7 @@ export function ShoppingClient({ initialItems, onRefresh, wgId }: { initialItems
 
                     <button 
                       onClick={(e) => deleteItem(e, item.id)}
-                      className="w-10 h-10 rounded-full border border-outline-variant/10 flex items-center justify-center text-on-surface-variant/20 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
+                      className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 ${isDarkMode ? 'border-emerald-700/40 text-emerald-200/40 hover:text-red-300 hover:bg-red-950/40' : 'border-outline-variant/10 text-on-surface-variant/20 hover:text-red-500 hover:bg-red-50'}`}
                     >
                       <span className="material-symbols-outlined text-[18px]">close</span>
                     </button>
@@ -142,29 +183,45 @@ export function ShoppingClient({ initialItems, onRefresh, wgId }: { initialItems
                 ))}
 
                 {catItems.length === 0 && (
-                  <div className="text-center py-12 bg-stone-100/30 rounded-[2.5rem] border-2 border-dashed border-stone-200/50">
-                    <p className="text-on-surface-variant font-bold text-sm tracking-tight opacity-30 uppercase">Alles da für {cat}</p>
+                  <div className={`text-center py-12 rounded-[2.5rem] border-2 border-dashed ${isDarkMode ? 'bg-emerald-950/50 border-emerald-700/40' : 'bg-stone-100/30 border-stone-200/50'}`}>
+                    <p className={`font-bold text-sm tracking-tight uppercase ${isDarkMode ? 'text-emerald-100/40' : 'text-on-surface-variant opacity-30'}`}>Alles da für {cat}</p>
                   </div>
                 )}
               </div>
 
-              {/* Individual Add Button per List */}
-              <div className="flex gap-2 p-2 bg-stone-100/50 rounded-full">
-                <input 
-                  type="text" 
-                  placeholder={`${cat} hinzufügen...`}
-                  className="flex-1 px-6 py-3 rounded-full bg-transparent border-none text-sm font-bold focus:ring-0 transition-all"
-                  value={newItemNames[cat] || ''}
-                  onChange={(e) => setNewItemNames(prev => ({ ...prev, [cat]: e.target.value }))}
-                  onKeyDown={(e) => e.key === 'Enter' && addItem(cat)}
-                />
-                <button 
-                  onClick={() => addItem(cat)}
-                  className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all"
+              {isActive ? (
+                <form
+                  className={`flex gap-2 p-2 rounded-full ${isDarkMode ? 'bg-emerald-950/80' : 'bg-stone-100/50'}`}
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    addItem(cat);
+                  }}
                 >
-                  <span className="material-symbols-outlined">add</span>
+                  <input 
+                    ref={activeInputRef}
+                    type="text" 
+                    placeholder={`${cat} hinzufügen...`}
+                    className={`flex-1 px-6 py-3 rounded-full bg-transparent border-none text-sm font-bold focus:ring-0 transition-all ${isDarkMode ? 'text-emerald-50 placeholder:text-emerald-200/50' : ''}`}
+                    value={newItemNames[cat] || ''}
+                    onChange={(e) => setNewItemNames(prev => ({ ...prev, [cat]: e.target.value }))}
+                    onKeyDown={(e) => e.key === 'Escape' && setActiveCategory(null)}
+                  />
+                  <button 
+                    type="submit"
+                    className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all"
+                  >
+                    <span className="material-symbols-outlined">add</span>
+                  </button>
+                </form>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory(cat)}
+                  className={`w-full mt-2 px-6 py-4 rounded-[2rem] border-2 border-dashed text-left text-sm font-bold uppercase tracking-[0.2em] transition-all ${isDarkMode ? 'border-emerald-700/50 text-emerald-200/60 hover:text-emerald-50 hover:border-emerald-300/50 hover:bg-emerald-800/30' : 'border-stone-200 text-on-surface-variant/40 hover:text-primary hover:border-primary/20 hover:bg-primary/5'}`}
+                >
+                  Eintrag hinzufügen
                 </button>
-              </div>
+              )}
             </section>
           );
         })}

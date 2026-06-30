@@ -1,6 +1,8 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { validatePasswordInput } from '../utils/logic';
+import { authFetch } from '../utils/authFetch';
 
 export function Login({ onLoginSuccess }: { onLoginSuccess: () => void }) {
   const [email, setEmail] = useState('');
@@ -13,15 +15,22 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: () => void }) {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+
+    const passwordCheck = validatePasswordInput(password);
+    if (!passwordCheck.isValid) {
+      setError(passwordCheck.error || 'Ungültiges Passwort');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await authFetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password: passwordCheck.value }),
       });
 
       if (response.ok) {
