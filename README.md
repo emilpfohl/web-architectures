@@ -182,3 +182,32 @@ Ebene           Was testen wir bei uns            Tool
 Unit                                       
 Integration
 E2E
+
+#07 Real Time Web
+
+Gibt es Daten in eurer App, die sich ändern können, während ein anderer Nutzer die Seite offen hat?	
+Ja - Chat, Einkaufliste, To-Do
+
+
+Müssen Änderungen sofort sichtbar sein – oder reicht ein Reload?	 
+Wäre schon besser
+
+Ist die Kommunikation einseitig (Server → Client) oder bidirektional (beide senden)?
+bidirektional
+
+Wie viele Clients könnten gleichzeitig verbunden sein?
+Zumindest 5 für 5er WGS
+
+Trefft danach eine begründete Technologieentscheidung:
+WebSockets → Beide Seiten kommunizieren aktiv (z.B. Chat, kollaboratives Editing, Multiplayer)
+Ist hier sinnvoll vorallem wegen dem Chat und weil Datenpakete von Clients an den Server gegeben werden und gleichzeitig auch vom Server an andere Clients ausgegeben
+
+„Welche Teile meiner App würden langfristig von Echtzeit-Kommunikation profitieren, welche nicht? Wo wäre Polling (z.B. alle 5 Sekunden ein GET) die ehrlichere Lösung? Begründe anhand meines konkreten Codes.":
+
+Ja zu Echtzeit für Nachrichten, Präsenz und Einkaufslisten.
+Nein zu generellem Live-Polling für alles.
+Die übrigen Bereiche sind im Backend sauberer als Request/Response mit explizitem Refresh.
+
+Unsere Einschätzung:
+Das klingt plausibel und wär auch unsere Antwort gewesen, nötig ist es nicht unbedingt, da bei einer WG App wohl nicht den ganzen Tag hoher Betrieb ist und es unwarscheinlich ist, dass zwei Leute gleichzeitig Eintragungen machen, dennoch wäre es in manchen Punkten wie dem Chat schon toll falls man mal live kommuniziert.
+
