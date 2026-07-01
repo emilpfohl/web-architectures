@@ -17,6 +17,17 @@ export function ShoppingClient({ initialItems, onRefresh, wgId, isDarkMode = fal
     'Wishlist': 'bg-accent-peach'
   };
 
+  const toggleAtStore = async () => {
+    const nextValue = !isAtStore;
+    setIsAtStore(nextValue);
+    if (!wgId) return;
+    await authFetch('/api/users/status', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wgId, isShopping: nextValue })
+    });
+  };
+
   const addItem = async (cat: string) => {
     const itemName = newItemNames[cat];
     const preparedItem = prepareShoppingItemInput(itemName, cat);
@@ -103,8 +114,8 @@ export function ShoppingClient({ initialItems, onRefresh, wgId, isDarkMode = fal
             <h2 className={`font-headline text-2xl font-bold mb-1 ${isDarkMode ? 'text-emerald-100' : 'text-primary'}`}>Einkaufen?</h2>
             <p className={`text-sm font-bold opacity-70 uppercase tracking-widest ${isDarkMode ? 'text-emerald-200' : 'text-on-surface-variant'}`}>Lass die WG wissen, dass du einkaufen bist</p>
           </div>
-          <button 
-            onClick={() => setIsAtStore(prev => !prev)}
+          <button
+            onClick={toggleAtStore}
             className={`w-16 h-10 rounded-full transition-all relative ${isAtStore ? 'bg-primary' : isDarkMode ? 'bg-emerald-950' : 'bg-stone-200'}`}
           >
             <div className={`absolute top-1 w-8 h-8 rounded-full bg-white shadow-sm transition-all ${isAtStore ? 'left-7' : 'left-1'}`} />

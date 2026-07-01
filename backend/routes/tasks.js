@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const prisma = require('../lib/prisma');
+const { notifyNewTask } = require('../lib/notifications');
 
 // -- TODOS --
 // GET /api/todos
@@ -83,6 +84,10 @@ router.post('/', async (req, res) => {
     });
 
     res.status(201).json(newTodo);
+
+    const creator = await prisma.user.findUnique({ where: { id: uId }, select: { name: true } });
+    notifyNewTask({ wgId: wId, creatorId: uId, creatorName: creator?.name || 'Jemand', taskTitle: title })
+      .catch(err => console.error('Error sending new task notification:', err));
   } catch (error) {
     console.error('Error creating todo:', error);
     res.status(500).json({ error: 'Internal server error' });

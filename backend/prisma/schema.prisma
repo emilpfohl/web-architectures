@@ -11,14 +11,15 @@ datasource db {
 }
 
 model User {
-  id          Int          @id @default(autoincrement())
-  name        String
-  email       String       @unique
-  password    String       @default("") // Adding default temporarily if migrating
-  memberships Membership[]
-  todos       Todo[]
-  finances    FinanceItem[]
-  messages    Message[]
+  id                Int                @id @default(autoincrement())
+  name              String
+  email             String             @unique
+  password          String             @default("") // Adding default temporarily if migrating
+  memberships       Membership[]
+  todos             Todo[]
+  finances          FinanceItem[]
+  messages          Message[]
+  pushSubscriptions PushSubscription[]
 }
 
 model WG {
@@ -35,13 +36,14 @@ model WG {
 }
 
 model Membership {
-  userId Int
-  wgId   Int
-  role   String
-  isHome Boolean @default(true)
-  mood   String  @default("Chill")
-  user   User    @relation(fields: [userId], references: [id])
-  wg     WG      @relation(fields: [wgId], references: [id])
+  userId     Int
+  wgId       Int
+  role       String
+  isHome     Boolean @default(true)
+  mood       String  @default("Chill")
+  isShopping Boolean @default(false)
+  user       User    @relation(fields: [userId], references: [id])
+  wg         WG      @relation(fields: [wgId], references: [id])
 
   @@id([userId, wgId])
 }
@@ -91,6 +93,16 @@ model Invitation {
   usedCount Int    @default(0)
   maxUses   Int
   wg        WG     @relation(fields: [wgId], references: [id])
+}
+
+model PushSubscription {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Message {

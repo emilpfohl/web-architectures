@@ -8,7 +8,10 @@ const authRouter = require('./routes/auth');
 const authenticate = require('./middleware/authenticate');
 const tasksRouter = require('./routes/tasks');
 const messagesRouter = require('./routes/messages');
+const pushRouter = require('./routes/push');
 const prisma = require('./lib/prisma');
+const { notifyNewMember, notifyShopping } = require('./lib/notifications');
+const { sendPushToUser } = require('./lib/webpush');
 
 const app = express();
 const PORT = 3000;
@@ -32,6 +35,7 @@ app.use(cookieParser());
 
 // Register Auth Router (NOT protected)
 app.use('/api/auth', authRouter);
+app.use('/api/push', pushRouter);
 
 // Protect all other routes
 app.use(authenticate);
@@ -103,19 +107,48 @@ app.get('/api/users', async (req, res) => {
 
 app.put('/api/users/status', async (req, res) => {
   try {
-    const { wgId, isHome, mood } = req.body;
+    const { wgId, isHome, mood, isShopping } = req.body;
     if (!wgId) return res.status(400).json({ error: 'wgId ist erforderlich' });
 
     const uId = parseInt(req.user.userId);
+    const wId = parseInt(wgId);
+
+    const previousMembership = await prisma.membership.findUnique({
+      where: { userId_wgId: { userId: uId, wgId: wId } }
+    });
+
     const updatedMembership = await prisma.membership.update({
-      where: { userId_wgId: { userId: uId, wgId: parseInt(wgId) } },
+      where: { userId_wgId: { userId: uId, wgId: wId } },
       data: {
         ...(isHome !== undefined ? { isHome } : {}),
-        ...(mood !== undefined ? { mood } : {})
+        ...(mood !== undefined ? { mood } : {}),
+        ...(isShopping !== undefined ? { isShopping } : {})
       }
     });
 
     res.json(updatedMembership);
+
+    if (isShopping === true && previousMembership && !previousMembership.isShopping) {
+      const shopper = await prisma.user.findUnique({ where: { id: uId }, select: { name: true } });
+      const shopperName = shopper?.name || 'Jemand';
+
+      notifyShopping({ wgId: wId, shopperId: uId, shopperName })
+        .catch(err => console.error('Error sending shopping notification:', err));
+
+      prisma.membership.findMany({ where: { wgId: wId, userId: { not: uId } } })
+        .then(otherMemberships => {
+          const pushPayload = {
+            title: `${shopperName} ist einkaufen`,
+            body: 'Sag Bescheid, falls dir noch etwas fehlt.',
+            url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/?tab=shopping`
+          };
+          otherMemberships.forEach(m => {
+            sendPushToUser(m.userId, pushPayload)
+              .catch(err => console.error('Error sending shopping push notification:', err));
+          });
+        })
+        .catch(err => console.error('Error loading WG members for push notification:', err));
+    }
   } catch (error) {
     console.error('Error updating status:', error);
     res.status(500).json({ error: 'Interner Serverfehler' });
@@ -553,7 +586,8 @@ app.post('/api/invitations/join', async (req, res) => {
     if (!token || !userId) return res.status(400).json({ error: 'Token und userId sind erforderlich' });
 
     const invite = await prisma.invitation.findUnique({
-      where: { token: token }
+      where: { token: token },
+      include: { wg: true }
     });
     if (!invite) return res.status(404).json({ error: 'Einladung nicht gefunden' });
 
@@ -585,6 +619,14 @@ app.post('/api/invitations/join', async (req, res) => {
     });
 
     res.status(200).json({ message: 'Erfolgreich beigetreten', wgId: invite.wgId });
+
+    const newMember = await prisma.user.findUnique({ where: { id: uId }, select: { name: true } });
+    notifyNewMember({
+      wgId: invite.wgId,
+      wgName: invite.wg.name,
+      newMemberId: uId,
+      newMemberName: newMember?.name || 'Ein neues Mitglied'
+    }).catch(err => console.error('Error sending new member notification:', err));
   } catch (error) {
     console.error('Error joining via invitation:', error);
     res.status(500).json({ error: 'Interner Serverfehler' });

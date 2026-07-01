@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
 const authenticate = require('../middleware/authenticate');
+const { notifyPasswordChanged } = require('../lib/notifications');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
@@ -162,6 +163,42 @@ router.put('/profile', authenticate, async (req, res) => {
     res.json({ id: updatedUser.id, name: updatedUser.name, email: updatedUser.email });
   } catch (error) {
     console.error('Error updating profile:', error);
+    res.status(500).json({ error: 'Interner Serverfehler' });
+  }
+});
+
+// PUT /api/auth/password
+router.put('/password', authenticate, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Aktuelles und neues Passwort sind erforderlich' });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'Das neue Passwort muss mindestens 8 Zeichen lang sein' });
+    }
+
+    const uId = parseInt(req.user.userId);
+    const user = await prisma.user.findUnique({ where: { id: uId } });
+    if (!user) return res.status(401).json({ error: 'Nicht authentifiziert' });
+
+    const isCurrentValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isCurrentValid) {
+      return res.status(401).json({ error: 'Aktuelles Passwort ist falsch' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: uId },
+      data: { password: hashedPassword }
+    });
+
+    res.json({ message: 'Passwort erfolgreich geändert' });
+
+    notifyPasswordChanged({ userEmail: user.email, userName: user.name })
+      .catch(err => console.error('Error sending password changed notification:', err));
+  } catch (error) {
+    console.error('Error changing password:', error);
     res.status(500).json({ error: 'Interner Serverfehler' });
   }
 });

@@ -12,6 +12,13 @@ export function ProfileModal({ user, onClose, onUpdated }: ProfileModalProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+
   const handleSave = async () => {
     if (!name.trim()) {
       setError('Name darf nicht leer sein.');
@@ -37,6 +44,44 @@ export function ProfileModal({ user, onClose, onUpdated }: ProfileModalProps) {
       setError('Netzwerkfehler');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handlePasswordSave = async () => {
+    setPasswordError('');
+    setPasswordSuccess('');
+    if (!currentPassword || !newPassword) {
+      setPasswordError('Bitte beide Passwortfelder ausfüllen.');
+      return;
+    }
+    if (newPassword.length < 8) {
+      setPasswordError('Das neue Passwort muss mindestens 8 Zeichen lang sein.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Die Passwörter stimmen nicht überein.');
+      return;
+    }
+    setPasswordSaving(true);
+    try {
+      const res = await authFetch('/api/auth/password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPasswordSuccess('Passwort erfolgreich geändert.');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        setPasswordError(data.error || 'Fehler beim Ändern des Passworts');
+      }
+    } catch {
+      setPasswordError('Netzwerkfehler');
+    } finally {
+      setPasswordSaving(false);
     }
   };
 
@@ -99,6 +144,63 @@ export function ProfileModal({ user, onClose, onUpdated }: ProfileModalProps) {
           {error && (
             <p className="text-red-500 text-sm font-bold px-2">{error}</p>
           )}
+        </div>
+
+        {/* Password Section */}
+        <div className="space-y-4 mt-8 pt-8 border-t border-outline-variant/10">
+          <h3 className="font-headline text-lg font-bold text-on-surface tracking-tight">Passwort ändern</h3>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60 px-2">
+              Aktuelles Passwort
+            </label>
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="w-full px-6 py-4 rounded-2xl bg-stone-50 border-2 border-transparent text-base font-bold focus:ring-0 focus:border-primary/30 transition-all"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60 px-2">
+              Neues Passwort
+            </label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full px-6 py-4 rounded-2xl bg-stone-50 border-2 border-transparent text-base font-bold focus:ring-0 focus:border-primary/30 transition-all"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60 px-2">
+              Neues Passwort bestätigen
+            </label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handlePasswordSave()}
+              className="w-full px-6 py-4 rounded-2xl bg-stone-50 border-2 border-transparent text-base font-bold focus:ring-0 focus:border-primary/30 transition-all"
+            />
+          </div>
+
+          {passwordError && (
+            <p className="text-red-500 text-sm font-bold px-2">{passwordError}</p>
+          )}
+          {passwordSuccess && (
+            <p className="text-primary text-sm font-bold px-2">{passwordSuccess}</p>
+          )}
+
+          <button
+            onClick={handlePasswordSave}
+            disabled={passwordSaving}
+            className="w-full py-4 rounded-2xl font-bold uppercase tracking-[0.15em] text-sm text-white bg-primary shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
+          >
+            {passwordSaving ? 'Ändern...' : 'Passwort ändern'}
+          </button>
         </div>
 
         {/* Actions */}

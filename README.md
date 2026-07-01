@@ -183,7 +183,7 @@ Unit
 Integration
 E2E
 
-#07 Real Time Web
+# 07 Real Time Web
 
 Gibt es Daten in eurer App, die sich ändern können, während ein anderer Nutzer die Seite offen hat?	
 Ja - Chat, Einkaufliste, To-Do
@@ -210,4 +210,20 @@ Die übrigen Bereiche sind im Backend sauberer als Request/Response mit explizit
 
 Unsere Einschätzung:
 Das klingt plausibel und wär auch unsere Antwort gewesen, nötig ist es nicht unbedingt, da bei einer WG App wohl nicht den ganzen Tag hoher Betrieb ist und es unwarscheinlich ist, dass zwei Leute gleichzeitig Eintragungen machen, dennoch wäre es in manchen Punkten wie dem Chat schon toll falls man mal live kommuniziert.
+
+# 08 Async Messaging
+
+Passwort geändert	Ja	Transactional	E-Mail	Sicherheitsrelevant, braucht Persistenz
+ToDos update Ja E-mail Mittelwichtig 
+Jemand ist gerade Einkaufen Ja E-mail + Push-Nachricht Sehr wichtig
+Einkaufsliste, Finanzen, Statusupdates Nein Nicht wichtig 
+
+Gibt es Events, bei denen der Nutzer sofort reagieren muss – oder reicht eine Mail, die er später liest?
+Nur wenn jemand im Moment Einkaufen ist und evtl. wenn jemand Nachhause kommt
+
+Habt ihr Marketing-Content geplant, der ein explizites Opt-in braucht?
+Nein
+
+Wie viele verschiedene Events würden pro Stunde realistisch Notifications auslösen?
+schwierig zu sagen, aber durchschnittlich wahrscheinlich 0-2
 

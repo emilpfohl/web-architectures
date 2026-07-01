@@ -4,6 +4,7 @@ import { MainLayout } from './components/MainLayout';
 import { Login } from './components/Login';
 import { Register } from './components/Register';
 import { authFetch } from './utils/authFetch';
+import { setupPushNotifications } from './utils/push';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -35,6 +36,12 @@ function App() {
   useEffect(() => {
     checkAuth();
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setupPushNotifications();
+    }
+  }, [isAuthenticated]);
 
   if (isAuthenticated === null) {
     return (
