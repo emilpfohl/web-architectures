@@ -26,6 +26,8 @@ model WG {
   id          Int            @id @default(autoincrement())
   name        String
   createdAt   String
+  icon        String         @default("🏠")
+  themeColor  String         @default("#50644e")
   memberships Membership[]
   shopping    ShoppingItem[]
   todos       Todo[]

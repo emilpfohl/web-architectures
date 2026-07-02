@@ -237,9 +237,9 @@ app.post('/api/wgs', async (req, res) => {
 app.put('/api/wgs/:id', async (req, res) => {
   try {
     const wgId = parseInt(req.params.id);
-    const { name } = req.body;
+    const { name, icon, themeColor } = req.body;
 
-    if (!name || !name.trim()) {
+    if (name !== undefined && !name.trim()) {
       return res.status(400).json({ error: 'Name ist erforderlich' });
     }
 
@@ -250,12 +250,88 @@ app.put('/api/wgs/:id', async (req, res) => {
 
     const updatedWg = await prisma.wG.update({
       where: { id: wgId },
-      data: { name: name.trim() }
+      data: {
+        ...(name !== undefined ? { name: name.trim() } : {}),
+        ...(icon !== undefined ? { icon } : {}),
+        ...(themeColor !== undefined ? { themeColor } : {})
+      }
     });
 
     res.json(updatedWg);
   } catch (error) {
     console.error('Error updating WG:', error);
+    res.status(500).json({ error: 'Interner Serverfehler' });
+  }
+});
+
+// GET /api/wgs/:id/members
+app.get('/api/wgs/:id/members', async (req, res) => {
+  try {
+    const wgId = parseInt(req.params.id);
+    const uId = parseInt(req.user.userId);
+
+    const isMember = await prisma.membership.findUnique({
+      where: { userId_wgId: { userId: uId, wgId } }
+    });
+    if (!isMember) return res.status(403).json({ error: 'Zugriff verweigert' });
+
+    const memberships = await prisma.membership.findMany({
+      where: { wgId },
+      include: { user: { select: { id: true, name: true, email: true } } }
+    });
+
+    res.json(memberships.map(m => ({
+      userId: m.user.id,
+      name: m.user.name,
+      email: m.user.email,
+      role: m.role
+    })));
+  } catch (error) {
+    console.error('Error fetching WG members:', error);
+    res.status(500).json({ error: 'Interner Serverfehler' });
+  }
+});
+
+// DELETE /api/wgs/:id/members/:userId (auch für "WG verlassen" via eigene userId)
+app.delete('/api/wgs/:id/members/:userId', async (req, res) => {
+  try {
+    const wgId = parseInt(req.params.id);
+    const targetUserId = parseInt(req.params.userId);
+    const requesterId = parseInt(req.user.userId);
+
+    const requesterMembership = await prisma.membership.findUnique({
+      where: { userId_wgId: { userId: requesterId, wgId } }
+    });
+    if (!requesterMembership) return res.status(403).json({ error: 'Zugriff verweigert' });
+
+    const targetMembership = await prisma.membership.findUnique({
+      where: { userId_wgId: { userId: targetUserId, wgId } }
+    });
+    if (!targetMembership) return res.status(404).json({ error: 'Mitgliedschaft nicht gefunden' });
+
+    const remainingCount = await prisma.membership.count({ where: { wgId } });
+
+    if (remainingCount <= 1) {
+      await prisma.$transaction([
+        prisma.shoppingItem.deleteMany({ where: { wgId } }),
+        prisma.todo.deleteMany({ where: { wgId } }),
+        prisma.calendarEvent.deleteMany({ where: { wgId } }),
+        prisma.financeItem.deleteMany({ where: { wgId } }),
+        prisma.invitation.deleteMany({ where: { wgId } }),
+        prisma.message.deleteMany({ where: { wgId } }),
+        prisma.membership.deleteMany({ where: { wgId } }),
+        prisma.wG.delete({ where: { id: wgId } })
+      ]);
+      return res.json({ message: 'Mitglied entfernt, WG war leer und wurde gelöscht', wgDeleted: true });
+    }
+
+    await prisma.membership.delete({
+      where: { userId_wgId: { userId: targetUserId, wgId } }
+    });
+
+    res.json({ message: 'Mitglied entfernt', wgDeleted: false });
+  } catch (error) {
+    console.error('Error removing WG member:', error);
     res.status(500).json({ error: 'Interner Serverfehler' });
   }
 });
@@ -562,6 +638,12 @@ app.post('/api/wgs/:id/invitations', async (req, res) => {
     const wgId = parseInt(req.params.id);
     const wg = await prisma.wG.findUnique({ where: { id: wgId } });
     if (!wg) return res.status(404).json({ error: 'WG nicht gefunden' });
+
+    const uId = parseInt(req.user.userId);
+    const membership = await prisma.membership.findUnique({
+      where: { userId_wgId: { userId: uId, wgId: wgId } }
+    });
+    if (!membership) return res.status(403).json({ error: 'Du bist kein Mitglied dieser WG' });
 
     const newInvite = await prisma.invitation.create({
       data: {

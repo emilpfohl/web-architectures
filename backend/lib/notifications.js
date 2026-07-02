@@ -7,6 +7,8 @@ const ShoppingEmail = require('../emails/ShoppingEmail');
 const PasswordChangedEmail = require('../emails/PasswordChangedEmail');
 
 const CHAT_URL = `${FRONTEND_URL}/?tab=dashboard`;
+const TASKS_URL = `${FRONTEND_URL}/?tab=todos`;
+const SHOPPING_URL = `${FRONTEND_URL}/?tab=shopping`;
 
 async function otherMemberEmails(wgId, excludeUserId) {
   const memberships = await prisma.membership.findMany({
@@ -22,27 +24,29 @@ async function notifyNewMember({ wgId, wgName, newMemberId, newMemberName }) {
   await sendMail({
     to: recipients,
     subject: `${newMemberName} ist der WG "${wgName}" beigetreten`,
-    react: React.createElement(NewMemberEmail, { newMemberName, wgName, chatUrl: CHAT_URL })
+    react: React.createElement(NewMemberEmail, { newMemberName, wgName, actionUrl: CHAT_URL })
   });
 }
 
 async function notifyNewTask({ wgId, creatorId, creatorName, taskTitle }) {
   const recipients = await otherMemberEmails(wgId, creatorId);
   if (recipients.length === 0) return;
+  const wg = await prisma.wG.findUnique({ where: { id: wgId }, select: { name: true } });
   await sendMail({
     to: recipients,
     subject: `Neue Aufgabe: "${taskTitle}"`,
-    react: React.createElement(NewTaskEmail, { creatorName, taskTitle, chatUrl: CHAT_URL })
+    react: React.createElement(NewTaskEmail, { creatorName, taskTitle, wgName: wg?.name, actionUrl: TASKS_URL })
   });
 }
 
 async function notifyShopping({ wgId, shopperId, shopperName }) {
   const recipients = await otherMemberEmails(wgId, shopperId);
   if (recipients.length === 0) return;
+  const wg = await prisma.wG.findUnique({ where: { id: wgId }, select: { name: true } });
   await sendMail({
     to: recipients,
     subject: `${shopperName} ist einkaufen`,
-    react: React.createElement(ShoppingEmail, { shopperName, chatUrl: CHAT_URL })
+    react: React.createElement(ShoppingEmail, { shopperName, wgName: wg?.name, actionUrl: SHOPPING_URL })
   });
 }
 

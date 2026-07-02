@@ -1,22 +1,27 @@
 const { Heading, Text, Button } = require('@react-email/components');
-const { EmailLayout, e } = require('./layout');
+const { EmailLayout, e, COLORS, FONT_HEADLINE } = require('./layout');
 
-function NewTaskEmail({ creatorName, taskTitle, chatUrl }) {
-  return e(EmailLayout, null,
-    e(Heading, { style: { fontSize: '22px' } }, `Neue Aufgabe: "${taskTitle}"`),
-    e(Text, null, `${creatorName} hat eine neue Aufgabe für die WG erstellt: "${taskTitle}".`),
-    e(Text, null, 'Schau vorbei und übernimm sie, wenn du Zeit hast.'),
+function NewTaskEmail({ creatorName, taskTitle, wgName, actionUrl }) {
+  return e(EmailLayout, { wgName },
+    e(Heading, { style: { fontFamily: FONT_HEADLINE, fontSize: '22px', color: COLORS.onSurface, margin: '0 0 12px' } },
+      `Neue Aufgabe: "${taskTitle}"`),
+    e(Text, { style: { color: COLORS.onSurface, fontSize: '15px', lineHeight: '22px', margin: '0 0 8px' } },
+      `${creatorName} hat eine neue Aufgabe für die WG erstellt: "${taskTitle}".`),
+    e(Text, { style: { color: COLORS.onSurfaceVariant, fontSize: '15px', lineHeight: '22px', margin: '0 0 24px' } },
+      'Schau vorbei und übernimm sie, wenn du Zeit hast.'),
     e(Button, {
-      href: chatUrl,
+      href: actionUrl,
       style: {
-        backgroundColor: '#4b6c53',
-        color: '#ffffff',
+        backgroundColor: COLORS.primary,
+        color: COLORS.onPrimary,
         padding: '12px 24px',
-        borderRadius: '999px',
-        fontWeight: 'bold',
+        borderRadius: '9999px',
+        fontFamily: FONT_HEADLINE,
+        fontWeight: 700,
+        fontSize: '14px',
         textDecoration: 'none'
       }
-    }, 'Zum Chat')
+    }, 'Zu den Aufgaben')
   );
 }
 

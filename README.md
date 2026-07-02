@@ -227,3 +227,8 @@ Nein
 Wie viele verschiedene Events würden pro Stunde realistisch Notifications auslösen?
 schwierig zu sagen, aber durchschnittlich wahrscheinlich 0-2
 
+Itterationen der E-mail:
+
+1. In der Email soll eine Überschrift geben die besagt was passiert, z.B. ... ist der WG beigetreten. Außerdem ein Satz der auffordert zu Handeln also in dem Fall etwas wie "Begrüß ihn direkt in der App!". Außerdem soll ein Link direkt zur Task enthalten sein
+
+2. Passe mir die E-mail noch an also gestalte sie mehr in dem Website look mit cleaner ästhethik oben links bitte das Logo das auch für die WG verwendet wird, außerdem der name der wg und ein link direkt zu der action, also zum Beispiel direkt zur Einkaufsliste wenn jemand einkaufen ist.

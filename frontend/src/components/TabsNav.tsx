@@ -8,10 +8,11 @@ interface TabsNavProps {
   onSelectWg?: (id: number) => void;
   user?: any;
   onOpenProfile?: () => void;
+  onOpenWgSettings?: () => void;
   isDarkMode?: boolean;
 }
 
-export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile, isDarkMode = false }: TabsNavProps) {
+export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile, onOpenWgSettings, isDarkMode = false }: TabsNavProps) {
   const [searchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'dashboard';
   const navigate = useNavigate();
@@ -41,23 +42,49 @@ export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile, is
       <div className="flex items-center gap-2 pb-4 min-w-[140px]">
         {wgs && wgs.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className={`material-symbols-outlined text-[20px] [font-variation-settings:'FILL'_1,'wght'_300] ${isDarkMode ? 'text-emerald-200' : 'text-primary'}`}>
-              home
-            </span>
             {wgs.length === 1 ? (
-              <span className={`font-headline text-[11px] md:text-[12px] font-semibold uppercase tracking-[0.15em] ${isDarkMode ? 'text-emerald-50' : 'text-on-surface'}`}>
-                {selectedWg?.name || 'WG'}
-              </span>
-            ) : (
-              <select
-                value={selectedWgId || ''}
-                onChange={(e) => onSelectWg?.(Number(e.target.value))}
-                className={`font-headline text-[11px] md:text-[12px] font-semibold uppercase tracking-[0.15em] bg-transparent border-none cursor-pointer focus:outline-none focus:ring-0 pr-4 ${isDarkMode ? 'text-emerald-50' : 'text-on-surface'}`}
+              <button
+                onClick={onOpenWgSettings}
+                title="WG bearbeiten"
+                className="flex items-center gap-2 group"
               >
-                {wgs.map(wg => (
-                  <option key={wg.id} value={wg.id}>{wg.name}</option>
-                ))}
-              </select>
+                {selectedWg?.icon ? (
+                  <span className="text-[16px] leading-none">{selectedWg.icon}</span>
+                ) : (
+                  <span className={`material-symbols-outlined text-[20px] [font-variation-settings:'FILL'_1,'wght'_300] ${isDarkMode ? 'text-emerald-200' : 'text-primary'}`}>
+                    home
+                  </span>
+                )}
+                <span className={`font-headline text-[11px] md:text-[12px] font-semibold uppercase tracking-[0.15em] group-hover:opacity-70 transition-opacity ${isDarkMode ? 'text-emerald-50' : 'text-on-surface'}`}>
+                  {selectedWg?.name || 'WG'}
+                </span>
+              </button>
+            ) : (
+              <>
+                {selectedWg?.icon ? (
+                  <span className="text-[16px] leading-none">{selectedWg.icon}</span>
+                ) : (
+                  <span className={`material-symbols-outlined text-[20px] [font-variation-settings:'FILL'_1,'wght'_300] ${isDarkMode ? 'text-emerald-200' : 'text-primary'}`}>
+                    home
+                  </span>
+                )}
+                <select
+                  value={selectedWgId || ''}
+                  onChange={(e) => onSelectWg?.(Number(e.target.value))}
+                  className={`font-headline text-[11px] md:text-[12px] font-semibold uppercase tracking-[0.15em] bg-transparent border-none cursor-pointer focus:outline-none focus:ring-0 pr-4 ${isDarkMode ? 'text-emerald-50' : 'text-on-surface'}`}
+                >
+                  {wgs.map(wg => (
+                    <option key={wg.id} value={wg.id}>{wg.name}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={onOpenWgSettings}
+                  title="WG bearbeiten"
+                  className={`material-symbols-outlined text-[16px] transition-colors ${isDarkMode ? 'text-emerald-200/50 hover:text-emerald-100' : 'text-on-surface-variant/40 hover:text-on-surface-variant'}`}
+                >
+                  settings
+                </button>
+              </>
             )}
           </div>
         )}

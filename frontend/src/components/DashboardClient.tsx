@@ -4,7 +4,7 @@ import { authFetch } from '../utils/authFetch';
 import { buildLeaderboard } from '../utils/leaderboard';
 import { formatMessageTimestamp } from '../utils/logic';
 
-export function DashboardClient({ wgId, user, wgName, todos = [], onRenameWg }: { shopping: any[], todos: any[], finances: any[], onRefresh: () => void, wgId: number, user: any, wgName?: string, onRenameWg?: (newName: string) => Promise<boolean> }) {
+export function DashboardClient({ wgId, user, wgName, wgIcon, todos = [] }: { shopping: any[], todos: any[], finances: any[], onRefresh: () => void, wgId: number, user: any, wgName?: string, wgIcon?: string }) {
   const navigate = useNavigate();
 
   const availableMoods = [
@@ -83,13 +83,6 @@ export function DashboardClient({ wgId, user, wgName, todos = [], onRenameWg }: 
   const isUserHome = currentUserData?.isHome ?? true;
   const userMood = currentUserData?.mood ?? 'Chill';
   const leaderboard = buildLeaderboard(allResidents, todos);
-  const [isEditingWgName, setIsEditingWgName] = useState(false);
-  const [wgNameDraft, setWgNameDraft] = useState(wgName || '');
-  const [isSavingWgName, setIsSavingWgName] = useState(false);
-
-  useEffect(() => {
-    setWgNameDraft(wgName || '');
-  }, [wgName]);
 
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -141,89 +134,25 @@ export function DashboardClient({ wgId, user, wgName, todos = [], onRenameWg }: 
     }
   };
 
-  const submitWgNameUpdate = async () => {
-    const nextName = wgNameDraft.trim();
-    if (!onRenameWg || !nextName) {
-      setWgNameDraft(wgName || '');
-      setIsEditingWgName(false);
-      return;
-    }
-
-    if (nextName === (wgName || '').trim()) {
-      setIsEditingWgName(false);
-      return;
-    }
-
-    setIsSavingWgName(true);
-    const ok = await onRenameWg(nextName);
-    setIsSavingWgName(false);
-
-    if (ok) {
-      setIsEditingWgName(false);
-      return;
-    }
-
-    setWgNameDraft(wgName || '');
-  };
-
   return (
     <div className="animate-fade-in w-full space-y-12 pb-20">
       
       {/* Vibe / Hero Section */}
       <section className="space-y-8 animate-fade-in py-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-full bg-sage-soft flex items-center justify-center text-primary border border-primary/10 shadow-sm">
-            <span className="material-symbols-outlined font-black">temple_buddhist</span>
-          </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">WG Stimmung</span>
-        </div>
-        
         <div>
-          <h1 className="font-headline text-5xl md:text-7xl font-semibold text-on-surface tracking-tighter leading-[1.05] mb-4">
-            {wgName ? (
-              <>
-                {isEditingWgName ? (
-                  <span className="inline-flex items-center gap-2 flex-wrap">
-                    <input
-                      type="text"
-                      value={wgNameDraft}
-                      onChange={(e) => setWgNameDraft(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          submitWgNameUpdate();
-                        }
-                        if (e.key === 'Escape') {
-                          setWgNameDraft(wgName || '');
-                          setIsEditingWgName(false);
-                        }
-                      }}
-                      className="text-3xl md:text-6xl px-4 py-2 rounded-2xl bg-white/80 border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-primary/30"
-                      autoFocus
-                    />
-                    <button
-                      type="button"
-                      onClick={submitWgNameUpdate}
-                      disabled={isSavingWgName || !wgNameDraft.trim()}
-                      className="px-4 py-2 rounded-full bg-primary text-white text-xs md:text-sm uppercase tracking-wider disabled:opacity-50"
-                    >
-                      {isSavingWgName ? 'Speichern...' : 'Speichern'}
-                    </button>
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingWgName(true)}
-                    className="text-left transition-opacity hover:opacity-70"
-                    title="WG-Namen bearbeiten"
-                  >
-                    {wgName}
-                  </button>
-                )}
-                <br/>
-              </>
-            ) : <>Willkommen Zuhause, <br/></>}
-            <span className="text-primary italic font-light text-4xl md:text-6xl">Alles im Griff</span>
+          <h1 className="font-headline text-5xl md:text-7xl font-semibold text-on-surface tracking-tighter leading-[1.05] mb-4 flex items-center gap-4 md:gap-6 flex-wrap">
+            {wgIcon && (
+              <span className="text-7xl md:text-9xl leading-none">{wgIcon}</span>
+            )}
+            <span>
+              {wgName ? (
+                <>
+                  {wgName}
+                  <br/>
+                </>
+              ) : <>Willkommen Zuhause, <br/></>}
+              <span className="text-primary italic font-light text-4xl md:text-6xl">Alles im Griff</span>
+            </span>
           </h1>
           <p className="text-on-surface-variant font-medium text-lg md:text-xl leading-relaxed opacity-70 max-w-lg">
             Dein Rückzugsort in der WG. Alles ist im Fluss, alle Aufgaben sind verteilt und die Stimmung ist Zen.
@@ -270,10 +199,13 @@ export function DashboardClient({ wgId, user, wgName, todos = [], onRenameWg }: 
         <div className="space-y-8">
           {/* Who's Home Card */}
           <div className="glass-panel stagger-1">
-            <h3 className="font-headline text-xl font-semibold mb-8 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-primary zen-pulse"></span>
-              Wer ist Zuhause
-            </h3>
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="font-headline text-xl font-semibold flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-primary zen-pulse"></span>
+                Wer ist Zuhause
+              </h3>
+            </div>
+
             <div className="flex gap-8">
               {allResidents.map((res, i) => {
                 const moodObj = availableMoods.find(m => m.name === res.mood) || availableMoods[0];
@@ -294,7 +226,7 @@ export function DashboardClient({ wgId, user, wgName, todos = [], onRenameWg }: 
               })}
             </div>
           </div>
- 
+
           {/* Blackboard */}
           <section className="mt-4 stagger-4 transition-all">
             <div className="bg-slate-900 rounded-[2rem] p-8 pb-10 border-[6px] border-stone-800 shadow-2xl relative overflow-hidden">

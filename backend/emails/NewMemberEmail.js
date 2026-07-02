@@ -1,19 +1,24 @@
 const { Heading, Text, Button } = require('@react-email/components');
-const { EmailLayout, e } = require('./layout');
+const { EmailLayout, e, COLORS, FONT_HEADLINE } = require('./layout');
 
-function NewMemberEmail({ newMemberName, wgName, chatUrl }) {
-  return e(EmailLayout, null,
-    e(Heading, { style: { fontSize: '22px' } }, `${newMemberName} ist der WG "${wgName}" beigetreten`),
-    e(Text, null, `${newMemberName} ist ab sofort Teil eurer WG.`),
-    e(Text, null, `Sag doch kurz Hallo und begrüße ${newMemberName} im Chat!`),
+function NewMemberEmail({ newMemberName, wgName, actionUrl }) {
+  return e(EmailLayout, { wgName },
+    e(Heading, { style: { fontFamily: FONT_HEADLINE, fontSize: '22px', color: COLORS.onSurface, margin: '0 0 12px' } },
+      `${newMemberName} ist der WG "${wgName}" beigetreten`),
+    e(Text, { style: { color: COLORS.onSurface, fontSize: '15px', lineHeight: '22px', margin: '0 0 8px' } },
+      `${newMemberName} ist ab sofort Teil eurer WG.`),
+    e(Text, { style: { color: COLORS.onSurfaceVariant, fontSize: '15px', lineHeight: '22px', margin: '0 0 24px' } },
+      `Sag doch kurz Hallo und begrüße ${newMemberName} im Chat!`),
     e(Button, {
-      href: chatUrl,
+      href: actionUrl,
       style: {
-        backgroundColor: '#4b6c53',
-        color: '#ffffff',
+        backgroundColor: COLORS.primary,
+        color: COLORS.onPrimary,
         padding: '12px 24px',
-        borderRadius: '999px',
-        fontWeight: 'bold',
+        borderRadius: '9999px',
+        fontFamily: FONT_HEADLINE,
+        fontWeight: 700,
+        fontSize: '14px',
         textDecoration: 'none'
       }
     }, 'Zum Chat')
