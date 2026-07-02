@@ -98,6 +98,7 @@ export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile, on
             <Link
               key={tab.id}
               to={`/?tab=${tab.id}`}
+              data-cy={`nav-tab-${tab.id}`}
               className={`
                 relative flex items-center gap-2 transition-all duration-300 px-2 group
                 ${isActive ? (isDarkMode ? 'text-emerald-200' : 'text-primary') : (isDarkMode ? 'text-emerald-200/50 hover:text-emerald-100' : 'text-on-surface-variant/40 hover:text-on-surface-variant')}
@@ -146,6 +147,7 @@ export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile, on
         <button
           onClick={handleLogout}
           title="Abmelden"
+          data-cy="logout-button"
           className="flex items-center gap-2 px-3 py-2 rounded-full text-on-surface-variant/50 hover:text-red-500 hover:bg-red-50/50 transition-all duration-300 group border border-transparent hover:border-red-100"
         >
           <span className="material-symbols-outlined text-[18px] md:text-[20px] transition-all duration-300 group-hover:scale-110 [font-variation-settings:'FILL'_0,'wght'_300]">

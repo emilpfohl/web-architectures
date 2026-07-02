@@ -132,7 +132,7 @@ export function MainLayout() {
 
   if (!loading && wgs.length === 0) {
     return (
-      <div className="font-body min-h-screen flex flex-col bg-background relative overflow-hidden">
+      <div className="font-body min-h-screen flex flex-col bg-background relative overflow-hidden" data-cy="wg-onboarding">
         {/* Subtle background flare */}
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse" />
         <div className="absolute top-1/2 -right-24 w-96 h-96 bg-accent-peach/5 rounded-full blur-3xl" />
@@ -153,9 +153,10 @@ export function MainLayout() {
             <div className="grid gap-6">
               {/* Create WG */}
               <div className="space-y-4">
-                <button 
+                <button
                   onClick={() => { setShowCreateForm(!showCreateForm); setShowJoinForm(false); }}
                   className={`w-full group relative p-8 bg-white rounded-[2.5rem] border transition-all text-left ${showCreateForm ? 'border-primary shadow-lg ring-4 ring-primary/5' : 'border-outline-variant/20 chill-shadow hover:scale-[1.01]'}`}
+                  data-cy="create-wg-toggle"
                 >
                   <div className="flex items-center gap-6">
                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${showCreateForm ? 'bg-primary text-white scale-110' : 'bg-sage-soft text-primary group-hover:scale-110'}`}>
@@ -170,14 +171,15 @@ export function MainLayout() {
 
                 {showCreateForm && (
                   <div className="bg-white p-8 rounded-[2.5rem] border-2 border-primary/10 animate-slide-up shadow-xl space-y-4">
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="Name deiner WG..."
                       className="w-full px-6 py-4 rounded-2xl bg-stone-50 border-none text-base font-bold focus:ring-2 focus:ring-primary/20 transition-all"
                       value={newWgName}
                       onChange={e => setNewWgName(e.target.value)}
+                      data-cy="create-wg-name-input"
                     />
-                    <button 
+                    <button
                       onClick={async () => {
                         if (newWgName.trim() && user) {
                           const res = await authFetch('/api/wgs', {
@@ -194,6 +196,7 @@ export function MainLayout() {
                       }}
                       disabled={!newWgName.trim()}
                       className="w-full py-4 bg-primary text-white rounded-2xl font-bold uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
+                      data-cy="create-wg-submit-button"
                     >
                       WG erstellen
                     </button>
@@ -266,6 +269,7 @@ export function MainLayout() {
     <div
       className={`font-body h-full min-h-screen flex flex-col ${isShoppingDarkMode ? 'shopping-mode bg-[#0f2a1f] text-emerald-50' : ''}`}
       style={selectedWg?.themeColor && !isShoppingDarkMode ? { '--color-primary': selectedWg.themeColor } as React.CSSProperties : undefined}
+      data-cy="main-app"
     >
       <div className="bg-flare" />
       <TabsNav wgs={wgs} selectedWgId={selectedWgId} onSelectWg={setSelectedWgId} user={user} onOpenProfile={() => setShowProfileModal(true)} onOpenWgSettings={() => setShowWgSettings(true)} isDarkMode={isShoppingDarkMode} />

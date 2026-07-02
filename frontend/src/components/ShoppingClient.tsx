@@ -105,7 +105,7 @@ export function ShoppingClient({ initialItems, onRefresh, wgId, isDarkMode = fal
   };
 
   return (
-    <div className={`animate-fade-in w-full max-w-2xl mx-auto space-y-12 pb-32 ${isDarkMode ? 'text-emerald-50' : ''}`}>
+    <div className={`animate-fade-in w-full max-w-2xl mx-auto space-y-12 pb-32 ${isDarkMode ? 'text-emerald-50' : ''}`} data-cy="shopping-view">
       
       {/* Live Status Toggle */}
       <section className={`p-8 rounded-[2.5rem] border chill-shadow ${isDarkMode ? 'bg-emerald-900/70 border-emerald-700/40' : 'bg-sage-soft/20 border-sage-soft/30'}`}>
@@ -149,6 +149,7 @@ export function ShoppingClient({ initialItems, onRefresh, wgId, isDarkMode = fal
           return (
             <section
               key={cat}
+              data-cy={`shopping-category-${cat}`}
               className={`animate-fade-in p-8 rounded-[3.5rem] border shadow-sm relative ${isDarkMode ? 'bg-emerald-950/70 border-emerald-700/30' : 'bg-white/50 border-outline-variant/10'}`}
             >
               <button 
@@ -171,7 +172,7 @@ export function ShoppingClient({ initialItems, onRefresh, wgId, isDarkMode = fal
 
               <div className="space-y-4 mb-6">
                 {catItems.map(item => (
-                  <div key={item.id} className={`p-6 rounded-[2.5rem] flex items-center justify-between group chill-shadow border hover:scale-[1.02] transition-transform cursor-pointer ${isDarkMode ? 'bg-emerald-900/90 border-emerald-700/40' : 'bg-white border-outline-variant/10'}`} onClick={() => toggleItem(item.id, item.checked)}>
+                  <div key={item.id} data-cy={`shopping-item-${item.id}`} className={`p-6 rounded-[2.5rem] flex items-center justify-between group chill-shadow border hover:scale-[1.02] transition-transform cursor-pointer ${isDarkMode ? 'bg-emerald-900/90 border-emerald-700/40' : 'bg-white border-outline-variant/10'}`} onClick={() => toggleItem(item.id, item.checked)}>
                     <div className="flex items-center gap-6">
                       <div className={`w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center ${item.checked ? 'bg-primary border-primary text-white scale-90' : isDarkMode ? 'border-emerald-700 bg-emerald-950/70' : 'border-stone-200 bg-stone-50'}`}>
                         {item.checked && <span className="material-symbols-outlined text-[20px] font-bold">check</span>}
@@ -208,18 +209,20 @@ export function ShoppingClient({ initialItems, onRefresh, wgId, isDarkMode = fal
                     addItem(cat);
                   }}
                 >
-                  <input 
+                  <input
                     ref={activeInputRef}
-                    type="text" 
+                    type="text"
                     placeholder={`${cat} hinzufügen...`}
                     className={`flex-1 px-6 py-3 rounded-full bg-transparent border-none text-sm font-bold focus:ring-0 transition-all ${isDarkMode ? 'text-emerald-50 placeholder:text-emerald-200/50' : ''}`}
                     value={newItemNames[cat] || ''}
                     onChange={(e) => setNewItemNames(prev => ({ ...prev, [cat]: e.target.value }))}
                     onKeyDown={(e) => e.key === 'Escape' && setActiveCategory(null)}
+                    data-cy={`new-item-input-${cat}`}
                   />
-                  <button 
+                  <button
                     type="submit"
                     className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all"
+                    data-cy={`new-item-submit-${cat}`}
                   >
                     <span className="material-symbols-outlined">add</span>
                   </button>
@@ -228,6 +231,7 @@ export function ShoppingClient({ initialItems, onRefresh, wgId, isDarkMode = fal
                 <button
                   type="button"
                   onClick={() => setActiveCategory(cat)}
+                  data-cy={`add-item-toggle-${cat}`}
                   className={`w-full mt-2 px-6 py-4 rounded-[2rem] border-2 border-dashed text-left text-sm font-bold uppercase tracking-[0.2em] transition-all ${isDarkMode ? 'border-emerald-700/50 text-emerald-200/60 hover:text-emerald-50 hover:border-emerald-300/50 hover:bg-emerald-800/30' : 'border-stone-200 text-on-surface-variant/40 hover:text-primary hover:border-primary/20 hover:bg-primary/5'}`}
                 >
                   Eintrag hinzufügen

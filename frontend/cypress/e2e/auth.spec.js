@@ -5,13 +5,14 @@ describe('Auth flow', () => {
 
     // create user via API
     cy.apiRegister(user).then((resp) => {
-      expect([200,201]).to.include(resp.status)
+      expect([200, 201]).to.include(resp.status)
     })
 
     // login via UI
     cy.uiLogin(user.email, user.password)
 
-    // after login we should be redirected to the dashboard
-    cy.contains('WG Stimmung', { timeout: 5000 }).should('be.visible')
+    // a freshly registered user has no WG yet, so they land on the onboarding screen
+    cy.get('[data-cy=wg-onboarding]', { timeout: 5000 }).should('be.visible')
+    cy.get('[data-cy=create-wg-toggle]').should('be.visible')
   })
 })

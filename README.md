@@ -232,3 +232,147 @@ Itterationen der E-mail:
 1. In der Email soll eine Überschrift geben die besagt was passiert, z.B. ... ist der WG beigetreten. Außerdem ein Satz der auffordert zu Handeln also in dem Fall etwas wie "Begrüß ihn direkt in der App!". Außerdem soll ein Link direkt zur Task enthalten sein
 
 2. Passe mir die E-mail noch an also gestalte sie mehr in dem Website look mit cleaner ästhethik oben links bitte das Logo das auch für die WG verwendet wird, außerdem der name der wg und ein link direkt zu der action, also zum Beispiel direkt zur Einkaufsliste wenn jemand einkaufen ist.
+
+
+# Microservices vs Monolith
+
+Bestandsaufnahme:
+
+Ehrliche Bestandsaufnahme: **keine saubere Modul-Trennung**. `server.js` (720 Zeilen) enthält die meisten Ressourcen direkt, nur ein Teil ist in `routes/` ausgelagert – und fast überall wird bereichsübergreifend gelesen/geschrieben.
+
+| Datei | Verantwortlich für | Greift auf fremde Daten zu? |
+
+| `routes/auth.js` | Login, Register, Logout, `/me`, Profil & Passwort | Nein – nur `User` |
+
+| `routes/tasks.js` | Todos lesen/anlegen/erledigen | Ja – `Membership`-Check, `User` für Assignee, `Message` beim Erledigen |
+
+| `routes/messages.js` | Chat lesen/senden | Ja – `Membership`-Check als Autorisierung |
+
+| `routes/push.js` | Push-Subscriptions | Nein – nur `PushSubscription` |
+
+| `server.js` | Alles Übrige: Users, WGs, Shopping, Kalender, Finanzen, Invitations, Auth-Middleware | Ja, durchgehend – `Membership`-Check in fast jeder Route; Mitglieder-Löschung räumt per Cascade sechs fremde Tabellen ab |
+
+Agent Antwort:
+
+Geschäftslogik, die in eigene Funktionen gehört
+server.js ist das Hauptproblem – fast alles liegt inline in einer 720-Zeilen-Datei statt in Router-Dateien wie bei tasks.js/messages.js:
+
+1. PUT /api/users/status (server.js:108-157) – vermischt Membership-Update, Shopping-Benachrichtigung, User-Lookup für den Namen und Push-Benachrichtigung an alle anderen Mitglieder in einem Handler. Sollte in notifyShoppingStatusChange()-artige Funktion in lib/notifications.js ausgelagert werden.
+
+2. DELETE /api/wgs/:id/members/:userId (server.js:296-337) – enthält die komplette "letztes Mitglied entfernt WG" Löschkaskade (7 Tabellen in einer Transaktion). Das ist reine Geschäftslogik ("WG-Löschregel") und gehört in eine Funktion wie deleteWgCascade(wgId), nicht in den Route-Handler.
+3. POST /api/finances (server.js:537-586) – enthält Namens-Matching-Logik (paidBy String → User-ID via Membership-Liste), identisch zur Logik in routes/tasks.js:63-72 (Assignee-Matching per Name). Klassischer Kandidat für eine gemeinsame Helper-Funktion resolveMemberByName(wgId, name).
+4. POST /api/invitations/join (server.js:665-716) – Invite-Validierung (maxUses, bereits Mitglied), Membership-Erstellung, Counter-Update und Notification-Trigger alles inline. Gehört in einen InvitationService.
+5. GET /api/users (server.js:48-106) – zwei komplett unterschiedliche Code-Pfade (Single-WG vs. "alle für mich sichtbaren User über alle WGs") in einem Handler, inkl. Aggregation über eine Map. Sollte in zwei separate Service-Funktionen aufgeteilt werden.
+
+Cross-Domain DB-Zugriffe (Datei greift auf fachfremde Tabellen zu)
+Das ist der auffälligere Befund:
+
+1. routes/tasks.js (Domäne: Todos) schreibt in prisma.message.create() (server.js-Domäne "Messages") bei Task-Abschluss (tasks.js:121-130) – Aktivitäts-Feed-Logik sitzt in der falschen Datei.
+2. Shopping-Handler in server.js (Domäne: Shopping, server.js:339-399, 401-434) schreiben ebenfalls in prisma.message (Zeile 385-392, 419-426) – gleiches Muster, Shopping "weiß" zu viel über Messages.
+3. Finance-Handler (server.js:562-579) schreibt ebenfalls in prisma.message beim Anlegen einer Ausgabe.
+4. DELETE /api/wgs/:id/members/:userId (server.js:296-337) greift direkt auf sechs fremde Domänen-Tabellen zu (shoppingItem, todo, calendarEvent, financeItem, invitation, message) – das WG-Modul kennt damit das komplette Schema aller anderen Module.
+
+Muster: Jede Domäne, die einen "System-Log-Eintrag" erzeugen will (Shopping, Finance, Tasks), schreibt direkt in die message-Tabelle statt über eine gemeinsame Funktion wie logActivity(wgId, content) in routes/messages.js oder einem eigenen lib/activityLog.js. Das ist die konkreteste, wiederkehrende Verletzung der Modultrennung im Code.
+
+Empfehlung: Eine lib/activityLog.js mit logActivity(wgId, content) einführen, die intern prisma.message.create kapselt, und in Shopping-, Finance- und Task-Handlern aufrufen statt direkt Prisma zu nutzen.
+
+
+Bounded Contexts:
+
+**Users & Auth**
+- Registrierung, Login/Logout, JWT-Session
+- Profil- & Passwortverwaltung
+- Owned Data: `User`
+
+**WG-Verwaltung**
+- WG anlegen/bearbeiten, Mitgliederliste, Mitglied entfernen (inkl. Lösch-Kaskade)
+- Einladungen (Invitations, Join-Flow)
+- Owned Data: `WG`, `Membership`, `Invitation`
+
+**Tasks (Todos)**
+- Aufgaben anlegen, zuweisen, erledigen
+- Owned Data: `Todo`
+
+**Shopping**
+- Einkaufsliste, Kategorien, "ist einkaufen"-Status
+- Owned Data: `ShoppingItem`
+
+**Finance**
+- Ausgaben erfassen, Settle-Up
+- Owned Data: `FinanceItem`
+
+**Calendar**
+- Termine/Events der WG
+- Owned Data: `CalendarEvent`
+
+**Messages / Chat**
+- Chatnachrichten + System-Feed (Activity Log)
+- Owned Data: `Message`
+
+**Notifications**
+- E-Mail- & Push-Versand
+- Owned Data: `PushSubscription`
+
+**Stats** *(noch nicht implementiert)*
+- Aggregierte Auswertungen (z.B. wer hat wie viel bezahlt, wer erledigt wie viele Todos)
+- Owned Data: keine eigenen – liest nur aus Tasks, Shopping, Finance
+
+Kommunikation: Fast jeder Kontext fragt bei **WG-Verwaltung** die `Membership` ab, um Zugriff auf eine `wgId` zu autorisieren, und **Tasks/Shopping/Finance** schreiben zusätzlich in **Messages** für den Activity-Feed. Ein zukünftiger **Stats**-Kontext würde nur lesend Daten aus Tasks, Shopping und Finance aggregieren, ohne eigenen Zustand zu besitzen.
+
+
+
+
+
+# 09 - Testing
+
+## Test-Pyramide
+
+```
+                ▲
+               / \
+              / E2E \          3 Cypress-Tests (frontend/cypress/e2e)
+             /-------\         auth.spec.js, shopping.spec.js, todos.spec.js
+            /         \        → kritische Pfade über die echte UI + API
+           /-----------\
+          /             \
+         /  Integration  \     (nicht vorhanden – siehe Hinweis unten)
+        /-----------------\
+       /                   \
+      /       Unit          \  21 Vitest-Tests (frontend/src/utils/*.test.ts)
+     /-----------------------\ → reine Funktionen: Normalfall, Grenzfall, Fehlerfall
+```
+
+- **Unit-Tests (Vitest)**: `frontend/src/utils/logic.test.ts` und `frontend/src/utils/leaderboard.test.ts` testen reine Utility-Funktionen (Passwort-Validierung, Finance-Summary, Shopping-Item-Input, Account-Initialen, Todo-Anzeigezustand, Timestamp-Formatierung, Leaderboard-Berechnung) isoliert ohne Server/DB. Jede Funktion wird mit einem Normalfall, einem Grenzfall (leere/fehlende Werte) und einem Fehlerfall (ungültiger Input) abgedeckt. Ausführen mit `npm test` im `frontend/`-Ordner.
+- **Integrationstests**: aktuell nicht vorhanden. Die Bounded Contexts (`modules/*.service.js`) wären der richtige Ort dafür (Service + Prisma gegen eine Test-DB, ohne HTTP-Layer) – bisher aber nicht umgesetzt.
+- **E2E-Tests (Cypress)**: `frontend/cypress/e2e/` deckt den kritischen Pfad **Registrierung → Login → WG erstellen → Kernfunktion (Einkauf/Aufgaben)** ab:
+  - `auth.spec.js` – Registrierung via API, Login via UI, Landung auf dem Onboarding-Screen für WG-lose Nutzer
+  - `shopping.spec.js` – WG erstellen, Einkaufsartikel hinzufügen, Anzeige in der Kategorie prüfen
+  - `todos.spec.js` – WG erstellen, Aufgabe anlegen und erledigen, Rangliste im Dashboard prüfen
+
+  Alle Selektoren in den E2E-Tests nutzen ausschließlich `data-cy`-Attribute (z.B. `[data-cy=login-email-input]`, `[data-cy=quick-action-shopping]`), um Tests von CSS-Klassen und Texten zu entkoppeln. Ausführen mit `npm run e2e` (interaktiv) oder `npm run e2e:run` (headless) im `frontend/`-Ordner, bei laufendem Dev-Server (`npm run dev`) und Backend (`npm start`, Port 3000).
+
+## Modul-Schnittstellen (Backend)
+
+Regel: Ein Modul greift nie direkt per Prisma auf die Tabelle eines anderen Kontexts zu, sondern ruft die exportierte Funktion des zuständigen `*.service.js` auf (z.B. `wgsService.getMembership(...)` statt `prisma.membership.findUnique(...)` in `auth.service.js`). Cross-Context-Löschungen (z.B. beim Entfernen des letzten WG-Mitglieds) laufen über `deleteAllForWgOperation(wgId)`, die jedes betroffene Modul selbst anbietet, damit `wgs.service.js` sie nur noch in eine gemeinsame `prisma.$transaction([...])` einreiht, ohne die fremde Tabelle selbst zu kennen.
+
+| Modul | öffentlich | intern |
+|---|---|---|
+| `auth.service.js` | `register()`, `login()`, `getCurrentUser()`, `updateProfile()`, `changePassword()`, `getUserById()`, `getAccessibleUsers()` | – |
+| `wgs.service.js` | `listWgs()`, `getWg()`, `createWg()`, `updateWg()`, `listMembers()`, `updateMemberStatus()`, `removeWgMember()`, `getInvitationByToken()`, `createInvitation()`, `joinViaInvitation()`, `getMembership()`, `getMembershipsForWg()`, `getMembershipsForUser()` | – |
+| `tasks.service.js` | `listTodos()`, `createTodo()`, `updateTodo()`, `deleteAllForWgOperation()` | – |
+| `shopping.service.js` | `listShoppingItems()`, `createShoppingItem()`, `updateShoppingItem()`, `deleteShoppingItem()`, `deleteAllForWgOperation()` | – |
+| `finances.service.js` | `listExpenses()`, `createExpense()`, `settleExpenses()`, `deleteAllForWgOperation()` | – |
+| `calendar.service.js` | `listEvents()`, `createEvent()`, `deleteAllForWgOperation()` | – |
+| `messages.service.js` | `listMessages()`, `createMessage()`, `deleteAllForWgOperation()` | – |
+| `push.service.js` | `upsertSubscription()` | – |
+
+Aktuell hat kein Modul eine rein interne (nicht exportierte) Hilfsfunktion – gemeinsame, modulübergreifende Logik wie die Mitgliedschaftsprüfung `isWgMember()` liegt bewusst in `lib/membership.js` (Cross-Cutting-Concern, kein Modul-Interna), nicht in einem der Kontext-Services.
+
+### Gefundener Verstoß & Behebung
+
+Beim Review wurde eine Regelverletzung gefunden: **`auth.service.js`** griff in `getAccessibleUsers()` direkt per `prisma.membership.findUnique/findMany` auf die `Membership`-Tabelle zu, die zum WG-Modul gehört. Ebenso griffen **`tasks.service.js`** (`createTodo`) und **`wgs.service.js`** (`updateMemberStatus`, `joinViaInvitation`) direkt per `prisma.user.findUnique` auf die `User`-Tabelle zu, die zum Auth-Modul gehört, und **`wgs.service.js`** löschte beim Entfernen des letzten Mitglieds direkt in `prisma.shoppingItem`, `prisma.todo`, `prisma.calendarEvent`, `prisma.financeItem`, `prisma.message` – alles fremde Tabellen.
+
+Behoben durch:
+- `wgs.service.js` exportiert jetzt `getMembership()`, `getMembershipsForWg()`, `getMembershipsForUser()`; `auth.service.js` ruft diese statt direktem Prisma-Zugriff auf.
+- `auth.service.js` exportiert bereits `getUserById()`; `tasks.service.js` und `wgs.service.js` nutzen diese Funktion statt eigener `prisma.user`-Abfragen.
+- `tasks.service.js`, `shopping.service.js`, `calendar.service.js`, `finances.service.js`, `messages.service.js` exportieren je ein `deleteAllForWgOperation(wgId)`, das die (nicht ausgeführte) Prisma-Operation zurückgibt; `wgs.service.js` reiht diese nur noch in seine eigene `$transaction([...])` ein, statt selbst auf die fremden Tabellen zuzugreifen.

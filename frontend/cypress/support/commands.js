@@ -10,9 +10,15 @@ Cypress.Commands.add('apiRegister', (user) => {
 
 Cypress.Commands.add('uiLogin', (email, password) => {
   cy.visit('/login')
-  cy.get('input[type="email"]').clear().type(email)
-  cy.get('input[type="password"]').clear().type(password)
-  cy.contains('Anmelden').click()
+  cy.get('[data-cy=login-email-input]').clear().type(email)
+  cy.get('[data-cy=login-password-input]').clear().type(password)
+  cy.get('[data-cy=login-submit-button]').click()
+})
+
+Cypress.Commands.add('uiCreateWg', (name) => {
+  cy.get('[data-cy=create-wg-toggle]').click()
+  cy.get('[data-cy=create-wg-name-input]').type(name)
+  cy.get('[data-cy=create-wg-submit-button]').click()
 })
 
 // eslint-disable-next-line no-undef

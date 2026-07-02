@@ -41,7 +41,7 @@ export function TodoClient({ initialTodos, onRefresh, wgId, user }: { initialTod
   };
 
   return (
-    <div className="animate-fade-in w-full max-w-2xl mx-auto space-y-10 pb-32">
+    <div className="animate-fade-in w-full max-w-2xl mx-auto space-y-10 pb-32" data-cy="todos-view">
       
       <header className="px-4">
         <h2 className="font-headline text-4xl font-bold text-on-surface tracking-tighter">Aufgaben & Rotation</h2>
@@ -53,8 +53,9 @@ export function TodoClient({ initialTodos, onRefresh, wgId, user }: { initialTod
           (() => {
             const displayTodo = buildTodoDisplayState(todo);
             return (
-          <div 
-            key={displayTodo.id || todo.id} 
+          <div
+            key={displayTodo.id || todo.id}
+            data-cy={`todo-item-${todo.id}`}
             onClick={() => toggleTodo(todo.id, todo.completed)}
             className={`
               bg-white p-8 rounded-[3.5rem] flex items-center justify-between group chill-shadow border border-outline-variant/10 transition-all cursor-pointer
@@ -106,16 +107,17 @@ export function TodoClient({ initialTodos, onRefresh, wgId, user }: { initialTod
           </div>
         )}
         <form onSubmit={addTodo} className="flex items-center gap-4 translate-y-2">
-          <input 
+          <input
             id="todo-title-input"
             data-testid="todo-title-input"
-            type="text" 
+            data-cy="todo-title-input"
+            type="text"
             placeholder="Neue Aufgabe eintragen..."
             className="w-full max-w-[260px] px-8 py-5 rounded-full bg-white shadow-2xl border-2 border-primary/10 focus:outline-none focus:border-primary/40 text-sm font-black transition-all"
             value={newTodoTitle}
             onChange={e => setNewTodoTitle(e.target.value)}
           />
-          <button id="add-todo-btn" data-testid="add-todo-btn" type="submit" className="w-20 h-20 rounded-full bg-primary text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all">
+          <button id="add-todo-btn" data-testid="add-todo-btn" data-cy="add-todo-button" type="submit" className="w-20 h-20 rounded-full bg-primary text-white shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all">
             <span className="material-symbols-outlined text-4xl font-black">add_task</span>
           </button>
         </form>

@@ -60,7 +60,7 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: () => void }) {
            <p className="text-gray-500 mt-2">Willkommen zurück. Bitte melde dich an.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" data-cy="login-form">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 ml-1">E-Mail</label>
             <input
@@ -70,6 +70,7 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: () => void }) {
               className="w-full px-4 py-3 bg-white/50 border border-white focus:border-primary/50 focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all placeholder:text-gray-400"
               placeholder="deine@email.com"
               required
+              data-cy="login-email-input"
             />
           </div>
 
@@ -82,14 +83,16 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: () => void }) {
               className="w-full px-4 py-3 bg-white/50 border border-white focus:border-primary/50 focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all placeholder:text-gray-400"
               placeholder="••••••••"
               required
+              data-cy="login-password-input"
             />
           </div>
 
           {error && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="p-3 text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2"
+              data-cy="login-error"
             >
               <div className="material-symbols-outlined text-base">error</div>
               {error}
@@ -100,6 +103,7 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: () => void }) {
             type="submit"
             disabled={loading}
             className="w-full py-4 bg-primary text-primary-foreground font-medium rounded-2xl hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20 transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            data-cy="login-submit-button"
           >
             {loading ? 'Anmelden...' : 'Anmelden'}
           </button>

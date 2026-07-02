@@ -60,7 +60,7 @@ export function Register() {
            <p className="text-gray-500 mt-2">Werde Teil deines Digital Sanctuary.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" data-cy="register-form">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 ml-1">Name</label>
             <input
@@ -70,6 +70,7 @@ export function Register() {
               className="w-full px-4 py-3 bg-white/50 border border-white focus:border-primary/50 focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all placeholder:text-gray-400"
               placeholder="Dein Name"
               required
+              data-cy="register-name-input"
             />
           </div>
 
@@ -82,6 +83,7 @@ export function Register() {
               className="w-full px-4 py-3 bg-white/50 border border-white focus:border-primary/50 focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all placeholder:text-gray-400"
               placeholder="deine@email.com"
               required
+              data-cy="register-email-input"
             />
           </div>
 
@@ -94,14 +96,16 @@ export function Register() {
               className="w-full px-4 py-3 bg-white/50 border border-white focus:border-primary/50 focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all placeholder:text-gray-400"
               placeholder="••••••••"
               required
+              data-cy="register-password-input"
             />
           </div>
 
           {error && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="p-3 text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2"
+              data-cy="register-error"
             >
               <div className="material-symbols-outlined text-base">error</div>
               {error}
@@ -112,6 +116,7 @@ export function Register() {
             type="submit"
             disabled={loading}
             className="w-full py-4 bg-primary text-primary-foreground font-medium rounded-2xl hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20 transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            data-cy="register-submit-button"
           >
             {loading ? 'Wird erstellt...' : 'Registrieren'}
           </button>

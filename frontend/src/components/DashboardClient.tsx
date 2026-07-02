@@ -135,8 +135,8 @@ export function DashboardClient({ wgId, user, wgName, wgIcon, todos = [] }: { sh
   };
 
   return (
-    <div className="animate-fade-in w-full space-y-12 pb-20">
-      
+    <div className="animate-fade-in w-full space-y-12 pb-20" data-cy="dashboard-view">
+
       {/* Vibe / Hero Section */}
       <section className="space-y-8 animate-fade-in py-6">
         <div>
@@ -308,9 +308,9 @@ export function DashboardClient({ wgId, user, wgName, wgIcon, todos = [] }: { sh
             <h3 className="font-headline text-xl font-black mb-1">WG Rangliste</h3>
             <p className="font-headline text-on-surface-variant text-[10px] uppercase tracking-widest font-black mb-8 opacity-60">Aufgaben-Serien Belohnungen</p>
             
-            <div className="space-y-4">
+            <div className="space-y-4" data-cy="leaderboard-list">
               {leaderboard.length > 0 ? leaderboard.map((leader, i) => (
-                <div key={leader.id} className={`flex items-center justify-between p-5 rounded-3xl transition-all stagger-${i+3} ${i === 0 ? 'bg-white shadow-lg shadow-sage-soft/20' : 'bg-white/40'}`}>
+                <div key={leader.id} data-cy={`leaderboard-entry-${leader.id}`} className={`flex items-center justify-between p-5 rounded-3xl transition-all stagger-${i+3} ${i === 0 ? 'bg-white shadow-lg shadow-sage-soft/20' : 'bg-white/40'}`}>
                   <div className="flex items-center gap-4">
                     <span className="font-headline text-2xl font-black italic text-primary/20">{String(i + 1).padStart(2, '0')}</span>
                     <div>
@@ -333,12 +333,12 @@ export function DashboardClient({ wgId, user, wgName, wgIcon, todos = [] }: { sh
 
           {/* Quick Actions */}
           <section className="grid grid-cols-2 gap-4">
-            <div onClick={() => navigate('/?tab=shopping')} className="p-6 rounded-[2rem] bg-white border border-outline-variant/30 hover:bg-sage-soft/10 transition-all group cursor-pointer shadow-sm">
+            <div onClick={() => navigate('/?tab=shopping')} data-cy="quick-action-shopping" className="p-6 rounded-[2rem] bg-white border border-outline-variant/30 hover:bg-sage-soft/10 transition-all group cursor-pointer shadow-sm">
               <span className="material-symbols-outlined text-primary mb-3 text-3xl group-hover:scale-110 transition-transform">shopping_basket</span>
               <p className="font-headline font-black text-lg">Einkaufen</p>
               <p className="text-[10px] text-on-surface-variant font-bold opacity-60">Milch, Eier, Snacks...</p>
             </div>
-            <div onClick={() => navigate('/?tab=todos')} className="p-6 rounded-[2rem] bg-white border border-outline-variant/30 hover:bg-sage-soft/10 transition-all group cursor-pointer shadow-sm">
+            <div onClick={() => navigate('/?tab=todos')} data-cy="quick-action-todos" className="p-6 rounded-[2rem] bg-white border border-outline-variant/30 hover:bg-sage-soft/10 transition-all group cursor-pointer shadow-sm">
               <span className="material-symbols-outlined text-primary mb-3 text-3xl group-hover:scale-110 transition-transform">task_alt</span>
               <p className="font-headline font-black text-lg">Aufgabe erledigt</p>
               <p className="text-[10px] text-on-surface-variant font-bold opacity-60">Punkte sammeln</p>

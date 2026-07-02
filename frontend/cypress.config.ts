@@ -6,7 +6,6 @@ export default defineConfig({
     specPattern: 'cypress/e2e/**/*.spec.{js,ts}',
     supportFile: 'cypress/support/commands.js',
     setupNodeEvents(on, config) {
-      // add node event listeners here if needed
       return config
     }
   },
@@ -14,14 +13,3 @@ export default defineConfig({
   viewportWidth: 1280,
   viewportHeight: 800
 })
-import { defineConfig } from "cypress";
-
-export default defineConfig({
-  allowCypressEnv: false,
-
-  e2e: {
-    setupNodeEvents(on, config) {
-      // implement node event listeners here
-    },
-  },
-});
