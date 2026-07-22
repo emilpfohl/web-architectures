@@ -376,3 +376,11 @@ Behoben durch:
 - `wgs.service.js` exportiert jetzt `getMembership()`, `getMembershipsForWg()`, `getMembershipsForUser()`; `auth.service.js` ruft diese statt direktem Prisma-Zugriff auf.
 - `auth.service.js` exportiert bereits `getUserById()`; `tasks.service.js` und `wgs.service.js` nutzen diese Funktion statt eigener `prisma.user`-Abfragen.
 - `tasks.service.js`, `shopping.service.js`, `calendar.service.js`, `finances.service.js`, `messages.service.js` exportieren je ein `deleteAllForWgOperation(wgId)`, das die (nicht ausgeführte) Prisma-Operation zurückgibt; `wgs.service.js` reiht diese nur noch in seine eigene `$transaction([...])` ein, statt selbst auf die fremden Tabellen zuzugreifen.
+
+# 11 Deployment
+
+Bestandteil	Läuft als	Hostname / Pfad (Beispiel)	Wird ausgeliefert von
+Frontend (React)	statisches Build (dist/)	meinprojekt.de	Express (express.static)
+Backend (Express)	Node.js-App	meinprojekt.de/api	konsoleH Node.js
+Datenbank (SQL)	MySQL/MariaDB	localhost (auf dem Server)	konsoleH DB-Verwaltung
+

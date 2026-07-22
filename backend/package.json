@@ -12,11 +12,9 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@prisma/adapter-better-sqlite3": "^6.19.3",
     "@prisma/client": "^6.19.3",
     "@react-email/components": "^1.0.12",
     "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^12.9.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.6",
     "dotenv": "^16.4.5",

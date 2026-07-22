@@ -29,7 +29,7 @@ export async function setupPushNotifications() {
       return;
     }
 
-    const keyRes = await fetch('/api/push/public-key');
+    const keyRes = await authFetch('/api/push/public-key');
     const { publicKey } = await keyRes.json();
     if (!publicKey) return;
 

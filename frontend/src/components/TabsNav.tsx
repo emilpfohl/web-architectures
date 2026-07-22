@@ -1,6 +1,7 @@
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getAccountInitials } from '../utils/logic';
+import { authFetch } from '../utils/authFetch';
 
 interface TabsNavProps {
   wgs?: any[];
@@ -26,7 +27,7 @@ export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile, on
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      await authFetch('/api/auth/logout', { method: 'POST' });
     } catch {
       // ignore network errors
     }
