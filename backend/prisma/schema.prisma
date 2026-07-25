@@ -100,7 +100,7 @@ model Invitation {
 model PushSubscription {
   id        Int      @id @default(autoincrement())
   userId    Int
-  endpoint  String   @unique
+  endpoint  String   @unique @db.VarChar(500)
   p256dh    String
   auth      String
   createdAt DateTime @default(now())
