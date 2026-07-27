@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authFetch } from '../utils/authFetch';
-import { buildLeaderboard } from '../utils/leaderboard';
-import { formatMessageTimestamp } from '../utils/logic';
+import { authFetch } from '../../shared/lib/authFetch';
+import { buildLeaderboard } from '../../shared/lib/leaderboard';
+import { formatMessageTimestamp } from '../../shared/lib/logic';
 
 export function DashboardClient({ wgId, user, wgName, wgIcon, todos = [] }: { shopping: any[], todos: any[], finances: any[], onRefresh: () => void, wgId: number, user: any, wgName?: string, wgIcon?: string }) {
   const navigate = useNavigate();

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { authFetch } from '../utils/authFetch';
+import { authFetch } from '../../shared/lib/authFetch';
 
 interface ProfileModalProps {
   user: any;

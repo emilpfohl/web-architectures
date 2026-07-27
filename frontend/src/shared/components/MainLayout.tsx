@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { TabsNav } from './TabsNav';
-import { DashboardClient } from './DashboardClient';
-import { ShoppingClient } from './ShoppingClient';
-import { TodoClient } from './TodoClient';
-import { FinanceClient } from './FinanceClient';
-import { ProfileModal } from './ProfileModal';
-import { WgSettingsModal } from './WgSettingsModal';
-import { authFetch } from '../utils/authFetch';
+import { DashboardClient } from '../../features/dashboard/DashboardClient';
+import { ShoppingClient } from '../../features/shopping/ShoppingClient';
+import { TodoClient } from '../../features/tasks/TodoClient';
+import { FinanceClient } from '../../features/finances/FinanceClient';
+import { ProfileModal } from '../../features/wg/ProfileModal';
+import { WgSettingsModal } from '../../features/wg/WgSettingsModal';
+import { authFetch } from '../lib/authFetch';
 
 export function MainLayout() {
   const [searchParams] = useSearchParams();

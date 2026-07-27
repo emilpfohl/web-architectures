@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { MainLayout } from './components/MainLayout';
-import { Login } from './components/Login';
-import { Register } from './components/Register';
-import { authFetch } from './utils/authFetch';
-import { setupPushNotifications } from './utils/push';
+import { MainLayout } from './shared/components/MainLayout';
+import { Login } from './features/auth/Login';
+import { Register } from './features/auth/Register';
+import { authFetch } from './shared/lib/authFetch';
+import { setupPushNotifications } from './shared/lib/push';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);

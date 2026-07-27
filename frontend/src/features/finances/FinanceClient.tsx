@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { authFetch } from '../utils/authFetch';
-import { calculateFinanceSummary } from '../utils/logic';
+import { authFetch } from '../../shared/lib/authFetch';
+import { calculateFinanceSummary } from '../../shared/lib/logic';
 
 export function FinanceClient({ initialExpenses, onRefresh, wgId, user }: { initialExpenses: any[], onRefresh: () => void, wgId: number, user: any }) {
   const [description, setDescription] = useState('');

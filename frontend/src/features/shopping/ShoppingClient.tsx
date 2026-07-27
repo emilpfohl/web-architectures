@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { authFetch } from '../utils/authFetch';
-import { prepareShoppingItemInput } from '../utils/logic';
-import { socket } from '../utils/socket';
+import { authFetch } from '../../shared/lib/authFetch';
+import { prepareShoppingItemInput } from '../../shared/lib/logic';
+import { socket } from '../../shared/lib/socket';
 
 export function ShoppingClient({ initialItems, onRefresh, wgId, isDarkMode = false, onStoreStatusChange }: { initialItems: any[], initialCategories: string[], onRefresh: () => void, wgId: number, isDarkMode?: boolean, onStoreStatusChange?: (isAtStore: boolean) => void }) {
   const [newItemNames, setNewItemNames] = useState<{ [key: string]: string }>({});

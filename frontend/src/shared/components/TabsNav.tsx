@@ -1,7 +1,7 @@
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getAccountInitials } from '../utils/logic';
-import { authFetch } from '../utils/authFetch';
+import { getAccountInitials } from '../lib/logic';
+import { authFetch } from '../lib/authFetch';
 
 interface TabsNavProps {
   wgs?: any[];

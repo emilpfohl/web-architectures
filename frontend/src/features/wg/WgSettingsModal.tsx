@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { authFetch } from '../utils/authFetch';
+import { authFetch } from '../../shared/lib/authFetch';
 
 interface WgSettingsModalProps {
   wg: any;

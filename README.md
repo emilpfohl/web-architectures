@@ -1,3 +1,14 @@
+# 01 - Intro & Full Stack Setup
+
+## Aufgabe 1: Projektidee & erstes Feature
+
+**User-Story:**
+Als Mitbewohner einer WG möchte ich eine Übersicht haben, was zum Beispiel an To-Dos ansteht oder wer zuletzt geputzt hat etc.
+
+# 02 - Frontend-Architektur
+
+Mit deaktiviertem JavaScript zeigt die Next.js-Seite HTML-Inhalt, unsere Vite-App zeigt nur eine weiß — für den WG-Planer irrelevant, weil sowieso erst nach Login nutzbar und nicht zwingend SEO-relevant.
+
 # 03 - API-Design
 
 ## Aufgabe 1: Ressourcen & Hierarchie
@@ -132,6 +143,41 @@ Wir verwenden Prisma als ORM mit einer SQLite-Datenbank. Das Modell ist relation
 | **Invitation** | id, wgId, token, role, usedCount, maxUses | Einladungs-Links für neue Mitglieder. |
 | **Message** | id, wgId, type, content, senderId, timestamp | System- und User-Nachrichten im WG-Feed. |
 
+**Beziehungen:** User↔WG ist n:m über `Membership` (ein User kann in mehreren WGs sein, eine WG hat mehrere Mitglieder). Alle anderen Ressourcen (Todo, ShoppingItem, CalendarEvent, FinanceItem, Invitation, Message) hängen 1:n an einer WG. Pflichtfelder: `title`/`name` sowie die jeweilige `wgId`-Fremdschlüsselbeziehung dürfen nicht leer sein.
+
+## Aufgabe 2: Prisma-Setup
+
+Prisma wurde mit `better-sqlite3` als initialem Entwicklungs-Datenbanktreiber eingerichtet (`prisma/schema.prisma`, erste Migration per `prisma migrate dev`). Die Datenbank-Verbindung liegt in `backend/.env` unter `DATABASE_URL` und ist über `.gitignore` von Git ausgeschlossen.
+
+## Aufgabe 3: Von Array zu Prisma-Query (Prompt-Iterationen)
+
+**Iteration 1 (Basis-Prompt):**
+```
+Ersetze den GET /api/todos-Handler. Bisher: res.json(todos).
+Neu: Alle Todos aus der Datenbank laden mit prisma und als JSON zurückgeben.
+```
+*Ergebnis:* Handler funktionierte, gab aber immer **alle** Todos aller WGs zurück – die `wgId`-Filterung aus der Query fehlte, und es gab keine einheitliche Fehlerbehandlung.
+
+**Iteration 2 (präzisiert):**
+```
+Der GET /api/todos-Handler soll nur Todos der übergebenen wgId laden
+(prisma.todo.findMany({ where: { wgId } })). Wenn wgId fehlt, wirf einen
+ValidationError. Wenn der User kein Mitglied der WG ist, wirf einen
+AccessDeniedError. Zentrale Fehlerklassen statt einzelner try/catch-Blöcke
+in jedem Handler.
+```
+*Präzisiert wurde:* die `where`-Filterung nach `wgId` sowie strukturierte Fehlerbehandlung über eigene Error-Klassen (`ValidationError`, `AccessDeniedError`, `NotFoundError`) statt Status-Codes direkt im Handler zu setzen.
+
+## Aufgabe 4: Persistenz-Test
+
+Getestet: Server gestartet, per Hoppscotch ein neues Todo per `POST /api/todos` angelegt, Server mit `Ctrl+C` gestoppt und neu gestartet, danach `GET /api/todos` erneut aufgerufen.
+
+**Ergebnis:** Der erste Testlauf war nicht eindeutig – Verwirrung durch mehrere parallel laufende Server-Instanzen (Port 3000 war bereits von einem alten Prozess belegt), sodass unklar war, ob der neu gestartete Server tatsächlich dieselbe SQLite-Datei verwendete. Nach Bereinigung des Ports (`lsof -ti:3000 | xargs kill -9` vor jedem Neustart) war der Eintrag nach dem Neustart zuverlässig noch vorhanden – die SQLite-Datei liegt auf Platte und übersteht den Prozess-Neustart, im Gegensatz zu den vorherigen In-Memory-Arrays aus Session 03.
+
+## Aufgabe 5: Architekturentscheidung – DB vs. Redis/S3 (Bonus)
+
+Die meisten unserer Daten (Todos, Finanzen, Kalender, Mitgliedschaften) sind strukturiert, relational und müssen dauerhaft und konsistent bleiben – dafür ist eine relationale Datenbank (SQLite/MySQL via Prisma) richtig. Für kurzlebige, häufig wechselnde Daten wie Chat-Presence ("wer ist gerade online") oder Session-/Token-Caching wäre **Redis** langfristig sinnvoller, da diese Daten nicht dauerhaft persistiert werden müssen und von schnellerem In-Memory-Zugriff profitieren. Für Datei-Uploads wie Profilbilder wäre ein **Object Store (S3)** besser geeignet als das Ablegen von Binärdaten in der relationalen DB, da Objektspeicher für große, unstrukturierte Dateien und deren Auslieferung über CDN optimiert ist.
+
 # 05 - Authentifizierung
 
 ## Test-Zugangsdaten (Development)
@@ -165,6 +211,16 @@ Sobald dieser manipulierte Token an den Server gesendet wird, schlägt die `jwt.
 Ein JWT besteht aus drei Teilen: *Header*, *Payload* (Daten) und der *Signature* (Signatur).
 Die Signatur wird vom Server mittels eines geheimen Schlüssels (in unserem Fall `JWT_SECRET`) kryptografisch aus dem Header und dem Payload berechnet. 
 Wenn ein Nutzer nun den Payload (also zum Beispiel eine ID) manuell ändert, passt die angehängte Signatur nicht mehr zu den geänderten Daten. Da der Nutzer den geheimen Serverschlüssel (`JWT_SECRET`) nicht besitzt, kann er unmöglich eine neue, passende Signatur für den manipulierten Payload berechnen. Der Server bemerkt beim Validierungsprozess sofort den Unterschied zwischen der berechneten und der mitgelieferten Signatur und erkennt den Token dadurch eindeutig als manipuliert.
+
+Aufgabe 5
+
+Manueller Test-Flow durchgeführt – alle Prüfungen bestanden:
+
+- [x] `/register` → neuen Nutzer angelegt → Weiterleitung auf die Startseite funktioniert.
+- [x] Logout (Token-Cookie gelöscht) → Aufruf einer geschützten Seite → Weiterleitung zu `/login`.
+- [x] Nach Login: JWT als HttpOnly-Cookie in den Browser-DevTools unter *Application → Cookies* sichtbar.
+- [x] Request via Hoppscotch ohne Token → Server antwortet mit `401`.
+- [x] Abruf einer Ressource eines anderen Nutzers/einer fremden WG → Server antwortet mit `404`.
 
 # 06 - Sicherheits-Audit (OWASP Top 10)
 
@@ -211,6 +267,42 @@ Die übrigen Bereiche sind im Backend sauberer als Request/Response mit explizit
 Unsere Einschätzung:
 Das klingt plausibel und wär auch unsere Antwort gewesen, nötig ist es nicht unbedingt, da bei einer WG App wohl nicht den ganzen Tag hoher Betrieb ist und es unwarscheinlich ist, dass zwei Leute gleichzeitig Eintragungen machen, dennoch wäre es in manchen Punkten wie dem Chat schon toll falls man mal live kommuniziert.
 
+## Aufgabe 2: Server-Sent Events
+
+SSE wurde bewusst **nicht** implementiert. Da unsere Kommunikationsanforderung (Chat) klar bidirektional ist – Clients senden selbst Nachrichten, nicht nur der Server – haben wir uns direkt für WebSockets (socket.io) entschieden und SSE nur konzeptionell in Aufgabe 4 gegenübergestellt, statt es zusätzlich als Lernübung separat umzusetzen.
+
+## Aufgabe 3: WebSockets mit socket.io
+
+**Iteration 1 (Basis-Prompt):**
+```
+Integriere socket.io in mein Express-Backend. Wenn ein Client eine neue Chat-Nachricht
+sendet, soll der Server sie an alle anderen verbundenen Clients weiterleiten.
+```
+*Ergebnis:* Funktionierte grundsätzlich, aber die Verbindung brach beim Wechsel zwischen WLAN/mobilem Netz gelegentlich ab und musste manuell per Reload wiederhergestellt werden.
+
+**Iteration 2 (präzisiert):**
+```
+Konfiguriere den socket.io-Client so, dass er bei Verbindungsabbruch automatisch mit
+Fallback auf Polling reconnected (transports: ['websocket', 'polling']). Der Server
+soll eingehende 'chat eintrag'-Events per socket.broadcast.emit an alle anderen
+Clients weiterleiten, mit withCredentials für die Cookie-basierte Auth.
+```
+*Präzisiert wurde:* automatisches Reconnect-Verhalten mit Polling-Fallback sowie das Mitschicken der Auth-Cookies (`withCredentials: true`) bei der Socket-Verbindung.
+
+**Zwei-Tab-Test:** Bestanden – eine im ersten Tab gesendete Chat-Nachricht erscheint im zweiten geöffneten Tab sofort ohne Reload.
+
+## Aufgabe 4: SSE vs. WebSockets – Direktvergleich
+
+| Kriterium | SSE | WebSockets |
+| :--- | :--- | :--- |
+| Richtung | Server → Client | Bidirektional |
+| Komplexität im Code | Gering | Mittel |
+| Reconnect bei Verbindungsabbruch | Automatisch (Browser) | socket.io übernimmt automatisch (mit Polling-Fallback) |
+| Geeignet für unser Projekt | ❌ | ✅ |
+| Warum? | Chat braucht Senden **und** Empfangen – SSE kann nur einseitig vom Server aus pushen, der Client müsste für's Senden trotzdem einen separaten REST-Call machen. | Chat, Präsenz und Live-Updates der Einkaufsliste sind von Natur aus bidirektional – ein Client sendet ein Event, der Server broadcastet es an alle anderen. Das passt direkt zum socket.io-Modell. |
+
+**Was passiert bei einem Server-Neustart?** Nicht explizit end-to-end getestet. Laut socket.io-Client-Konfiguration (`transports: ['websocket', 'polling']`, Standard-Reconnect aktiv) sollten verbundene Clients die Verbindung verlieren und automatisch neu verbinden, sobald der Server wieder erreichbar ist – das reine Reconnect-Verhalten wurde aber nicht gezielt durch einen Server-Neustart während einer offenen Verbindung verifiziert. Offener Punkt für einen weiteren Test.
+
 # 08 Async Messaging
 
 Passwort geändert	Ja	Transactional	E-Mail	Sicherheitsrelevant, braucht Persistenz
@@ -233,6 +325,22 @@ Itterationen der E-mail:
 
 2. Passe mir die E-mail noch an also gestalte sie mehr in dem Website look mit cleaner ästhethik oben links bitte das Logo das auch für die WG verwendet wird, außerdem der name der wg und ein link direkt zu der action, also zum Beispiel direkt zur Einkaufsliste wenn jemand einkaufen ist.
 
+**Mailversand über Queue statt synchron im Request-Handler:** Der Versand lief anfangs als reines fire-and-forget-`.catch()` direkt im Request-Handler. Nachträglich in eine eigene, einfache In-Process-Queue (`backend/lib/mailQueue.js`) ausgelagert: `notifications.js` reiht Mail-Jobs per `enqueueMail()` ein, ein Worker-Loop verarbeitet sie sequenziell im Hintergrund, ohne den HTTP-Request zu blockieren. Für unser Volumen (laut eigener Analyse realistisch 0–2 Events/Stunde) reicht eine In-Process-Queue aus – ein externer Broker wie Redis/BullMQ wäre für diese Größenordnung Overkill gewesen.
+
+## Aufgabe 3: Web Push
+
+Web Push wurde implementiert, da Aufgabe 1 "Jemand ist gerade einkaufen" als zeitkritisches Event mit Push-Bedarf identifiziert hat. VAPID-Keys liegen in `.env`. Der Service Worker (`backend/public/sw.js`) empfängt Push-Events, zeigt eine Notification mit Titel, Body und Deep Link (`notificationclick` öffnet/fokussiert die Ziel-URL). Subscriptions werden per `POST /api/push/subscribe` gespeichert. Abgelaufene Subscriptions (HTTP 410/404 vom Push-Service) werden serverseitig automatisch aus der Datenbank gelöscht (`backend/lib/webpush.js`).
+
+**Zwei-Tab-Test:** Bestanden – Auslösen des Events (z.B. "einkaufen"-Status setzen) in Tab 1 zeigt die Push-Notification in Tab 2 sofort an.
+
+## Aufgabe 4: Template-Checkliste
+
+| Kriterium | Ergebnis |
+| :--- | :--- |
+| Alle nötigen Infos ohne Login sichtbar? | ✅ Wer/was/WG-Name direkt im Template |
+| Direkter Deep Link zur betroffenen Ansicht (nicht nur Startseite)? | ✅ z.B. direkt zur Einkaufsliste bzw. zur Todo-Ansicht |
+| Betreff/Titel klar und unter 50 Zeichen? | ✅ z.B. `Neue Aufgabe: "Küche putzen"` |
+| Notification-Body unter 120 Zeichen? | ✅ kurze, klare Sätze pro Event |
 
 # Microservices vs Monolith
 
@@ -319,9 +427,101 @@ Bounded Contexts:
 
 Kommunikation: Fast jeder Kontext fragt bei **WG-Verwaltung** die `Membership` ab, um Zugriff auf eine `wgId` zu autorisieren, und **Tasks/Shopping/Finance** schreiben zusätzlich in **Messages** für den Activity-Feed. Ein zukünftiger **Stats**-Kontext würde nur lesend Daten aus Tasks, Shopping und Finance aggregieren, ohne eigenen Zustand zu besitzen.
 
+## Aufgabe 3: Service Layer einführen
 
+**Iteration 1 (Basis-Prompt):**
+```
+Refactore den POST /api/todos-Handler. Die Validierung und die Prisma-Abfrage
+sollen in eine neue Datei tasks.service.js als Funktion createTodo(data, userId)
+ausgelagert werden. Der Route-Handler bleibt schlank.
+```
+*Ergebnis:* Die Logik landete in `tasks.service.js`, aber Fehler wurden uneinheitlich geworfen (mal `res.status(400)` direkt im Service, mal ein generisches `throw new Error(...)`) – der Route-Handler musste den Fehlertyp an unterschiedlichen Stellen unterschiedlich auswerten.
 
+**Iteration 2 (präzisiert):**
+```
+Vereinheitliche die Fehlerbehandlung: Erstelle in lib/errors.js zentrale Error-Klassen
+(ValidationError, AccessDeniedError, NotFoundError, ConflictError, GoneError). Services
+werfen ausschließlich diese Klassen, niemals res.status() direkt. Der Route-Handler
+fängt den Fehler zentral per try/catch und mappt err.name auf den passenden HTTP-Status.
+```
+*Präzisiert wurde:* eine zentrale, wiederverwendbare Fehlerklassen-Hierarchie (`backend/lib/errors.js`) statt Ad-hoc-Statuscodes verstreut in den Services – Services kennen jetzt keine HTTP-Details mehr, das bleibt sauber beim Route-Handler.
 
+## Aufgabe 4: Modulare Ordnerstruktur
+
+Umgesetzt (Commit `8de05fa7 refactor: restructure backend into modular bounded contexts`). Jeder Bounded Context liegt jetzt unter `backend/modules/<kontext>/` mit `<kontext>.routes.js` + `<kontext>.service.js`:
+
+```
+backend/modules/
+├── auth/        (auth.routes.js, auth.service.js, users.routes.js)
+├── wgs/         (wgs.routes.js, wgs.service.js, invitations.routes.js, status.routes.js)
+├── tasks/       (tasks.routes.js, tasks.service.js)
+├── shopping/    (shopping.routes.js, shopping.service.js)
+├── finances/    (finances.routes.js, finances.service.js)
+├── calendar/    (calendar.routes.js, calendar.service.js)
+├── messages/    (messages.routes.js, messages.service.js)
+└── push/        (push.routes.js, push.service.js)
+```
+
+`server.js` bindet die Module nur noch über `app.use('/api/...', router)` ein und enthält selbst keine Geschäftslogik mehr. Verifiziert: Keine `.routes.js`-Datei greift noch direkt auf `prisma.*` zu – alle DB-Zugriffe laufen über die zugehörige `.service.js`.
+
+## Aufgabe 5: Modulschnittstellen
+
+Die "Activity Log"-Verletzung aus der Bestandsaufnahme (Shopping/Finance/Tasks schrieben direkt in `prisma.message`) wurde behoben: `backend/lib/activityLog.js` kapselt `logActivity(wgId, content)`, das intern `prisma.message.create` aufruft. Tasks-, Shopping- und Finance-Service rufen jetzt `logActivity()` auf statt direkt in eine fremde Tabelle zu schreiben.
+
+Beim WG-Löschen ruft `wgs.service.js` die anderen Module ebenfalls nur über exportierte Funktionen auf, nie über direkten Prisma-Zugriff auf fremde Tabellen:
+
+```
+wgs.service.js
+  ruft auf:  shopping.service.deleteAllForWgOperation(wgId)
+             tasks.service.deleteAllForWgOperation(wgId)
+             calendar.service.deleteAllForWgOperation(wgId)
+             finances.service.deleteAllForWgOperation(wgId)
+             messages.service.deleteAllForWgOperation(wgId)
+             auth.service.getUserById(userId)
+```
+
+Öffentliche vs. interne Schnittstellen (Auszug):
+
+```
+tasks.service.js
+  öffentlich:  listTodos(), createTodo(), updateTodo(), deleteAllForWgOperation()
+
+shopping.service.js
+  öffentlich:  listShoppingItems(), createShoppingItem(), updateShoppingItem(), deleteAllForWgOperation()
+
+wgs.service.js
+  öffentlich:  u.a. createWg(), joinWg(), removeMember(), ruft deleteAllForWgOperation() der anderen Module auf
+  intern:      keine eigene Kapselung fremder Tabellen – nutzt ausschließlich exportierte Funktionen anderer Module
+
+lib/activityLog.js
+  öffentlich:  logActivity(wgId, content)
+```
+
+## Aufgabe 6: Architektur-Review – Frage 4 (Extraktionskandidat)
+
+`push`-Modul wäre am einfachsten als eigener Service extrahierbar: Es hat nur eine eigene Tabelle (`PushSubscription`), keine ausgehenden Abhängigkeiten zu anderen Modulen und wird nur von außen (`lib/webpush.js`) genutzt, nie umgekehrt. Am meisten eingehende Abhängigkeiten hat das `wgs`-Modul (wird von Tasks, Shopping, Finance, Calendar, Messages beim WG-Löschen referenziert bzw. referenziert diese selbst) – erwartbares Warnsignal, aber kein Fehler: `wgs` ist bewusst die zentrale Aggregations-/Cascade-Instanz der Domäne, ähnlich einem Aggregate Root im DDD-Sinn.
+
+**Bestehende Tests nach dem Umbau:** `npx vitest run` (statt Cypress, das auf unserer Entwicklungsumgebung Gatekeeper-Probleme hatte) – alle 21 Tests weiterhin grün nach dem Backend-Refactoring.
+
+## Bonus: Frontend nach Feature-Modulen strukturiert ⭐
+
+Das Frontend war bisher flach nach Typ organisiert (`components/`, `utils/`). Umgebaut nach Feature-Ordnern:
+
+```
+frontend/src/
+├── features/
+│   ├── auth/        (Login.tsx, Register.tsx)
+│   ├── dashboard/    (DashboardClient.tsx)
+│   ├── shopping/     (ShoppingClient.tsx)
+│   ├── tasks/        (TodoClient.tsx)
+│   ├── finances/     (FinanceClient.tsx)
+│   └── wg/           (WgSettingsModal.tsx, ProfileModal.tsx)
+└── shared/
+    ├── components/   (MainLayout.tsx, TabsNav.tsx – generische/übergreifende UI)
+    └── lib/          (authFetch.ts, logic.ts, leaderboard.ts, socket.ts, push.ts)
+```
+
+Da keine Komponente eine andere Komponente direkt importierte (nur `MainLayout` als zentrale Shell bindet alle Feature-Komponenten ein, jede Komponente selbst hängt nur von `shared/lib/` ab), ließ sich die Umstrukturierung risikoarm durchführen. Verifiziert nach dem Umzug: `npx vitest run` (21/21 grün), `npx tsc --noEmit` (keine Fehler), `npx vite build` (Production-Build erfolgreich).
 
 # 09 - Testing
 
@@ -379,8 +579,17 @@ Behoben durch:
 
 # 11 Deployment
 
-Bestandteil	Läuft als	Hostname / Pfad (Beispiel)	Wird ausgeliefert von
-Frontend (React)	statisches Build (dist/)	meinprojekt.de	Express (express.static)
-Backend (Express)	Node.js-App	meinprojekt.de/api	konsoleH Node.js
-Datenbank (SQL)	MySQL/MariaDB	localhost (auf dem Server)	konsoleH DB-Verwaltung
+| Bestandteil | Läuft als | Hostname / Pfad | Wird ausgeliefert von |
+| :--- | :--- | :--- | :--- |
+| Frontend (React) | statisches Build (`dist/` → `backend/public/`) | `wehgehts.de` | Express (`express.static`) |
+| Backend (Express) | Node.js-App | `wehgehts.de/api` | konsoleH Node.js |
+| Datenbank (SQL) | MySQL/MariaDB | `lvrs.your-database.de` (externer DB-Host) | Datenbank-Hoster-Verwaltung |
 
+1. Warum müssen API-Routen vor dem SPA-Fallback stehen?
+Damit nicht jede Request abgefangen wird bevor sie überhaupt irgendwo ankommt.
+
+2. Warum darf index.html nicht gecacht werden, Assets aber schon?
+Durch hashing ändert sich der Name der Assets bei einer Änderung. Cachet man die index.html datei dann würde diese noch auf alte Assets hinweisen und somit kaputt gehen
+
+3. Was passiert ohne SPA-Fallback?
+Getestet: Fallback-Middleware kurz auskommentiert, Server neu gestartet, direkt `http://localhost:3000/login` per curl/Browser aufgerufen. Ergebnis: `404 Cannot GET /login`. Express findet keine passende Route (weder API noch statische Datei `login`) und wirft den Standard-Express-404, statt `index.html` auszuliefern. Die React-Router-Logik läuft aber nur *innerhalb* der bereits geladenen React-App im Browser – ruft man eine Client-Route direkt per URL/Reload auf, bekommt der Browser diese Anfrage nie an React weitergereicht, sondern sieht nur die rohe Server-Antwort. Ohne Fallback wäre jede tief verlinkte Route (Reload auf `/dashboard`, geteilter Link zu `/login`) kaputt – nur der Einstieg über `/` würde funktionieren.

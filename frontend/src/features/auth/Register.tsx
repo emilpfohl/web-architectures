@@ -1,8 +1,8 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { validatePasswordInput } from '../utils/logic';
-import { authFetch } from '../utils/authFetch';
+import { validatePasswordInput } from '../../shared/lib/logic';
+import { authFetch } from '../../shared/lib/authFetch';
 
 export function Register() {
   const [name, setName] = useState('');

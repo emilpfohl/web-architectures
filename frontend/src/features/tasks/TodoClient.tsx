@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { authFetch } from '../utils/authFetch';
-import { buildTodoDisplayState } from '../utils/logic';
+import { authFetch } from '../../shared/lib/authFetch';
+import { buildTodoDisplayState } from '../../shared/lib/logic';
 
 export function TodoClient({ initialTodos, onRefresh, wgId, user }: { initialTodos: any[], onRefresh: () => void, wgId: number, user: any }) {
   const [newTodoTitle, setNewTodoTitle] = useState('');
