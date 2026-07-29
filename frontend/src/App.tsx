@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { MainLayout } from './shared/components/MainLayout';
 import { Login } from './features/auth/Login';
 import { Register } from './features/auth/Register';
+import { LandingPage } from './features/landing/LandingPage';
 import { authFetch } from './shared/lib/authFetch';
 import { setupPushNotifications } from './shared/lib/push';
 
@@ -16,19 +17,19 @@ function App() {
       const response = await authFetch('/api/auth/me');
       if (response.ok) {
         setIsAuthenticated(true);
-        if (location.pathname === '/login' || location.pathname === '/register') {
+        if (['/login', '/register', '/welcome'].includes(location.pathname)) {
           navigate('/');
         }
       } else {
         setIsAuthenticated(false);
-        if (location.pathname !== '/login' && location.pathname !== '/register') {
-          navigate('/login');
+        if (!['/login', '/register', '/welcome'].includes(location.pathname)) {
+          navigate('/welcome');
         }
       }
     } catch {
       setIsAuthenticated(false);
-      if (location.pathname !== '/login' && location.pathname !== '/register') {
-        navigate('/login');
+      if (!['/login', '/register', '/welcome'].includes(location.pathname)) {
+        navigate('/welcome');
       }
     }
   };
@@ -53,6 +54,7 @@ function App() {
 
   return (
     <Routes>
+      <Route path="/welcome" element={<LandingPage />} />
       <Route path="/login" element={<Login onLoginSuccess={() => setIsAuthenticated(true)} />} />
       <Route path="/register" element={<Register />} />
       <Route path="/*" element={<MainLayout />} />

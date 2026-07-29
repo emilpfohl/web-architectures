@@ -644,3 +644,53 @@ Da Frontend und Backend vom selben Origin (`wehgehts.de`) ausgeliefert werden, w
 - ✅ Node.js-Konfiguration in konsoleH aktiv: Arbeitsverzeichnis `public_html`, Skriptpfad `server.js`
 
 **Stolperstein bei der Node.js-Aktivierung:** Das Arbeitsverzeichnis-Feld in konsoleH erwartet nicht den absoluten Pfad (`/usr/www/users/<login>`) und nicht den Domainnamen, sondern exakt `public_html` — der von Hetzner vorgegebene Alias für den Domain-Webroot. Mit einem falschen Arbeitsverzeichnis meldete konsoleH beim ersten Klick auf „Aktivieren" einen Fehler, beim zweiten Klick fälschlich „erfolgreich aktiviert", der Status fiel nach jedem Seiten-Reload aber wieder auf „inaktiv" zurück und das komplette Formular (inkl. Umgebungsvariablen) wurde geleert. Per SSH-Test (`node server.js` mit gesetzten Env-Vars) ließ sich vorab ausschließen, dass die App selbst crasht — das grenzte das Problem auf die konsoleH-Konfiguration ein.
+
+# 12 - Polish
+
+## Aufgabe 1: Sicherheits-Scan & Header-Quick-Wins
+
+Der externe Scan durch den Dozenten stand zum Zeitpunkt dieser Session noch aus. Um trotzdem sofort verwertbare Ergebnisse zu haben, wurde die deployte Konfiguration selbst gegen die gängigen HTTP-Security-Header geprüft (`curl -I` gegen `server.js`, vor und nach dem Fix).
+
+**3 wichtigste Findings (vor dem Fix):**
+
+1. **Keine Security-Header gesetzt.** `server.js` setzte außer `cors()` keinerlei HTTP-Security-Header. Es fehlten insbesondere `Content-Security-Policy`, `X-Content-Type-Options`, `X-Frame-Options` und `Strict-Transport-Security` — Standard-Findings, die jeder automatisierte Scanner (Mozilla Observatory, securityheaders.com, OWASP ZAP) sofort als "Missing Header" auflisten würde.
+2. **Kein Clickjacking-Schutz.** Ohne `X-Frame-Options`/`frame-ancestors` hätte die App in ein fremdes `<iframe>` eingebettet werden können — relevant, da die App Login-Formulare und sensible WG-Daten (Finanzen, Chat) zeigt.
+3. **Kein erzwungenes HTTPS auf Protokoll-Ebene.** Die App läuft zwar produktiv nur über HTTPS (Hetzner-Redirect), der Node-Prozess selbst sendete aber keinen `Strict-Transport-Security`-Header, sodass ein Downgrade-Angriff auf einer Netzwerkebene ohne HSTS theoretisch möglich gewesen wäre.
+
+**Fix:** `helmet` (`npm install helmet` in `backend/`) vor allen Routen registriert (`backend/server.js`), mit einer projektspezifischen CSP (`connect-src 'self' ws: wss:` für den Socket.io-Client, `img-src 'self' data:` für Base64-Icons, `style-src 'unsafe-inline'` für Tailwind-Utility-Klassen zur Laufzeit). Verifiziert per `curl -I http://localhost:3000/`:
+
+```
+Content-Security-Policy: default-src 'self'; ...; frame-ancestors 'none'; ...
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+Cross-Origin-Resource-Policy: same-origin
+```
+
+App danach manuell erneut durchgeklickt (Login, Dashboard, Shopping, Chat) — keine Regressionen durch die CSP (keine geblockten Requests in der Browser-Konsole).
+
+*Sobald der Dozenten-Scan vorliegt, werden dessen konkrete Findings hier ergänzt.*
+
+## Aufgabe 2: Performance-Messung (Lighthouse)
+
+Lighthouse-Performance-Audit gegen den lokal produktiv gebauten Build (`npm run build` → `backend/public/`) via `npx lighthouse --only-categories=performance --chrome-flags="--headless=new"`.
+
+| | Vorher (`/login`, alter Build) | Nachher (`/welcome`, neuer Build mit Landing Page) |
+| :--- | :--- | :--- |
+| Performance-Score | 0.80 | 0.79 |
+| First Contentful Paint | 3.8 s | 3.8 s |
+| Largest Contentful Paint | 3.9 s | 3.9 s |
+| Total Blocking Time | 20 ms | 40 ms |
+| Cumulative Layout Shift | 0 | 0 |
+
+**Ehrliche Einordnung:** Es gibt in unserem Projekt (noch) kein großes Hero-Image oder sonstiges datenintensives Asset — die Landing Page wurde bewusst rein aus CSS/Tailwind-Gradients, SVG-Icons (Material Symbols als Icon-Font) und einer gestylten Vorschau-Karte aus bestehenden UI-Primitiven gebaut, kein Stockfoto. Der in der Aufgabenstellung vorgesehene Optimierungsschritt (Skalieren, WebP-Konvertierung, Kompression via Squoosh, `loading="lazy"` + explizite `width`/`height`) entfällt damit inhaltlich, da kein Rasterbild eingebunden wurde, das diesen Schritt bräuchte. Der leichte Anstieg der Total Blocking Time (+20 ms) kommt vom zusätzlichen Rendering der neuen Landing-Page-Komponente (Framer-Motion-Animationen), liegt aber weiterhin im unauffälligen Bereich. Die im Baseline-Score bereits mittelmäßigen Werte (FCP/LCP ~3.8s) stammen primär vom lokalen `headless`-Chrome-Overhead, nicht vom eigentlichen Bundle (145 KB gzip JS gesamt).
+
+## Aufgabe 3: Landing Page
+
+Neue Route `/welcome` (`frontend/src/features/landing/LandingPage.tsx`) als Startseite für nicht eingeloggte Nutzer, statt direktem Redirect zu `/login`:
+
+- **Above the fold:** Nutzen-Headline ("Eure WG, endlich organisiert – ohne Zettel-Chaos an der Kühlschranktür") statt generischem Marketing-Text, kurzer Subtext, zwei klare CTAs ("Kostenlos starten" → `/register`, "Ich habe schon ein Konto" → `/login`).
+- **Features & Nutzen:** Vier Karten (Aufgaben, Einkaufsliste, Finanzen, Chat), die konkret beschreiben was das Feature für den Alltag bringt statt nur den Feature-Namen zu nennen.
+- **Reibungsfreier Übergang:** CTA-Buttons sind direkte `react-router`-Links zu `/register`/`/login`, kein Zwischenschritt.
+
+**Routing-Anpassung:** `App.tsx` leitete nicht eingeloggte Nutzer bisher hart auf `/login` um. Jetzt: `/welcome`, `/login`, `/register` sind die drei "öffentlichen" Routen; alles andere leitet nicht authentifizierte Nutzer zu `/welcome` statt `/login`. Der global in `authFetch.ts` verdrahtete 401-Redirect (bei abgelaufenem Token) musste ebenfalls von `/login` auf diese Drei-Routen-Logik angepasst werden, sonst wäre man beim Aufruf von `/welcome` sofort wieder zu `/login` zurückgeworfen worden (per Playwright-Screenshot-Test gefunden und gefixt).

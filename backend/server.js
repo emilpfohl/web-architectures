@@ -2,6 +2,7 @@ require('dotenv').config();
 const http = require('http');
 const path = require('path');
 const express = require('express');
+const helmet = require('helmet');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const { Server } = require('socket.io');
@@ -42,6 +43,26 @@ io.on('connection', (socket) => {
     socket.broadcast.emit('chat eintrag', entryData);
   });
 });
+
+// Security-Header (Helmet) - setzt u.a. HSTS, X-Content-Type-Options,
+// X-Frame-Options und eine CSP. connect-src erlaubt 'self' + ws/wss für
+// den Socket.io-Client (gleicher Origin, aber ws-Scheme unterscheidet sich).
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:'],
+      connectSrc: ["'self'", 'ws:', 'wss:'],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  },
+  crossOriginResourcePolicy: { policy: 'same-origin' },
+}));
 
 app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));
 app.use(express.json());
