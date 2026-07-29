@@ -694,3 +694,18 @@ Neue Route `/welcome` (`frontend/src/features/landing/LandingPage.tsx`) als Star
 - **Reibungsfreier Übergang:** CTA-Buttons sind direkte `react-router`-Links zu `/register`/`/login`, kein Zwischenschritt.
 
 **Routing-Anpassung:** `App.tsx` leitete nicht eingeloggte Nutzer bisher hart auf `/login` um. Jetzt: `/welcome`, `/login`, `/register` sind die drei "öffentlichen" Routen; alles andere leitet nicht authentifizierte Nutzer zu `/welcome` statt `/login`. Der global in `authFetch.ts` verdrahtete 401-Redirect (bei abgelaufenem Token) musste ebenfalls von `/login` auf diese Drei-Routen-Logik angepasst werden, sonst wäre man beim Aufruf von `/welcome` sofort wieder zu `/login` zurückgeworfen worden (per Playwright-Screenshot-Test gefunden und gefixt).
+
+## Aufgabe 4: Automatisches Deployment (CI/CD)
+
+GitHub Actions Workflow (`.github/workflows/deploy.yml`) baut bei jedem Push auf `main` das Frontend, kopiert den Build nach `backend/public/` und deployed per `rsync` + SSH auf konsoleH (Zielverzeichnis `~/public_html`, passend zum Arbeitsverzeichnis aus Session 11). Secrets (`HETZNER_SSH_USER`, `HETZNER_SSH_HOST`, `HETZNER_SSH_PASSWORD`) liegen in den GitHub-Repository-Secrets, nicht im Code.
+
+**Verifiziert:** Erster Actions-Run lief grün durch (einzige Meldung: Info-Annotation zu einer veralteten Node-20-Runtime in `actions/checkout@v4`/`setup-node@v4`, kein Fehler). Nach einem manuellen Neustart der Node.js-App in konsoleH (der `touch server.js`-Trigger im Workflow reicht allein nicht, um den laufenden Prozess neu zu laden) wurden die neuen Security-Header und die `/welcome`-Route live auf `https://wehgehts.de` bestätigt:
+
+```
+$ curl -sI https://wehgehts.de/
+content-security-policy: default-src 'self'; ...
+strict-transport-security: max-age=31536000; includeSubDomains
+x-frame-options: SAMEORIGIN
+```
+
+`https://wehgehts.de/welcome` antwortet mit `200`. Automatisches Deployment inkl. DB-Migrationen (`prisma migrate deploy`) und Prisma-Client-Generierung ist damit produktiv im Einsatz.
