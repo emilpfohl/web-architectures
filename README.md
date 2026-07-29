@@ -593,3 +593,54 @@ Durch hashing ändert sich der Name der Assets bei einer Änderung. Cachet man d
 
 3. Was passiert ohne SPA-Fallback?
 Getestet: Fallback-Middleware kurz auskommentiert, Server neu gestartet, direkt `http://localhost:3000/login` per curl/Browser aufgerufen. Ergebnis: `404 Cannot GET /login`. Express findet keine passende Route (weder API noch statische Datei `login`) und wirft den Standard-Express-404, statt `index.html` auszuliefern. Die React-Router-Logik läuft aber nur *innerhalb* der bereits geladenen React-App im Browser – ruft man eine Client-Route direkt per URL/Reload auf, bekommt der Browser diese Anfrage nie an React weitergereicht, sondern sieht nur die rohe Server-Antwort. Ohne Fallback wäre jede tief verlinkte Route (Reload auf `/dashboard`, geteilter Link zu `/login`) kaputt – nur der Einstieg über `/` würde funktionieren.
+
+### Production Build & relative Pfade
+
+Frontend und Backend werden als **ein** deploybares Verzeichnis gebaut:
+
+```bash
+cd frontend && npm run build   # erzeugt frontend/dist/
+cp -r frontend/dist/* backend/public/
+```
+
+Das Frontend spricht die API **relativ** an (`/api/...`, nicht `http://localhost:3000/api/...`), da beide vom selben Origin ausgeliefert werden. Im Dev-Betrieb (`npm run dev`, Vite auf Port 5173) übernimmt der Vite-Dev-Proxy in `frontend/vite.config.ts` das Weiterleiten von `/api` an `http://localhost:3000`, damit der gleiche relative Code in Dev und Prod funktioniert:
+
+```ts
+server: {
+  proxy: {
+    '/api': { target: 'http://localhost:3000', changeOrigin: true, secure: false },
+  },
+},
+```
+
+### Middleware-Reihenfolge (`backend/server.js`)
+
+1. `cors`, `express.json`, `cookieParser`
+2. API-Routen (`/api/auth`, `/api/todos`, `/api/wgs`, …), jeweils mit `authenticate`-Middleware wo nötig
+3. Fallback für unbekannte `/api/*`-Pfade → JSON `404` (damit die API nie versehentlich `index.html` zurückgibt)
+4. `express.static(FRONTEND_DIST, …)` mit langem Cache (`max-age=31536000, immutable`) für gehashte Vite-Assets unter `/assets/`
+5. SPA-Fallback (letzte Middleware ohne Pfad, da Express 5 bei `app.get('*', ...)` wegen geänderter `path-to-regexp`-Syntax einen Fehler wirft) → liefert immer `index.html` mit `Cache-Control: no-cache`
+
+### Datenbank
+
+Migration von SQLite auf **MySQL/MariaDB** ist erfolgt (`backend/prisma/schema.prisma`, `provider = "mysql"`), DB läuft extern beim Hoster (`lvrs.your-database.de`). Lokal/Dev: `prisma migrate dev`, im Deployment: `prisma migrate deploy` (wendet nur bereits erstellte Migrationen an, erzeugt keine neuen — sicherer für Produktion).
+
+### Cookies & CORS im Same-Origin-Setup
+
+Da Frontend und Backend vom selben Origin (`wehgehts.de`) ausgeliefert werden, wäre CORS eigentlich nicht mehr nötig — `cors({ origin: ALLOWED_ORIGINS, credentials: true })` ist trotzdem als Absicherung für den lokalen Dev-Betrieb (Vite auf Port 5173/5174) im Code geblieben. Auth-Cookie (`backend/modules/auth/auth.routes.js`) wird gesetzt mit:
+
+- `httpOnly: true` — nicht per JavaScript auslesbar (XSS-Schutz)
+- `secure: process.env.NODE_ENV === 'production'` — nur über HTTPS im Prod-Betrieb
+- `sameSite: 'lax'` — CSRF-Schutz, da Same-Origin ohnehin ausreicht
+- `app.set('trust proxy', 1)` — nötig hinter dem Hetzner-Reverse-Proxy, damit Express `req.secure`/`req.ip` korrekt erkennt und `secure`-Cookies funktionieren
+
+`backend/.env.example` dokumentiert alle benötigten Variablen (`DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL`, `RESEND_API_KEY`, VAPID-Keys); `PORT` wird vom Hosting (konsoleH Node.js App) automatisch gesetzt.
+
+### Deployment-Status
+
+- ✅ Same-Origin-Architektur (ein Node.js-Prozess liefert API + Build) implementiert und live auf `https://wehgehts.de`
+- ✅ SSL-Zertifikat (Let's Encrypt) aktiv, HTTP→HTTPS-Redirect (`301`) verifiziert
+- ✅ Backend per SSH auf konsoleH-Node.js-App deployed (`npm install`, `npx prisma generate`, `npx prisma migrate deploy`)
+- ✅ Node.js-Konfiguration in konsoleH aktiv: Arbeitsverzeichnis `public_html`, Skriptpfad `server.js`
+
+**Stolperstein bei der Node.js-Aktivierung:** Das Arbeitsverzeichnis-Feld in konsoleH erwartet nicht den absoluten Pfad (`/usr/www/users/<login>`) und nicht den Domainnamen, sondern exakt `public_html` — der von Hetzner vorgegebene Alias für den Domain-Webroot. Mit einem falschen Arbeitsverzeichnis meldete konsoleH beim ersten Klick auf „Aktivieren" einen Fehler, beim zweiten Klick fälschlich „erfolgreich aktiviert", der Status fiel nach jedem Seiten-Reload aber wieder auf „inaktiv" zurück und das komplette Formular (inkl. Umgebungsvariablen) wurde geleert. Per SSH-Test (`node server.js` mit gesetzten Env-Vars) ließ sich vorab ausschließen, dass die App selbst crasht — das grenzte das Problem auf die konsoleH-Konfiguration ein.
