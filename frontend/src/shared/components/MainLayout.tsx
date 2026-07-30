@@ -154,6 +154,11 @@ export function MainLayout() {
     }
   }, [searchParams]);
   const isShoppingDarkMode = isShoppingActive;
+  const selectedWg = wgs.find(w => w.id === selectedWgId);
+
+  useEffect(() => {
+    document.title = selectedWg?.name ? `${selectedWg.name}` : 'Sanctuary';
+  }, [selectedWg?.name]);
 
   if (!loading && wgs.length === 0) {
     return (
@@ -288,12 +293,6 @@ export function MainLayout() {
       </div>
     );
   }
-
-  const selectedWg = wgs.find(w => w.id === selectedWgId);
-
-  useEffect(() => {
-    document.title = selectedWg?.name ? `${selectedWg.name}` : 'Sanctuary';
-  }, [selectedWg?.name]);
 
   return (
     <div
