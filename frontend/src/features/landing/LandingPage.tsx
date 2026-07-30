@@ -24,19 +24,25 @@ const FEATURES = [
   },
 ];
 
+const STATS = [
+  { value: '< 1 Min', label: 'bis eure WG startklar ist' },
+  { value: '100%', label: 'kostenlos, keine Werbung' },
+  { value: '0', label: 'Excel-Tabellen mehr nötig' },
+];
+
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-background font-body text-foreground">
+    <div className="login-page relative min-h-screen overflow-hidden font-body text-foreground">
+      <div className="bg-flare" />
+
       {/* Above the fold */}
-      <section className="relative overflow-hidden px-6 pt-20 pb-24 sm:pt-28">
+      <section className="relative z-10 overflow-hidden px-6 pt-10 pb-24 sm:pt-16">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 -top-24 -z-10 flex justify-center"
-        >
-          <div className="h-[420px] w-[420px] rounded-full bg-secondary/40 blur-3xl" />
-        </div>
+          className="pointer-events-none absolute inset-x-0 top-0 z-0 mx-auto h-56 w-full max-w-3xl rounded-full bg-[radial-gradient(ellipse_at_center,white_0%,white_40%,rgba(94,96,91,0.1)_70%,rgba(94,96,91,0)_100%)] blur-3xl"
+        />
 
-        <div className="mx-auto max-w-3xl text-center">
+        <div className="relative z-10 mx-auto max-w-3xl text-center">
           <span className="inline-block rounded-full bg-sage-soft px-4 py-1.5 text-sm font-medium text-primary">
             Für WGs gemacht
           </span>
@@ -45,7 +51,7 @@ export function LandingPage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="mt-6 font-headline text-4xl font-bold leading-tight sm:text-5xl"
+            className="mt-6 font-headline text-4xl font-bold leading-tight text-foreground sm:text-5xl lg:text-6xl"
           >
             Eure WG, endlich organisiert
             <br />
@@ -66,10 +72,21 @@ export function LandingPage() {
             </Link>
             <Link
               to="/login"
-              className="w-full rounded-2xl border border-outline-variant bg-white/60 px-8 py-4 text-center font-medium text-foreground transition-all hover:bg-white sm:w-auto"
+              className="w-full rounded-2xl border border-white/60 bg-white/70 px-8 py-4 text-center font-medium text-foreground backdrop-blur-xl transition-all hover:bg-white sm:w-auto"
             >
               Ich habe schon ein Konto
             </Link>
+          </div>
+
+          <div className="relative z-10 mx-auto mt-8 mb-4 grid max-w-lg grid-cols-3 gap-4 sm:mt-10">
+            {STATS.map((stat) => (
+              <div key={stat.label}>
+                <p className="font-headline text-2xl font-bold text-primary sm:text-3xl">
+                  {stat.value}
+                </p>
+                <p className="mt-1 text-xs text-on-surface-variant sm:text-sm">{stat.label}</p>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -79,7 +96,7 @@ export function LandingPage() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.15 }}
-          className="mx-auto mt-16 max-w-2xl rounded-[2rem] border border-white/60 bg-white/70 p-6 shadow-glass backdrop-blur-xl"
+          className="relative z-10 mx-auto mt-16 max-w-2xl rounded-[2rem] border border-white/60 bg-white/80 p-6 shadow-2xl shadow-primary/10 backdrop-blur-2xl sm:p-8"
         >
           <div className="flex items-center gap-2 border-b border-outline-variant pb-4">
             <div className="h-3 w-3 rounded-full bg-accent-peach" />
@@ -101,19 +118,19 @@ export function LandingPage() {
       </section>
 
       {/* Features & Nutzen */}
-      <section className="px-6 py-20">
+      <section className="relative z-10 px-6 py-20">
         <div className="mx-auto max-w-5xl">
           <h2 className="text-center font-headline text-3xl font-bold">
             Alles, was eure WG wirklich braucht
           </h2>
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {FEATURES.map((feature) => (
               <div
                 key={feature.title}
-                className="rounded-2xl border border-outline-variant bg-white/60 p-6 text-left"
+                className="rounded-2xl border border-white/60 bg-white/70 p-6 text-left backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/10"
               >
-                <div className="material-symbols-outlined flex h-11 w-11 items-center justify-center rounded-xl bg-sage-soft text-primary">
-                  {feature.icon}
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sage-soft">
+                  <span className="material-symbols-outlined text-primary leading-none">{feature.icon}</span>
                 </div>
                 <h3 className="mt-4 font-headline text-lg font-semibold">{feature.title}</h3>
                 <p className="mt-2 text-sm text-on-surface-variant">{feature.text}</p>
@@ -124,13 +141,13 @@ export function LandingPage() {
       </section>
 
       {/* Closing CTA */}
-      <section className="px-6 pb-24">
-        <div className="mx-auto max-w-2xl rounded-[2rem] bg-primary px-8 py-12 text-center text-on-primary">
+      <section className="relative z-10 px-6 pb-32 sm:pb-36">
+        <div className="mx-auto max-w-2xl rounded-[2rem] bg-primary px-8 py-12 text-center text-on-primary shadow-2xl shadow-primary/20">
           <h2 className="font-headline text-2xl font-bold sm:text-3xl">
             Bereit für weniger WG-Chaos?
           </h2>
           <p className="mt-3 text-on-primary/80">
-            Registriert eure WG in unter einer Minute – kein Kreditkarte, keine Werbung.
+            Registriert eure WG in unter einer Minute – keine Kreditkarte, keine Werbung.
           </p>
           <Link
             to="/register"
@@ -140,6 +157,22 @@ export function LandingPage() {
           </Link>
         </div>
       </section>
+
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 flex items-center justify-between px-4 py-4 sm:px-[30px] sm:py-[30px]">
+        <div className="pointer-events-auto flex items-center gap-4 sm:gap-5">
+          <Link to="/contact" className="text-xs font-medium text-primary transition-opacity hover:opacity-80 sm:text-sm">
+            Kontakt
+          </Link>
+          <Link to="/impressum" className="text-xs font-medium text-primary transition-opacity hover:opacity-80 sm:text-sm">
+            Impressum
+          </Link>
+        </div>
+        <div className="pointer-events-auto hidden lg:flex">
+          <Link to="/about" className="text-sm font-medium text-primary transition-opacity hover:opacity-80">
+            Über uns
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
