@@ -1,7 +1,20 @@
 {
+  "scripts": {
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down",
+    "test:backend": "npm --prefix backend test",
+    "test:frontend:unit": "npm --prefix frontend test",
+    "dev:e2e:servers": "concurrently -k \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
+    "test:e2e": "start-server-and-test \"npm run dev:e2e:servers\" \"http://localhost:3000/api/health|http://localhost:5173\" \"npm --prefix frontend run e2e:run\"",
+    "test": "npm run test:backend && npm run test:frontend:unit && npm run test:e2e"
+  },
   "dependencies": {
     "@react-email/components": "^1.0.12",
     "@react-email/render": "^2.0.9",
     "resend": "^6.16.0"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.4",
+    "start-server-and-test": "^3.0.11"
   }
 }

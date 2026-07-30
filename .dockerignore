@@ -1,0 +1,15 @@
+**/node_modules
+.git
+frontend/dist
+backend/public
+**/.env
+**/.env.*
+!**/.env.example
+frontend/cypress
+frontend/playwright
+frontend/test-results
+frontend/coverage
+backend/coverage
+**/*.db
+**/*.log
+.claude

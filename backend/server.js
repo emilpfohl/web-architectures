@@ -70,6 +70,8 @@ app.use(cookieParser());
 
 // --- 1) API-Routen ZUERST, bevor Static/SPA-Fallback etwas verschlucken kann ---
 
+app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
+
 // Register Auth Router (NOT protected)
 app.use('/api/auth', authRouter);
 app.use('/api/push', pushRouter);

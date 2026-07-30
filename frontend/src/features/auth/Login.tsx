@@ -181,7 +181,7 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: () => void }) {
         </div>
       </div>
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 flex items-center justify-between px-4 py-4 sm:px-[30px] sm:py-[30px]">
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 flex items-center justify-between bg-gradient-to-t from-background via-background/90 to-transparent px-4 py-4 sm:px-[30px] sm:py-[30px] lg:bg-none">
         <div className="pointer-events-auto flex items-center gap-4 sm:gap-5">
           <Link to="/contact" className="text-xs font-medium text-primary transition-opacity hover:opacity-80 sm:text-sm">
             Kontakt

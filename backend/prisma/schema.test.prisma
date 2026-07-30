@@ -1,0 +1,125 @@
+// Test-Schema: identisch zu schema.prisma, aber mit SQLite als Provider.
+// Wird nur für Backend-Tests (Vitest) verwendet, damit diese ohne laufende
+// MySQL-Instanz und ohne Mocking der Prisma-Queries laufen können - die
+// Business-Logik (Validierung, Zugriffskontrolle, Fehlerfälle) wird damit
+// gegen eine echte Datenbank getestet statt gegen Mock-Rückgabewerte.
+// Prisma-Client wird mit eigenem "output" generiert, um den MySQL-Client
+// für die Produktion nicht zu überschreiben.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client-test"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("TEST_DATABASE_URL")
+}
+
+model User {
+  id                Int                @id @default(autoincrement())
+  name              String
+  email             String             @unique
+  password          String             @default("")
+  memberships       Membership[]
+  todos             Todo[]
+  finances          FinanceItem[]
+  messages          Message[]
+  pushSubscriptions PushSubscription[]
+}
+
+model WG {
+  id          Int             @id @default(autoincrement())
+  name        String
+  createdAt   String
+  icon        String          @default("🏠")
+  themeColor  String          @default("#50644e")
+  memberships Membership[]
+  shopping    ShoppingItem[]
+  todos       Todo[]
+  calendar    CalendarEvent[]
+  finances    FinanceItem[]
+  invitations Invitation[]
+  messages    Message[]
+}
+
+model Membership {
+  userId     Int
+  wgId       Int
+  role       String
+  isHome     Boolean @default(true)
+  mood       String  @default("Chill")
+  isShopping Boolean @default(false)
+  user       User    @relation(fields: [userId], references: [id])
+  wg         WG      @relation(fields: [wgId], references: [id])
+
+  @@id([userId, wgId])
+}
+
+model ShoppingItem {
+  id       Int     @id @default(autoincrement())
+  wgId     Int
+  name     String
+  checked  Boolean @default(false)
+  category String
+  wg       WG      @relation(fields: [wgId], references: [id])
+}
+
+model Todo {
+  id         Int     @id @default(autoincrement())
+  wgId       Int
+  title      String
+  assigneeId Int?
+  completed  Boolean @default(false)
+  wg         WG      @relation(fields: [wgId], references: [id])
+  assignee   User?   @relation(fields: [assigneeId], references: [id])
+}
+
+model CalendarEvent {
+  id    Int    @id @default(autoincrement())
+  wgId  Int
+  date  String
+  title String
+  wg    WG     @relation(fields: [wgId], references: [id])
+}
+
+model FinanceItem {
+  id          Int    @id @default(autoincrement())
+  wgId        Int
+  amount      Float
+  description String
+  paidById    Int
+  wg          WG     @relation(fields: [wgId], references: [id])
+  paidBy      User   @relation(fields: [paidById], references: [id])
+}
+
+model Invitation {
+  id        Int    @id @default(autoincrement())
+  wgId      Int
+  token     String @unique
+  role      String
+  usedCount Int    @default(0)
+  maxUses   Int
+  wg        WG     @relation(fields: [wgId], references: [id])
+}
+
+model PushSubscription {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  wgId      Int
+  type      String
+  content   String
+  senderId  Int?
+  timestamp String
+  wg        WG       @relation(fields: [wgId], references: [id])
+  sender    User?    @relation(fields: [senderId], references: [id])
+}
