@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { authFetch } from '../../shared/lib/authFetch';
 import { buildLeaderboard } from '../../shared/lib/leaderboard';
 import { formatMessageTimestamp } from '../../shared/lib/logic';
+import { WgInfoCard } from './WgInfoCard';
 
 export function DashboardClient({ wgId, user, wgName, wgIcon, todos = [] }: { shopping: any[], todos: any[], finances: any[], onRefresh: () => void, wgId: number, user: any, wgName?: string, wgIcon?: string }) {
   const navigate = useNavigate();
@@ -83,6 +85,46 @@ export function DashboardClient({ wgId, user, wgName, wgIcon, todos = [] }: { sh
   const isUserHome = currentUserData?.isHome ?? true;
   const userMood = currentUserData?.mood ?? 'Chill';
   const leaderboard = buildLeaderboard(allResidents, todos);
+
+  const [isPicking, setIsPicking] = useState(false);
+  const [displayedName, setDisplayedName] = useState<string | null>(null);
+  const [pickedName, setPickedName] = useState<string | null>(null);
+  const pickIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const runRandomPicker = () => {
+    if (isPicking || allResidents.length === 0) return;
+
+    setPickedName(null);
+    setIsPicking(true);
+
+    const winner = allResidents[Math.floor(Math.random() * allResidents.length)];
+    let tick = 0;
+    const totalTicks = 14;
+
+    const scheduleNextTick = () => {
+      const random = allResidents[Math.floor(Math.random() * allResidents.length)];
+      setDisplayedName(random.name);
+      tick += 1;
+
+      if (tick >= totalTicks) {
+        setDisplayedName(winner.name);
+        setPickedName(winner.name);
+        setIsPicking(false);
+        return;
+      }
+
+      const delay = 70 + tick * 18;
+      pickIntervalRef.current = setTimeout(scheduleNextTick, delay);
+    };
+
+    scheduleNextTick();
+  };
+
+  useEffect(() => {
+    return () => {
+      if (pickIntervalRef.current) clearTimeout(pickIntervalRef.current);
+    };
+  }, []);
 
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -303,6 +345,62 @@ export function DashboardClient({ wgId, user, wgName, wgIcon, todos = [] }: { sh
  
         {/* Status Grid Right */}
         <div className="space-y-8">
+          {/* Random Picker */}
+          <div className="bg-primary/10 rounded-[3rem] p-8 border border-primary/20">
+            <h3 className="font-headline text-xl font-black mb-1">Zufalls-Losung</h3>
+            <p className="font-headline text-on-surface-variant text-[10px] uppercase tracking-widest font-black mb-6 opacity-60">Wer macht den Abwasch?</p>
+
+            <button
+              type="button"
+              data-cy="random-picker-button"
+              onClick={runRandomPicker}
+              disabled={isPicking || allResidents.length === 0}
+              className="w-full bg-white rounded-3xl p-6 flex items-center justify-center min-h-[88px] shadow-sm hover:shadow-md transition-shadow disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <AnimatePresence mode="wait">
+                {displayedName ? (
+                  <motion.span
+                    key={displayedName}
+                    data-cy="random-picker-name"
+                    initial={{ opacity: 0, y: 8, scale: 0.9 }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      scale: pickedName === displayedName ? 1.15 : 1,
+                    }}
+                    exit={{ opacity: 0, y: -8, scale: 0.9 }}
+                    transition={{ duration: 0.12 }}
+                    className={`font-headline font-black text-2xl ${pickedName === displayedName ? 'text-primary' : 'text-on-surface'}`}
+                  >
+                    {displayedName}
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="cta"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="font-headline font-black text-sm uppercase tracking-widest text-primary/60 flex items-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-xl">casino</span>
+                    Jemanden auslosen
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </button>
+
+            {pickedName && !isPicking && (
+              <button
+                type="button"
+                data-cy="random-picker-reroll"
+                onClick={runRandomPicker}
+                className="w-full mt-3 flex items-center justify-center gap-2 text-primary/70 hover:text-primary font-headline font-black text-[11px] uppercase tracking-widest transition-colors"
+              >
+                <span className="material-symbols-outlined text-base">refresh</span>
+                Neu losen
+              </button>
+            )}
+          </div>
+
           {/* Vibe Leaders */}
           <div className="bg-sage-soft/20 rounded-[3rem] p-8 border border-sage-soft/30">
             <h3 className="font-headline text-xl font-black mb-1">WG Rangliste</h3>
@@ -330,6 +428,9 @@ export function DashboardClient({ wgId, user, wgName, wgIcon, todos = [] }: { sh
               )}
             </div>
           </div>
+
+          {/* Wichtige WG-Infos */}
+          <WgInfoCard wgId={wgId} />
 
           {/* Quick Actions */}
           <section className="grid grid-cols-2 gap-4">

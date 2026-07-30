@@ -24,7 +24,7 @@ async function getCurrentUser(token) {
   const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
   if (!user) throw new AccessDeniedError('Nutzer nicht gefunden');
 
-  return { id: user.id, name: user.name, email: user.email };
+  return { id: user.id, name: user.name, email: user.email, icon: user.icon };
 }
 
 async function register({ email, password, name }) {
@@ -69,18 +69,26 @@ async function login({ email, password }) {
     { expiresIn: '24h' }
   );
 
-  return { token, user: { id: user.id, name: user.name, email: user.email } };
+  return { token, user: { id: user.id, name: user.name, email: user.email, icon: user.icon } };
 }
 
-async function updateProfile(userId, name) {
+const ALLOWED_ICONS = ['😀', '😎', '🤓', '🦊', '🐸', '🐼', '🐧', '🦁', '🐨', '🐙', '🌻', '🌈', '🍀', '⚡', '🔥', '🌙'];
+
+async function updateProfile(userId, name, icon) {
   if (!name || !name.trim()) throw new ValidationError('Name ist erforderlich');
+  if (icon !== undefined && icon !== null && !ALLOWED_ICONS.includes(icon)) {
+    throw new ValidationError('Ungültiges Icon');
+  }
 
   const updatedUser = await prisma.user.update({
     where: { id: userId },
-    data: { name: name.trim() }
+    data: {
+      name: name.trim(),
+      ...(icon ? { icon } : {})
+    }
   });
 
-  return { id: updatedUser.id, name: updatedUser.name, email: updatedUser.email };
+  return { id: updatedUser.id, name: updatedUser.name, email: updatedUser.email, icon: updatedUser.icon };
 }
 
 async function changePassword(userId, { currentPassword, newPassword }) {
@@ -110,7 +118,7 @@ async function changePassword(userId, { currentPassword, newPassword }) {
 async function getUserById(id) {
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user) throw new NotFoundError('User not found');
-  return { id: user.id, name: user.name, email: user.email };
+  return { id: user.id, name: user.name, email: user.email, icon: user.icon };
 }
 
 async function getAccessibleUsers(requesterId, wgId) {
@@ -126,8 +134,10 @@ async function getAccessibleUsers(requesterId, wgId) {
       id: m.user.id,
       name: m.user.name,
       email: m.user.email,
+      icon: m.user.icon,
       isHome: m.isHome,
-      mood: m.mood
+      mood: m.mood,
+      isShopping: m.isShopping
     }));
   }
 
@@ -141,6 +151,7 @@ async function getAccessibleUsers(requesterId, wgId) {
         id: member.user.id,
         name: member.user.name,
         email: member.user.email,
+        icon: member.user.icon,
         isHome: member.isHome,
         mood: member.mood
       });
@@ -157,5 +168,6 @@ module.exports = {
   updateProfile,
   changePassword,
   getUserById,
-  getAccessibleUsers
+  getAccessibleUsers,
+  ALLOWED_ICONS
 };

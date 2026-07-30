@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Footer } from '../../shared/components/Footer';
 
 const FEATURES = [
   {
@@ -297,21 +298,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 flex items-center justify-between bg-gradient-to-t from-background via-background/90 to-transparent px-4 py-4 sm:px-[30px] sm:py-[30px]">
-        <div className="pointer-events-auto flex items-center gap-4 sm:gap-5">
-          <Link to="/contact" className="text-xs font-medium text-primary transition-opacity hover:opacity-80 sm:text-sm">
-            Kontakt
-          </Link>
-          <Link to="/impressum" className="text-xs font-medium text-primary transition-opacity hover:opacity-80 sm:text-sm">
-            Impressum
-          </Link>
-        </div>
-        <div className="pointer-events-auto hidden lg:flex">
-          <Link to="/about" className="text-sm font-medium text-primary transition-opacity hover:opacity-80">
-            Über uns
-          </Link>
-        </div>
-      </div>
+      <Footer />
     </div>
   );
 }

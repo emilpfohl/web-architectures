@@ -7,12 +7,13 @@ import { TodoClient } from '../../features/tasks/TodoClient';
 import { FinanceClient } from '../../features/finances/FinanceClient';
 import { ProfileModal } from '../../features/wg/ProfileModal';
 import { WgSettingsModal } from '../../features/wg/WgSettingsModal';
+import { ShoppingModeBadge } from './ShoppingModeBadge';
+import { Footer } from './Footer';
 import { authFetch } from '../lib/authFetch';
 
 export function MainLayout() {
   const [searchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'dashboard';
-  const isShoppingMode = currentTab === 'shopping';
 
   const [user, setUser] = useState<any>(null);
   const [wgs, setWgs] = useState<any[]>([]);
@@ -21,10 +22,12 @@ export function MainLayout() {
   const [categories, setCategories] = useState<string[]>([]);
   const [todos, setTodos] = useState<any[]>([]);
   const [finances, setFinances] = useState<any[]>([]);
+  const [debts, setDebts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshCounter, setRefreshCounter] = useState(0);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showWgSettings, setShowWgSettings] = useState(false);
+  const [isShoppingActive, setIsShoppingActive] = useState(false);
 
   const refresh = () => {
     setLoading(true);
@@ -101,6 +104,11 @@ export function MainLayout() {
               .then(r => r.json())
               .then(d => Array.isArray(d) ? setFinances(d) : setFinances([]))
           );
+          promises.push(
+            authFetch(`/api/debts?wgId=${selectedWgId}`)
+              .then(r => r.json())
+              .then(d => Array.isArray(d) ? setDebts(d) : setDebts([]))
+          );
         }
 
         await Promise.all(promises);
@@ -113,6 +121,24 @@ export function MainLayout() {
 
     fetchData();
   }, [currentTab, refreshCounter, selectedWgId]);
+
+  // Shopping-Modus-Status des aktuellen Nutzers laden (unabhängig vom Tab,
+  // damit der Modus über Tab-Wechsel und Reload hinweg bestehen bleibt)
+  useEffect(() => {
+    if (!selectedWgId || !user?.id) return;
+
+    let cancelled = false;
+    authFetch(`/api/users?wgId=${selectedWgId}`)
+      .then(r => r.json())
+      .then(data => {
+        if (cancelled || !Array.isArray(data)) return;
+        const me = data.find((u: any) => u.id === user.id);
+        setIsShoppingActive(!!me?.isShopping);
+      })
+      .catch(err => console.error('Error fetching shopping status:', err));
+
+    return () => { cancelled = true; };
+  }, [selectedWgId, user?.id]);
 
   const [newWgName, setNewWgName] = useState('');
   const [inviteToken, setInviteToken] = useState('');
@@ -127,8 +153,7 @@ export function MainLayout() {
       setShowJoinForm(true);
     }
   }, [searchParams]);
-  const [isShoppingActive, setIsShoppingActive] = useState(false);
-  const isShoppingDarkMode = isShoppingMode && isShoppingActive;
+  const isShoppingDarkMode = isShoppingActive;
 
   if (!loading && wgs.length === 0) {
     return (
@@ -138,7 +163,7 @@ export function MainLayout() {
         <div className="absolute top-1/2 -right-24 w-96 h-96 bg-accent-peach/5 rounded-full blur-3xl" />
         
         <TabsNav wgs={wgs} selectedWgId={selectedWgId} onSelectWg={setSelectedWgId} user={user} onOpenProfile={() => setShowProfileModal(true)} onOpenWgSettings={() => setShowWgSettings(true)} isDarkMode={isShoppingDarkMode} />
-        <main className="flex-1 flex items-start justify-center p-6 pt-4 animate-fade-in relative z-10">
+        <main className="flex-1 flex items-start justify-center p-6 pt-4 pb-24 animate-fade-in relative z-10">
           <div className="max-w-md w-full space-y-12 text-center">
             <header className="space-y-4">
               <div className="w-24 h-24 bg-primary/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 shadow-inner shadow-primary/5">
@@ -259,21 +284,26 @@ export function MainLayout() {
             </div>
           </div>
         </main>
+        <Footer />
       </div>
     );
   }
 
   const selectedWg = wgs.find(w => w.id === selectedWgId);
 
+  useEffect(() => {
+    document.title = selectedWg?.name ? `${selectedWg.name}` : 'Sanctuary';
+  }, [selectedWg?.name]);
+
   return (
     <div
-      className={`font-body h-full min-h-screen flex flex-col ${isShoppingDarkMode ? 'shopping-mode bg-[#0f2a1f] text-emerald-50' : ''}`}
-      style={selectedWg?.themeColor && !isShoppingDarkMode ? { '--color-primary': selectedWg.themeColor } as React.CSSProperties : undefined}
+      className={`font-body h-full min-h-screen flex flex-col ${isShoppingActive ? 'shopping-mode' : ''}`}
+      style={selectedWg?.themeColor ? { '--color-primary': selectedWg.themeColor } as React.CSSProperties : undefined}
       data-cy="main-app"
     >
       <div className="bg-flare" />
-      <TabsNav wgs={wgs} selectedWgId={selectedWgId} onSelectWg={setSelectedWgId} user={user} onOpenProfile={() => setShowProfileModal(true)} onOpenWgSettings={() => setShowWgSettings(true)} isDarkMode={isShoppingDarkMode} />
-      <main className={`flex-1 p-6 md:p-16 lg:p-24 overflow-x-hidden animate-fade-in ${isShoppingDarkMode ? 'bg-gradient-to-b from-emerald-950/80 to-emerald-900/80' : ''}`}>
+      <TabsNav wgs={wgs} selectedWgId={selectedWgId} onSelectWg={setSelectedWgId} user={user} onOpenProfile={() => setShowProfileModal(true)} onOpenWgSettings={() => setShowWgSettings(true)} isDarkMode={isShoppingActive} />
+      <main className={`flex-1 p-6 md:p-16 lg:p-24 pb-24 overflow-x-hidden animate-fade-in ${isShoppingActive ? 'shopping-mode-main' : ''}`}>
         <div className="w-full max-w-6xl mx-auto space-y-12">
           {loading ? (
             <div className="flex items-center justify-center min-h-[400px]">
@@ -284,9 +314,9 @@ export function MainLayout() {
               {selectedWgId ? (
                 <>
                   {currentTab === 'dashboard' && <DashboardClient shopping={shopping} todos={todos} finances={finances} onRefresh={refresh} wgId={selectedWgId} user={user} wgName={selectedWg?.name} wgIcon={selectedWg?.icon} />}
-                  {currentTab === 'shopping' && <ShoppingClient initialItems={shopping} initialCategories={categories} onRefresh={refresh} wgId={selectedWgId} isDarkMode={isShoppingDarkMode} onStoreStatusChange={setIsShoppingActive} />}
+                  {currentTab === 'shopping' && <ShoppingClient initialItems={shopping} initialCategories={categories} onRefresh={refresh} wgId={selectedWgId} isDarkMode={isShoppingActive} isAtStore={isShoppingActive} onToggleAtStore={setIsShoppingActive} />}
                   {currentTab === 'todos' && <TodoClient initialTodos={todos} onRefresh={refresh} wgId={selectedWgId} user={user} />}
-                  {currentTab === 'finance' && <FinanceClient initialExpenses={finances} onRefresh={refresh} wgId={selectedWgId} user={user} />}
+                  {currentTab === 'finance' && <FinanceClient initialExpenses={finances} initialDebts={debts} onRefresh={refresh} wgId={selectedWgId} user={user} isDarkMode={isShoppingActive} />}
                 </>
               ) : (
                 <div className="text-center py-20 text-on-surface-variant italic">
@@ -297,6 +327,8 @@ export function MainLayout() {
           )}
         </div>
       </main>
+      <Footer variant={isShoppingActive ? 'dark' : 'default'} />
+      {isShoppingActive && currentTab !== 'shopping' && <ShoppingModeBadge />}
       {showProfileModal && user && (
         <ProfileModal
           user={user}

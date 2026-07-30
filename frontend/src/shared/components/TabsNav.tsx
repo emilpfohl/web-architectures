@@ -38,7 +38,7 @@ export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile, on
 
   // Get user initials from user name
   return (
-    <nav className={`relative flex items-center justify-between w-full border-b mb-0 pt-4 md:pt-7 px-4 md:px-8 ${isDarkMode ? 'border-emerald-700/30 bg-emerald-950/30' : 'border-outline-variant/20'}`}>
+    <nav className={`relative flex items-center justify-between w-full border-b mb-0 pt-4 md:pt-7 px-4 md:px-8 ${isDarkMode ? 'border-white/10 bg-black/40 backdrop-blur-2xl backdrop-saturate-150 sticky top-0 z-30' : 'border-outline-variant/20'}`}>
       {/* Left side: WG Switcher */}
       <div className="flex items-center gap-2 pb-4 min-w-[140px]">
         {wgs && wgs.length > 0 && (
@@ -52,11 +52,11 @@ export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile, on
                 {selectedWg?.icon ? (
                   <span className="text-[16px] leading-none">{selectedWg.icon}</span>
                 ) : (
-                  <span className={`material-symbols-outlined text-[20px] [font-variation-settings:'FILL'_1,'wght'_300] ${isDarkMode ? 'text-emerald-200' : 'text-primary'}`}>
+                  <span className={`material-symbols-outlined text-[20px] [font-variation-settings:'FILL'_1,'wght'_300] ${isDarkMode ? 'text-white' : 'text-primary'}`}>
                     home
                   </span>
                 )}
-                <span className={`font-headline text-[11px] md:text-[12px] font-semibold uppercase tracking-[0.15em] group-hover:opacity-70 transition-opacity ${isDarkMode ? 'text-emerald-50' : 'text-on-surface'}`}>
+                <span className={`font-headline text-[11px] md:text-[12px] font-semibold uppercase tracking-[0.15em] group-hover:opacity-70 transition-opacity ${isDarkMode ? 'text-white' : 'text-on-surface'}`}>
                   {selectedWg?.name || 'WG'}
                 </span>
               </button>
@@ -65,14 +65,14 @@ export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile, on
                 {selectedWg?.icon ? (
                   <span className="text-[16px] leading-none">{selectedWg.icon}</span>
                 ) : (
-                  <span className={`material-symbols-outlined text-[20px] [font-variation-settings:'FILL'_1,'wght'_300] ${isDarkMode ? 'text-emerald-200' : 'text-primary'}`}>
+                  <span className={`material-symbols-outlined text-[20px] [font-variation-settings:'FILL'_1,'wght'_300] ${isDarkMode ? 'text-white' : 'text-primary'}`}>
                     home
                   </span>
                 )}
                 <select
                   value={selectedWgId || ''}
                   onChange={(e) => onSelectWg?.(Number(e.target.value))}
-                  className={`font-headline text-[11px] md:text-[12px] font-semibold uppercase tracking-[0.15em] bg-transparent border-none cursor-pointer focus:outline-none focus:ring-0 pr-4 ${isDarkMode ? 'text-emerald-50' : 'text-on-surface'}`}
+                  className={`font-headline text-[11px] md:text-[12px] font-semibold uppercase tracking-[0.15em] bg-transparent border-none cursor-pointer focus:outline-none focus:ring-0 pr-4 ${isDarkMode ? 'text-white' : 'text-on-surface'}`}
                 >
                   {wgs.map(wg => (
                     <option key={wg.id} value={wg.id}>{wg.name}</option>
@@ -81,7 +81,7 @@ export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile, on
                 <button
                   onClick={onOpenWgSettings}
                   title="WG bearbeiten"
-                  className={`material-symbols-outlined text-[16px] transition-colors ${isDarkMode ? 'text-emerald-200/50 hover:text-emerald-100' : 'text-on-surface-variant/40 hover:text-on-surface-variant'}`}
+                  className={`material-symbols-outlined text-[16px] transition-colors ${isDarkMode ? 'text-white/50 hover:text-white' : 'text-on-surface-variant/40 hover:text-on-surface-variant'}`}
                 >
                   settings
                 </button>
@@ -102,7 +102,7 @@ export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile, on
               data-cy={`nav-tab-${tab.id}`}
               className={`
                 relative flex items-center gap-2 transition-all duration-300 px-2 group
-                ${isActive ? (isDarkMode ? 'text-emerald-200' : 'text-primary') : (isDarkMode ? 'text-emerald-200/50 hover:text-emerald-100' : 'text-on-surface-variant/40 hover:text-on-surface-variant')}
+                ${isActive ? (isDarkMode ? 'text-white' : 'text-primary') : (isDarkMode ? 'text-white/50 hover:text-white' : 'text-on-surface-variant/40 hover:text-on-surface-variant')}
               `}
             >
               <span className={`material-symbols-outlined text-[18px] md:text-[20px] transition-all duration-500 ${isActive ? "[font-variation-settings:'FILL'_1,'wght'_300]" : "[font-variation-settings:'FILL'_0,'wght'_200]"}`}>
@@ -115,7 +115,7 @@ export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile, on
               {isActive && (
                 <motion.div
                   layoutId="activeUnderline"
-                  className={`absolute -bottom-[12px] left-0 right-0 h-[2px] rounded-full shadow-lg ${isDarkMode ? 'bg-emerald-300 shadow-emerald-500/20' : 'bg-primary shadow-primary/10'}`}
+                  className={`absolute -bottom-[12px] left-0 right-0 h-[2px] rounded-full shadow-lg ${isDarkMode ? 'bg-white shadow-white/20' : 'bg-primary shadow-primary/10'}`}
                   transition={{
                     type: 'spring',
                     stiffness: 260,
@@ -135,12 +135,12 @@ export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile, on
           <button
             onClick={onOpenProfile}
             title="Profil bearbeiten"
-            className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all duration-300 group border ${isDarkMode ? 'text-emerald-200 hover:bg-emerald-800/40 border-transparent hover:border-emerald-600/40' : 'text-on-surface-variant hover:bg-sage-soft/30 border-transparent hover:border-primary/10'}`}
+            className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all duration-300 group border ${isDarkMode ? 'text-white hover:bg-white/10 border-transparent hover:border-white/20' : 'text-on-surface-variant hover:bg-sage-soft/30 border-transparent hover:border-primary/10'}`}
           >
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black uppercase ${isDarkMode ? 'bg-emerald-300/20 text-emerald-100' : 'bg-primary/10 text-primary'}`}>
-              {getAccountInitials(user?.name)}
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[13px] ${isDarkMode ? 'bg-white/20 text-white' : 'bg-primary/10 text-primary'} ${!user?.icon ? 'text-[10px] font-black uppercase' : ''}`}>
+              {user?.icon || getAccountInitials(user?.name)}
             </div>
-            <span className={`hidden md:inline font-headline text-[10px] font-bold uppercase tracking-[0.15em] ${isDarkMode ? 'text-emerald-100/80' : 'text-on-surface-variant'}`}>
+            <span className={`hidden md:inline font-headline text-[10px] font-bold uppercase tracking-[0.15em] ${isDarkMode ? 'text-white/80' : 'text-on-surface-variant'}`}>
               {user.name}
             </span>
           </button>
@@ -149,7 +149,7 @@ export function TabsNav({ wgs, selectedWgId, onSelectWg, user, onOpenProfile, on
           onClick={handleLogout}
           title="Abmelden"
           data-cy="logout-button"
-          className="flex items-center gap-2 px-3 py-2 rounded-full text-on-surface-variant/50 hover:text-red-500 hover:bg-red-50/50 transition-all duration-300 group border border-transparent hover:border-red-100"
+          className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all duration-300 group border border-transparent ${isDarkMode ? 'text-white/50 hover:text-red-300 hover:bg-red-950/30 hover:border-red-300/20' : 'text-on-surface-variant/50 hover:text-red-500 hover:bg-red-50/50 hover:border-red-100'}`}
         >
           <span className="material-symbols-outlined text-[18px] md:text-[20px] transition-all duration-300 group-hover:scale-110 [font-variation-settings:'FILL'_0,'wght'_300]">
             logout

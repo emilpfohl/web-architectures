@@ -129,6 +129,62 @@ export function calculateFinanceSummary(expenses: unknown): FinanceSummary {
   };
 }
 
+export type DebtInput = {
+  id?: number;
+  fromUserName: string;
+  toUserName: string;
+  amount: number;
+  description?: string;
+  settledAt?: string | null;
+};
+
+export type NetDebt = {
+  fromUserName: string;
+  toUserName: string;
+  amount: number;
+};
+
+export function calculateNetDebts(debts: unknown): NetDebt[] {
+  if (!Array.isArray(debts)) return [];
+
+  const validDebts = debts.filter((d): d is DebtInput => {
+    if (!d || typeof d !== 'object') return false;
+    const maybe = d as Partial<DebtInput>;
+    return (
+      typeof maybe.fromUserName === 'string' && maybe.fromUserName.trim().length > 0 &&
+      typeof maybe.toUserName === 'string' && maybe.toUserName.trim().length > 0 &&
+      typeof maybe.amount === 'number' && Number.isFinite(maybe.amount) &&
+      !maybe.settledAt
+    );
+  });
+
+  const pairBalances = new Map<string, { a: string; b: string; netAtoB: number }>();
+
+  for (const debt of validDebts) {
+    const from = debt.fromUserName.trim();
+    const to = debt.toUserName.trim();
+    if (from === to) continue;
+
+    const [a, b] = [from, to].sort();
+    const key = `${a}::${b}`;
+    const existing = pairBalances.get(key) || { a, b, netAtoB: 0 };
+
+    existing.netAtoB += from === a ? debt.amount : -debt.amount;
+    pairBalances.set(key, existing);
+  }
+
+  const result: NetDebt[] = [];
+  for (const { a, b, netAtoB } of pairBalances.values()) {
+    if (netAtoB > 0) {
+      result.push({ fromUserName: a, toUserName: b, amount: netAtoB });
+    } else if (netAtoB < 0) {
+      result.push({ fromUserName: b, toUserName: a, amount: -netAtoB });
+    }
+  }
+
+  return result;
+}
+
 export function getAccountInitials(name: unknown): string {
   if (typeof name !== 'string') return '?';
 
@@ -150,7 +206,6 @@ export type TodoDisplayState = {
   assignee: string;
   isCompleted: boolean;
   urgencyLabel: string;
-  points: number;
 };
 
 export function buildTodoDisplayState(todo: unknown): TodoDisplayState {
@@ -161,7 +216,6 @@ export function buildTodoDisplayState(todo: unknown): TodoDisplayState {
       assignee: 'Keiner',
       isCompleted: false,
       urgencyLabel: 'Ungültig',
-      points: 0,
     };
   }
 
@@ -183,7 +237,6 @@ export function buildTodoDisplayState(todo: unknown): TodoDisplayState {
     assignee,
     isCompleted,
     urgencyLabel: id > 0 && id % 2 === 0 ? 'Dringend' : 'Normal',
-    points: id > 0 ? id * 150 + 400 : 0,
   };
 }
 

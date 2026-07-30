@@ -15,9 +15,12 @@ model User {
   name              String
   email             String             @unique
   password          String             @default("") // Adding default temporarily if migrating
+  icon              String             @default("😀")
   memberships       Membership[]
   todos             Todo[]
   finances          FinanceItem[]
+  debtsOwed         Debt[]             @relation("DebtsOwed")
+  debtsOwedTo       Debt[]             @relation("DebtsOwedTo")
   messages          Message[]
   pushSubscriptions PushSubscription[]
 }
@@ -33,8 +36,10 @@ model WG {
   todos       Todo[]
   calendar    CalendarEvent[]
   finances    FinanceItem[]
+  debts       Debt[]
   invitations Invitation[]
   messages    Message[]
+  wgInfo      WgInfo?
 }
 
 model Membership {
@@ -87,6 +92,20 @@ model FinanceItem {
   paidBy      User   @relation(fields: [paidById], references: [id])
 }
 
+model Debt {
+  id          Int       @id @default(autoincrement())
+  wgId        Int
+  fromUserId  Int
+  toUserId    Int
+  amount      Float
+  description String    @default("")
+  createdAt   DateTime  @default(now())
+  settledAt   DateTime?
+  wg          WG        @relation(fields: [wgId], references: [id])
+  fromUser    User      @relation("DebtsOwed", fields: [fromUserId], references: [id])
+  toUser      User      @relation("DebtsOwedTo", fields: [toUserId], references: [id])
+}
+
 model Invitation {
   id        Int    @id @default(autoincrement())
   wgId      Int
@@ -116,4 +135,19 @@ model Message {
   timestamp String
   wg        WG       @relation(fields: [wgId], references: [id])
   sender    User?    @relation(fields: [senderId], references: [id])
+}
+
+model WgInfo {
+  id            Int    @id @default(autoincrement())
+  wgId          Int    @unique
+  address       String @default("")
+  landlordName  String @default("")
+  landlordPhone String @default("")
+  janitorName   String @default("")
+  janitorPhone  String @default("")
+  wifiName      String @default("")
+  wifiPassword  String @default("")
+  notes         String @default("") @db.Text
+  customFields  String @default("[]") @db.Text
+  wg            WG     @relation(fields: [wgId], references: [id])
 }
