@@ -4,8 +4,13 @@ import { MainLayout } from './shared/components/MainLayout';
 import { Login } from './features/auth/Login';
 import { Register } from './features/auth/Register';
 import { LandingPage } from './features/landing/LandingPage';
+import { ContactPage } from './features/legal/ContactPage';
+import { ImpressumPage } from './features/legal/ImpressumPage';
+import { AboutPage } from './features/legal/AboutPage';
 import { authFetch } from './shared/lib/authFetch';
 import { setupPushNotifications } from './shared/lib/push';
+
+const PUBLIC_PATHS = ['/login', '/register', '/welcome', '/contact', '/impressum', '/about'];
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -22,13 +27,13 @@ function App() {
         }
       } else {
         setIsAuthenticated(false);
-        if (!['/login', '/register', '/welcome'].includes(location.pathname)) {
+        if (!PUBLIC_PATHS.includes(location.pathname)) {
           navigate('/welcome');
         }
       }
     } catch {
       setIsAuthenticated(false);
-      if (!['/login', '/register', '/welcome'].includes(location.pathname)) {
+      if (!PUBLIC_PATHS.includes(location.pathname)) {
         navigate('/welcome');
       }
     }
@@ -57,6 +62,9 @@ function App() {
       <Route path="/welcome" element={<LandingPage />} />
       <Route path="/login" element={<Login onLoginSuccess={() => setIsAuthenticated(true)} />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/impressum" element={<ImpressumPage />} />
+      <Route path="/about" element={<AboutPage />} />
       <Route path="/*" element={<MainLayout />} />
     </Routes>
   );

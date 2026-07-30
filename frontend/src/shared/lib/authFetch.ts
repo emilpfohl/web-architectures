@@ -8,7 +8,7 @@ export async function authFetch(url: string | URL | globalThis.Request, options:
 
   if (response.status === 401) {
     // Wenn Token abgelaufen oder ungültig: Zum Login weiterleiten
-    if (!['/login', '/register', '/welcome'].includes(window.location.pathname)) {
+    if (!['/login', '/register', '/welcome', '/contact', '/impressum', '/about'].includes(window.location.pathname)) {
       window.location.href = '/welcome';
     }
   }

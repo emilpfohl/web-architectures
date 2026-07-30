@@ -35,9 +35,7 @@ async function createShoppingItem(userId, { wgId, name, category }) {
 
 async function updateShoppingItem(userId, id, checked) {
   const item = await prisma.shoppingItem.findUnique({ where: { id } });
-  if (!item) throw new NotFoundError();
-
-  if (!(await isWgMember(userId, item.wgId))) throw new AccessDeniedError();
+  if (!item || !(await isWgMember(userId, item.wgId))) throw new NotFoundError();
 
   const updatedItem = await prisma.shoppingItem.update({
     where: { id },
@@ -53,9 +51,7 @@ async function updateShoppingItem(userId, id, checked) {
 
 async function deleteShoppingItem(userId, id) {
   const item = await prisma.shoppingItem.findUnique({ where: { id } });
-  if (!item) throw new NotFoundError();
-
-  if (!(await isWgMember(userId, item.wgId))) throw new AccessDeniedError();
+  if (!item || !(await isWgMember(userId, item.wgId))) throw new NotFoundError();
 
   await prisma.shoppingItem.delete({ where: { id } });
 }

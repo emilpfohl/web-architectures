@@ -7,96 +7,38 @@ Als Mitbewohner einer WG möchte ich eine Übersicht haben, was zum Beispiel an 
 
 # 02 - Frontend-Architektur
 
-Mit deaktiviertem JavaScript zeigt die Next.js-Seite HTML-Inhalt, unsere Vite-App zeigt nur eine weiß — für den WG-Planer irrelevant, weil sowieso erst nach Login nutzbar und nicht zwingend SEO-relevant.
+Mit deaktiviertem JavaScript zeigt die Next.js-Seite HTML-Inhalt, unsere Vite-App zeigt nur eine weiße Seite — für den WG-Planer irrelevant, weil sowieso erst nach Login nutzbar und nicht zwingend SEO-relevant.
 
 # 03 - API-Design
 
-## Aufgabe 1: Ressourcen & Hierarchie
-**Ressourcen:** `WG`, `User`, `ToDo` (Tasks), `Einkaufsliste` (Stock), `Finanzen`, `Moods`.
+Ressourcen: `WG`, `User`, `ToDo`, `Einkaufsliste`, `Finanzen`, `Moods`.
 
-**Struktur:** Wir haben uns gegen eine starre URL-Hierarchie (z.B. `/wgs/1/todos`) und für eine **flache Struktur mit Query-Parametern** (z.B. `/api/todos?wgId=1`) entschieden. 
-**Grund:** Dies ermöglicht es Nutzern, WG-übergreifend zu agieren (z.B. "Zeige mir alle meine Aufgaben aus allen WGs") und vereinfacht die API-Entwicklung massiv.
+Struktur: Wir haben uns gegen eine starre URL-Hierarchie sondern für eine flache Struktur mit Query-Parametern entschieden. 
+Grund: Dies ermöglicht es Nutzern, WG-übergreifend zu nutzen (z.B. "Zeige mir alle meine Aufgaben aus allen WGs") und vereinfacht die API-Entwicklung massiv.
 
----
+->
+Die wichtigste Ressource für die Interaktion in der WG ist das ToDo-Element. In unserem Projekt muss ein ToDo jedoch immer einer `wgId` zugeordnet sein, damit die Daten sauber getrennt bleiben.
 
-
-## Aufgabe 2: CRUD-API Beschreibung & Generierung
-
-### Interpretation für unser Projekt (myWG)
-Die wichtigste Ressource für die Interaktion in der WG ist das **ToDo-Element**. In unserem Projekt muss ein ToDo jedoch immer einer `wgId` zugeordnet sein, damit die Daten sauber getrennt bleiben.
-
-### Iteration 1: Der Basis-Entwurf (Erster Prompt)
-*Hier haben wir die grundlegenden Endpoints definiert, ohne tiefe Fehlerbehandlung:*
-
+Iteration 1:
 - `GET /api/todos?wgId=X` – Gibt alle ToDos einer WG zurück.
 - `GET /api/todos/:id` – Gibt ein spezifisches ToDo zurück.
 - `POST /api/todos` – Erstellt ein ToDo (erwartet `title` und `wgId`).
 - `PUT /api/todos/:id` – Aktualisiert/Ersetzt ein ToDo.
 - `DELETE /api/todos/:id` – Löscht ein ToDo.
 
-### Iteration 2: Präzisierung (Zweiter Prompt)
-*Was haben wir im zweiten Schritt präzisiert?*
+Iteration 2:
 1. **Fehlerbehandlung**: Wir haben explizit **400 Bad Request** gefordert, falls die `wgId` oder der `title` im Body fehlen.
 2. **Status-Codes**: Wir haben festgelegt, dass `DELETE` mit **204 No Content** antworten muss und `POST` mit **201 Created**.
 3. **NotFound**: Ein **404 Not Found** wird zurückgegeben, wenn eine ID beim `GET`, `PUT` oder `DELETE` nicht existiert.
 4. **Relationales Mapping**: Wir haben ergänzt, dass `assigneeId` (User-Referenz) optional übergeben werden kann, um den Multi-User-Aspekt zu stützen.
 
-### Lösungsvorschlag (Implementierung in Express.js)
+Lösungsvorschlag -> Express.js
 
-```javascript
-// In server.js (Ausschnitt)
-const data = { todos: [] };
+**Hoppscotch test:**
 
-// GET - Alle Todos einer WG
-app.get('/api/todos', (req, res) => {
-  const { wgId } = req.query;
-  if (!wgId) return res.status(400).json({ error: "wgId query parameter required" });
-  const filtered = data.todos.filter(t => t.wgId === parseInt(wgId));
-  res.json(filtered);
-});
-
-// GET - Einzelnes Todo
-app.get('/api/todos/:id', (req, res) => {
-  const item = data.todos.find(t => t.id === parseInt(req.params.id));
-  if (!item) return res.status(404).json({ error: "Todo not found" });
-  res.json(item);
-});
-
-// POST - Neu anlegen
-app.post('/api/todos', (req, res) => {
-  const { title, wgId } = req.body;
-  if (!title || !wgId) return res.status(400).json({ error: "Title and wgId are required" });
-  const newTodo = { id: Date.now(), title, wgId: parseInt(wgId), completed: false };
-  data.todos.push(newTodo);
-  res.status(201).json(newTodo);
-});
-
-// PUT - Ersetzen
-app.put('/api/todos/:id', (req, res) => {
-  const index = data.todos.findIndex(t => t.id === parseInt(req.params.id));
-  if (index === -1) return res.status(404).send("Not found");
-  data.todos[index] = { ...data.todos[index], ...req.body, id: parseInt(req.params.id) };
-  res.json(data.todos[index]);
-});
-
-// DELETE - Löschen
-app.delete('/api/todos/:id', (req, res) => {
-  const initialLength = data.todos.length;
-  data.todos = data.todos.filter(t => t.id !== parseInt(req.params.id));
-  if (data.todos.length === initialLength) return res.status(404).send("Not found");
-  res.status(204).send();
-});
-```
-
----
-
-## Aufgabe 3: Test-Dokumentation (Hoppscotch)
-
-Hier sind die dokumentierten Fehlerfälle aus unserer API-Validierung (Iteration 2):
-
-### Fehlermeldung 1: 400 Bad Request (Pflichtparameter fehlt)
-**Szenario:** Abruf von ToDos ohne Angabe einer `wgId`.  
-**Request:** `GET http://localhost:3000/api/todos`
+Fehler 1: 400 Bad Request (Pflichtparameter fehlt)
+Szenario: Abruf von ToDos ohne Angabe einer `wgId`.  
+Request: `GET http://localhost:3000/api/todos`
 
 ```json
 {
@@ -104,18 +46,18 @@ Hier sind die dokumentierten Fehlerfälle aus unserer API-Validierung (Iteration
 }
 ```
 
-### Fehlermeldung 2: 404 Not Found (Ressource existiert nicht)
-**Szenario:** Abruf eines ToDos mit einer ID, die nicht existiert.  
-**Request:** `GET http://localhost:3000/api/todos/999`
+Fehler 2: 404 Not Found (Ressource existiert nicht)
+Szenario: Abruf eines ToDos mit einer ID, die nicht existiert.  
+Request: `GET http://localhost:3000/api/todos/999`
 
 ```text
 Not found
 ```
 
-### Fehlermeldung 3: 400 Bad Request (Pflichtfeld im Body fehlt)
-**Szenario:** Erstellen eines ToDos ohne das Feld `title`.  
-**Request:** `POST http://localhost:3000/api/todos`  
-**Body:** `{"wgId": 1}`
+Fehler 3: 400 Bad Request (Pflichtfeld im Body fehlt)
+Szenario: Erstellen eines ToDos ohne das Feld `title`.  
+Request: `POST http://localhost:3000/api/todos`  
+Body: `{"wgId": 1}`
 
 ```json
 {
@@ -123,13 +65,13 @@ Not found
 }
 ```
 
----
 
 # 04 - Datenhaltung & Persistenz
 
-## Datenmodell (Prisma / SQLite)
+Datenmodell (Prisma / SQLite)
 
-Wir verwenden Prisma als ORM mit einer SQLite-Datenbank. Das Modell ist relational aufgebaut und unterstützt WG-Strukturen mit mehreren Mitgliedern.
+Wir nutzen Prisma als mit SQLite DB.
+-> WGs mit mehreren Mitgliedern (zwingend notwendig)
 
 | Model | Felder | Beschreibung |
 | :--- | :--- | :--- |
@@ -145,42 +87,39 @@ Wir verwenden Prisma als ORM mit einer SQLite-Datenbank. Das Modell ist relation
 
 **Beziehungen:** User↔WG ist n:m über `Membership` (ein User kann in mehreren WGs sein, eine WG hat mehrere Mitglieder). Alle anderen Ressourcen (Todo, ShoppingItem, CalendarEvent, FinanceItem, Invitation, Message) hängen 1:n an einer WG. Pflichtfelder: `title`/`name` sowie die jeweilige `wgId`-Fremdschlüsselbeziehung dürfen nicht leer sein.
 
-## Aufgabe 2: Prisma-Setup
+Aufgabe 2: Prisma-Setup
 
 Prisma wurde mit `better-sqlite3` als initialem Entwicklungs-Datenbanktreiber eingerichtet (`prisma/schema.prisma`, erste Migration per `prisma migrate dev`). Die Datenbank-Verbindung liegt in `backend/.env` unter `DATABASE_URL` und ist über `.gitignore` von Git ausgeschlossen.
 
-## Aufgabe 3: Von Array zu Prisma-Query (Prompt-Iterationen)
+Aufgabe 3: Von Array zu Prisma-Query (Prompt-Iterationen)
 
-**Iteration 1 (Basis-Prompt):**
-```
+Iteration 1:
 Ersetze den GET /api/todos-Handler. Bisher: res.json(todos).
 Neu: Alle Todos aus der Datenbank laden mit prisma und als JSON zurückgeben.
-```
-*Ergebnis:* Handler funktionierte, gab aber immer **alle** Todos aller WGs zurück – die `wgId`-Filterung aus der Query fehlte, und es gab keine einheitliche Fehlerbehandlung.
 
-**Iteration 2 (präzisiert):**
-```
+-> Handler funktioniert, gibt aber alle Todos von allen WGs zurück – `wgId`-Filterung aus der Query fehlt hier, keine einheitliche Fehlerbehandlung.
+
+Iteration 2:
 Der GET /api/todos-Handler soll nur Todos der übergebenen wgId laden
 (prisma.todo.findMany({ where: { wgId } })). Wenn wgId fehlt, wirf einen
 ValidationError. Wenn der User kein Mitglied der WG ist, wirf einen
 AccessDeniedError. Zentrale Fehlerklassen statt einzelner try/catch-Blöcke
 in jedem Handler.
-```
-*Präzisiert wurde:* die `where`-Filterung nach `wgId` sowie strukturierte Fehlerbehandlung über eigene Error-Klassen (`ValidationError`, `AccessDeniedError`, `NotFoundError`) statt Status-Codes direkt im Handler zu setzen.
 
-## Aufgabe 4: Persistenz-Test
+
+Aufgabe 4: Persistenz-Test
 
 Getestet: Server gestartet, per Hoppscotch ein neues Todo per `POST /api/todos` angelegt, Server mit `Ctrl+C` gestoppt und neu gestartet, danach `GET /api/todos` erneut aufgerufen.
 
-**Ergebnis:** Der erste Testlauf war nicht eindeutig – Verwirrung durch mehrere parallel laufende Server-Instanzen (Port 3000 war bereits von einem alten Prozess belegt), sodass unklar war, ob der neu gestartete Server tatsächlich dieselbe SQLite-Datei verwendete. Nach Bereinigung des Ports (`lsof -ti:3000 | xargs kill -9` vor jedem Neustart) war der Eintrag nach dem Neustart zuverlässig noch vorhanden – die SQLite-Datei liegt auf Platte und übersteht den Prozess-Neustart, im Gegensatz zu den vorherigen In-Memory-Arrays aus Session 03.
+Ergebnis: Erster testlauf nicht unbedingt eindeutig –> mehrere parallel laufende Server (Port 3000 alten Prozess belegt), so war unklar ob der neu gestartete Server tatsächlich dieselbe SQLite-Datei verwendete. Nach Bereinigung des Ports (`lsof -ti:3000 | xargs kill -9` vor jedem Neustart) war der Eintrag nach dem Neustart zuverlässig noch vorhanden – die SQLite-Datei liegt auf Platte und übersteht den Prozess-Neustart, im Gegensatz zu den vorherigen In-Memory-Arrays aus Session 03.
 
-## Aufgabe 5: Architekturentscheidung – DB vs. Redis/S3 (Bonus)
+Aufgabe 5: Architekturentscheidung – DB vs. Redis/S3 (Bonus)
 
 Die meisten unserer Daten (Todos, Finanzen, Kalender, Mitgliedschaften) sind strukturiert, relational und müssen dauerhaft und konsistent bleiben – dafür ist eine relationale Datenbank (SQLite/MySQL via Prisma) richtig. Für kurzlebige, häufig wechselnde Daten wie Chat-Presence ("wer ist gerade online") oder Session-/Token-Caching wäre **Redis** langfristig sinnvoller, da diese Daten nicht dauerhaft persistiert werden müssen und von schnellerem In-Memory-Zugriff profitieren. Für Datei-Uploads wie Profilbilder wäre ein **Object Store (S3)** besser geeignet als das Ablegen von Binärdaten in der relationalen DB, da Objektspeicher für große, unstrukturierte Dateien und deren Auslieferung über CDN optimiert ist.
 
 # 05 - Authentifizierung
 
-## Test-Zugangsdaten (Development)
+Test-Zugangsdaten (Development)
 
 | Nutzer | E-Mail | Passwort |
 | :--- | :--- | :--- |
@@ -427,26 +366,23 @@ Bounded Contexts:
 
 Kommunikation: Fast jeder Kontext fragt bei **WG-Verwaltung** die `Membership` ab, um Zugriff auf eine `wgId` zu autorisieren, und **Tasks/Shopping/Finance** schreiben zusätzlich in **Messages** für den Activity-Feed. Ein zukünftiger **Stats**-Kontext würde nur lesend Daten aus Tasks, Shopping und Finance aggregieren, ohne eigenen Zustand zu besitzen.
 
-## Aufgabe 3: Service Layer einführen
+Aufgabe 3: Service Layer einführen
 
-**Iteration 1 (Basis-Prompt):**
-```
+Iteration 1:
+
 Refactore den POST /api/todos-Handler. Die Validierung und die Prisma-Abfrage
 sollen in eine neue Datei tasks.service.js als Funktion createTodo(data, userId)
 ausgelagert werden. Der Route-Handler bleibt schlank.
-```
-*Ergebnis:* Die Logik landete in `tasks.service.js`, aber Fehler wurden uneinheitlich geworfen (mal `res.status(400)` direkt im Service, mal ein generisches `throw new Error(...)`) – der Route-Handler musste den Fehlertyp an unterschiedlichen Stellen unterschiedlich auswerten.
 
-**Iteration 2 (präzisiert):**
-```
+Ergebnis: Die Logik landete in `tasks.service.js`, aber Fehler wurden uneinheitlich geworfen (mal `res.status(400)` direkt im Service, mal ein generisches `throw new Error(...)`) – der Route-Handler musste den Fehlertyp an unterschiedlichen Stellen unterschiedlich auswerten.
+
+Iteration 2:
 Vereinheitliche die Fehlerbehandlung: Erstelle in lib/errors.js zentrale Error-Klassen
 (ValidationError, AccessDeniedError, NotFoundError, ConflictError, GoneError). Services
 werfen ausschließlich diese Klassen, niemals res.status() direkt. Der Route-Handler
 fängt den Fehler zentral per try/catch und mappt err.name auf den passenden HTTP-Status.
-```
-*Präzisiert wurde:* eine zentrale, wiederverwendbare Fehlerklassen-Hierarchie (`backend/lib/errors.js`) statt Ad-hoc-Statuscodes verstreut in den Services – Services kennen jetzt keine HTTP-Details mehr, das bleibt sauber beim Route-Handler.
 
-## Aufgabe 4: Modulare Ordnerstruktur
+Aufgabe 4: Modulare Ordnerstruktur
 
 Umgesetzt (Commit `8de05fa7 refactor: restructure backend into modular bounded contexts`). Jeder Bounded Context liegt jetzt unter `backend/modules/<kontext>/` mit `<kontext>.routes.js` + `<kontext>.service.js`:
 
@@ -464,7 +400,7 @@ backend/modules/
 
 `server.js` bindet die Module nur noch über `app.use('/api/...', router)` ein und enthält selbst keine Geschäftslogik mehr. Verifiziert: Keine `.routes.js`-Datei greift noch direkt auf `prisma.*` zu – alle DB-Zugriffe laufen über die zugehörige `.service.js`.
 
-## Aufgabe 5: Modulschnittstellen
+Aufgabe 5: Modulschnittstellen
 
 Die "Activity Log"-Verletzung aus der Bestandsaufnahme (Shopping/Finance/Tasks schrieben direkt in `prisma.message`) wurde behoben: `backend/lib/activityLog.js` kapselt `logActivity(wgId, content)`, das intern `prisma.message.create` aufruft. Tasks-, Shopping- und Finance-Service rufen jetzt `logActivity()` auf statt direkt in eine fremde Tabelle zu schreiben.
 
@@ -497,13 +433,13 @@ lib/activityLog.js
   öffentlich:  logActivity(wgId, content)
 ```
 
-## Aufgabe 6: Architektur-Review – Frage 4 (Extraktionskandidat)
+Aufgabe 6: Architektur-Review – Frage 4 (Extraktionskandidat)
 
 `push`-Modul wäre am einfachsten als eigener Service extrahierbar: Es hat nur eine eigene Tabelle (`PushSubscription`), keine ausgehenden Abhängigkeiten zu anderen Modulen und wird nur von außen (`lib/webpush.js`) genutzt, nie umgekehrt. Am meisten eingehende Abhängigkeiten hat das `wgs`-Modul (wird von Tasks, Shopping, Finance, Calendar, Messages beim WG-Löschen referenziert bzw. referenziert diese selbst) – erwartbares Warnsignal, aber kein Fehler: `wgs` ist bewusst die zentrale Aggregations-/Cascade-Instanz der Domäne, ähnlich einem Aggregate Root im DDD-Sinn.
 
 **Bestehende Tests nach dem Umbau:** `npx vitest run` (statt Cypress, das auf unserer Entwicklungsumgebung Gatekeeper-Probleme hatte) – alle 21 Tests weiterhin grün nach dem Backend-Refactoring.
 
-## Bonus: Frontend nach Feature-Modulen strukturiert ⭐
+Bonus: Frontend nach Feature-Modulen strukturiert
 
 Das Frontend war bisher flach nach Typ organisiert (`components/`, `utils/`). Umgebaut nach Feature-Ordnern:
 
@@ -525,7 +461,7 @@ Da keine Komponente eine andere Komponente direkt importierte (nur `MainLayout` 
 
 # 09 - Testing
 
-## Test-Pyramide
+Test-Pyramide
 
 ```
                 ▲
@@ -551,7 +487,7 @@ Da keine Komponente eine andere Komponente direkt importierte (nur `MainLayout` 
 
   Alle Selektoren in den E2E-Tests nutzen ausschließlich `data-cy`-Attribute (z.B. `[data-cy=login-email-input]`, `[data-cy=quick-action-shopping]`), um Tests von CSS-Klassen und Texten zu entkoppeln. Ausführen mit `npm run e2e` (interaktiv) oder `npm run e2e:run` (headless) im `frontend/`-Ordner, bei laufendem Dev-Server (`npm run dev`) und Backend (`npm start`, Port 3000).
 
-## Modul-Schnittstellen (Backend)
+Modul-Schnittstellen (Backend)
 
 Regel: Ein Modul greift nie direkt per Prisma auf die Tabelle eines anderen Kontexts zu, sondern ruft die exportierte Funktion des zuständigen `*.service.js` auf (z.B. `wgsService.getMembership(...)` statt `prisma.membership.findUnique(...)` in `auth.service.js`). Cross-Context-Löschungen (z.B. beim Entfernen des letzten WG-Mitglieds) laufen über `deleteAllForWgOperation(wgId)`, die jedes betroffene Modul selbst anbietet, damit `wgs.service.js` sie nur noch in eine gemeinsame `prisma.$transaction([...])` einreiht, ohne die fremde Tabelle selbst zu kennen.
 
@@ -568,7 +504,7 @@ Regel: Ein Modul greift nie direkt per Prisma auf die Tabelle eines anderen Kont
 
 Aktuell hat kein Modul eine rein interne (nicht exportierte) Hilfsfunktion – gemeinsame, modulübergreifende Logik wie die Mitgliedschaftsprüfung `isWgMember()` liegt bewusst in `lib/membership.js` (Cross-Cutting-Concern, kein Modul-Interna), nicht in einem der Kontext-Services.
 
-### Gefundener Verstoß & Behebung
+Gefundener Verstoß & Behebung
 
 Beim Review wurde eine Regelverletzung gefunden: **`auth.service.js`** griff in `getAccessibleUsers()` direkt per `prisma.membership.findUnique/findMany` auf die `Membership`-Tabelle zu, die zum WG-Modul gehört. Ebenso griffen **`tasks.service.js`** (`createTodo`) und **`wgs.service.js`** (`updateMemberStatus`, `joinViaInvitation`) direkt per `prisma.user.findUnique` auf die `User`-Tabelle zu, die zum Auth-Modul gehört, und **`wgs.service.js`** löschte beim Entfernen des letzten Mitglieds direkt in `prisma.shoppingItem`, `prisma.todo`, `prisma.calendarEvent`, `prisma.financeItem`, `prisma.message` – alles fremde Tabellen.
 
@@ -594,9 +530,9 @@ Durch hashing ändert sich der Name der Assets bei einer Änderung. Cachet man d
 3. Was passiert ohne SPA-Fallback?
 Getestet: Fallback-Middleware kurz auskommentiert, Server neu gestartet, direkt `http://localhost:3000/login` per curl/Browser aufgerufen. Ergebnis: `404 Cannot GET /login`. Express findet keine passende Route (weder API noch statische Datei `login`) und wirft den Standard-Express-404, statt `index.html` auszuliefern. Die React-Router-Logik läuft aber nur *innerhalb* der bereits geladenen React-App im Browser – ruft man eine Client-Route direkt per URL/Reload auf, bekommt der Browser diese Anfrage nie an React weitergereicht, sondern sieht nur die rohe Server-Antwort. Ohne Fallback wäre jede tief verlinkte Route (Reload auf `/dashboard`, geteilter Link zu `/login`) kaputt – nur der Einstieg über `/` würde funktionieren.
 
-### Production Build & relative Pfade
+Production Build & relative Pfade
 
-Frontend und Backend werden als **ein** deploybares Verzeichnis gebaut:
+Frontend und Backend werden als ein deploybares Verzeichnis gebaut:
 
 ```bash
 cd frontend && npm run build   # erzeugt frontend/dist/
@@ -613,7 +549,7 @@ server: {
 },
 ```
 
-### Middleware-Reihenfolge (`backend/server.js`)
+Middleware-Reihenfolge (`backend/server.js`)
 
 1. `cors`, `express.json`, `cookieParser`
 2. API-Routen (`/api/auth`, `/api/todos`, `/api/wgs`, …), jeweils mit `authenticate`-Middleware wo nötig
@@ -621,11 +557,11 @@ server: {
 4. `express.static(FRONTEND_DIST, …)` mit langem Cache (`max-age=31536000, immutable`) für gehashte Vite-Assets unter `/assets/`
 5. SPA-Fallback (letzte Middleware ohne Pfad, da Express 5 bei `app.get('*', ...)` wegen geänderter `path-to-regexp`-Syntax einen Fehler wirft) → liefert immer `index.html` mit `Cache-Control: no-cache`
 
-### Datenbank
+Datenbank
 
 Migration von SQLite auf **MySQL/MariaDB** ist erfolgt (`backend/prisma/schema.prisma`, `provider = "mysql"`), DB läuft extern beim Hoster (`lvrs.your-database.de`). Lokal/Dev: `prisma migrate dev`, im Deployment: `prisma migrate deploy` (wendet nur bereits erstellte Migrationen an, erzeugt keine neuen — sicherer für Produktion).
 
-### Cookies & CORS im Same-Origin-Setup
+Cookies & CORS im Same-Origin-Setup
 
 Da Frontend und Backend vom selben Origin (`wehgehts.de`) ausgeliefert werden, wäre CORS eigentlich nicht mehr nötig — `cors({ origin: ALLOWED_ORIGINS, credentials: true })` ist trotzdem als Absicherung für den lokalen Dev-Betrieb (Vite auf Port 5173/5174) im Code geblieben. Auth-Cookie (`backend/modules/auth/auth.routes.js`) wird gesetzt mit:
 
@@ -636,7 +572,7 @@ Da Frontend und Backend vom selben Origin (`wehgehts.de`) ausgeliefert werden, w
 
 `backend/.env.example` dokumentiert alle benötigten Variablen (`DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL`, `RESEND_API_KEY`, VAPID-Keys); `PORT` wird vom Hosting (konsoleH Node.js App) automatisch gesetzt.
 
-### Deployment-Status
+Deployment-Status
 
 - ✅ Same-Origin-Architektur (ein Node.js-Prozess liefert API + Build) implementiert und live auf `https://wehgehts.de`
 - ✅ SSL-Zertifikat (Let's Encrypt) aktiv, HTTP→HTTPS-Redirect (`301`) verifiziert
@@ -645,9 +581,34 @@ Da Frontend und Backend vom selben Origin (`wehgehts.de`) ausgeliefert werden, w
 
 **Stolperstein bei der Node.js-Aktivierung:** Das Arbeitsverzeichnis-Feld in konsoleH erwartet nicht den absoluten Pfad (`/usr/www/users/<login>`) und nicht den Domainnamen, sondern exakt `public_html` — der von Hetzner vorgegebene Alias für den Domain-Webroot. Mit einem falschen Arbeitsverzeichnis meldete konsoleH beim ersten Klick auf „Aktivieren" einen Fehler, beim zweiten Klick fälschlich „erfolgreich aktiviert", der Status fiel nach jedem Seiten-Reload aber wieder auf „inaktiv" zurück und das komplette Formular (inkl. Umgebungsvariablen) wurde geleert. Per SSH-Test (`node server.js` mit gesetzten Env-Vars) ließ sich vorab ausschließen, dass die App selbst crasht — das grenzte das Problem auf die konsoleH-Konfiguration ein.
 
+Docker Quickstart (One-Command-Start)
+
+Für die Prüfungsleistung zusätzlich zum Hetzner-Deployment: ein vollständig lauffähiger Start mit einem einzigen Befehl, ohne manuelle Zwischenschritte.
+
+```bash
+cp .env.example .env
+# .env öffnen und die Platzhalter (MYSQL_*, JWT_SECRET, ...) ausfüllen
+
+docker compose up --build
+# alternativ: npm run docker:up
+```
+
+Das startet zwei Container:
+
+- **`mysql`** — MySQL 8.4 mit persistentem Volume (`mysql-data`), Healthcheck via `mysqladmin ping`.
+- **`app`** — Multi-Stage-Build (`Dockerfile`): Stage 1 baut das Frontend (`npm run build`), Stage 2 installiert die Backend-Produktionsabhängigkeiten, generiert den Prisma-Client und kopiert den Frontend-Build nach `backend/public/`. Das Ergebnis ist bewusst identisch zum Same-Origin-Deployment auf Hetzner (ein Node-Prozess liefert API + SPA).
+
+Der Container startet erst, wenn `mysql` laut Healthcheck bereit ist (`depends_on: condition: service_healthy`). `docker/entrypoint.sh` versucht zusätzlich `prisma migrate deploy` mit bis zu 10 Wiederholungen (3s Abstand), da MySQL bei einem frischen Volume TCP-Verbindungen teils schon annimmt, bevor die Datenbank selbst vollständig initialisiert ist. Danach startet `node server.js`.
+
+Die App ist anschließend unter `http://localhost:3000` erreichbar (Port über `APP_PORT` in `.env` änderbar). `DATABASE_URL` wird nicht manuell eingetragen, sondern in `docker-compose.yml` automatisch aus den `MYSQL_*`-Variablen zusammengesetzt — eine Fehlerquelle weniger.
+
+Zum Stoppen: `docker compose down` (bzw. `npm run docker:down`); die Daten im `mysql-data`-Volume bleiben dabei erhalten.
+
+**Hinweis:** Diese Docker-Konfiguration wurde sorgfältig gegen die bereits produktiv laufende Hetzner-Pipeline (`.github/workflows/deploy.yml`) abgeglichen (gleiche Umgebungsvariablen, gleicher Same-Origin-Aufbau, gleiche Prisma-Migrationsschritte), konnte aber auf diesem Entwicklungsrechner mangels lokaler Docker-Installation nicht selbst end-to-end ausgeführt werden.
+
 # 12 - Polish
 
-## Aufgabe 1: Sicherheits-Scan & Header-Quick-Wins
+Aufgabe 1: Sicherheits-Scan & Header-Quick-Wins
 
 Der externe Scan durch den Dozenten stand zum Zeitpunkt dieser Session noch aus. Um trotzdem sofort verwertbare Ergebnisse zu haben, wurde die deployte Konfiguration selbst gegen die gängigen HTTP-Security-Header geprüft (`curl -I` gegen `server.js`, vor und nach dem Fix).
 
@@ -671,7 +632,7 @@ App danach manuell erneut durchgeklickt (Login, Dashboard, Shopping, Chat) — k
 
 *Sobald der Dozenten-Scan vorliegt, werden dessen konkrete Findings hier ergänzt.*
 
-## Aufgabe 2: Performance-Messung (Lighthouse)
+Aufgabe 2: Performance-Messung (Lighthouse)
 
 Lighthouse-Performance-Audit gegen den lokal produktiv gebauten Build (`npm run build` → `backend/public/`) via `npx lighthouse --only-categories=performance --chrome-flags="--headless=new"`.
 
@@ -685,7 +646,7 @@ Lighthouse-Performance-Audit gegen den lokal produktiv gebauten Build (`npm run 
 
 **Ehrliche Einordnung:** Es gibt in unserem Projekt (noch) kein großes Hero-Image oder sonstiges datenintensives Asset — die Landing Page wurde bewusst rein aus CSS/Tailwind-Gradients, SVG-Icons (Material Symbols als Icon-Font) und einer gestylten Vorschau-Karte aus bestehenden UI-Primitiven gebaut, kein Stockfoto. Der in der Aufgabenstellung vorgesehene Optimierungsschritt (Skalieren, WebP-Konvertierung, Kompression via Squoosh, `loading="lazy"` + explizite `width`/`height`) entfällt damit inhaltlich, da kein Rasterbild eingebunden wurde, das diesen Schritt bräuchte. Der leichte Anstieg der Total Blocking Time (+20 ms) kommt vom zusätzlichen Rendering der neuen Landing-Page-Komponente (Framer-Motion-Animationen), liegt aber weiterhin im unauffälligen Bereich. Die im Baseline-Score bereits mittelmäßigen Werte (FCP/LCP ~3.8s) stammen primär vom lokalen `headless`-Chrome-Overhead, nicht vom eigentlichen Bundle (145 KB gzip JS gesamt).
 
-## Aufgabe 3: Landing Page
+Aufgabe 3: Landing Page
 
 Neue Route `/welcome` (`frontend/src/features/landing/LandingPage.tsx`) als Startseite für nicht eingeloggte Nutzer, statt direktem Redirect zu `/login`:
 
@@ -694,3 +655,22 @@ Neue Route `/welcome` (`frontend/src/features/landing/LandingPage.tsx`) als Star
 - **Reibungsfreier Übergang:** CTA-Buttons sind direkte `react-router`-Links zu `/register`/`/login`, kein Zwischenschritt.
 
 **Routing-Anpassung:** `App.tsx` leitete nicht eingeloggte Nutzer bisher hart auf `/login` um. Jetzt: `/welcome`, `/login`, `/register` sind die drei "öffentlichen" Routen; alles andere leitet nicht authentifizierte Nutzer zu `/welcome` statt `/login`. Der global in `authFetch.ts` verdrahtete 401-Redirect (bei abgelaufenem Token) musste ebenfalls von `/login` auf diese Drei-Routen-Logik angepasst werden, sonst wäre man beim Aufruf von `/welcome` sofort wieder zu `/login` zurückgeworfen worden (per Playwright-Screenshot-Test gefunden und gefixt).
+
+Aufgabe 4: Automatisches Deployment (CI/CD)
+
+GitHub Actions Workflow (`.github/workflows/deploy.yml`) baut bei jedem Push auf `main` das Frontend, kopiert den Build nach `backend/public/` und deployed per `rsync` + SSH auf konsoleH (Zielverzeichnis `~/public_html`, passend zum Arbeitsverzeichnis aus Session 11). Secrets (`HETZNER_SSH_USER`, `HETZNER_SSH_HOST`, `HETZNER_SSH_PASSWORD`) liegen in den GitHub-Repository-Secrets, nicht im Code.
+
+**Verifiziert:** Erster Actions-Run lief grün durch (einzige Meldung: Info-Annotation zu einer veralteten Node-20-Runtime in `actions/checkout@v4`/`setup-node@v4`, kein Fehler). Nach einem manuellen Neustart der Node.js-App in konsoleH (der `touch server.js`-Trigger im Workflow reicht allein nicht, um den laufenden Prozess neu zu laden) wurden die neuen Security-Header und die `/welcome`-Route live auf `https://wehgehts.de` bestätigt:
+
+```
+$ curl -sI https://wehgehts.de/
+content-security-policy: default-src 'self'; ...
+strict-transport-security: max-age=31536000; includeSubDomains
+x-frame-options: SAMEORIGIN
+```
+
+`https://wehgehts.de/welcome` antwortet mit `200`. Automatisches Deployment inkl. DB-Migrationen (`prisma migrate deploy`) und Prisma-Client-Generierung ist damit produktiv im Einsatz.
+
+
+
+**Teils wurde KI verwendet um bei den Antworten für die Dokumentation der Sessions zu helfen**
