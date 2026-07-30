@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { authFetch } from '../../shared/lib/authFetch';
 
+const ICON_OPTIONS = ['😀', '😎', '🤓', '🦊', '🐸', '🐼', '🐧', '🦁', '🐨', '🐙', '🌻', '🌈', '🍀', '⚡', '🔥', '🌙'];
+
 interface ProfileModalProps {
   user: any;
   onClose: () => void;
@@ -9,6 +11,7 @@ interface ProfileModalProps {
 
 export function ProfileModal({ user, onClose, onUpdated }: ProfileModalProps) {
   const [name, setName] = useState(user?.name || '');
+  const [icon, setIcon] = useState(user?.icon || '😀');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -30,7 +33,7 @@ export function ProfileModal({ user, onClose, onUpdated }: ProfileModalProps) {
       const res = await authFetch('/api/auth/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim() })
+        body: JSON.stringify({ name: name.trim(), icon })
       });
       if (res.ok) {
         const updatedUser = await res.json();
@@ -86,13 +89,13 @@ export function ProfileModal({ user, onClose, onUpdated }: ProfileModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center animate-fade-in" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center animate-fade-in p-4" onClick={onClose}>
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
-      
+
       {/* Modal */}
-      <div 
-        className="relative bg-white rounded-[2.5rem] p-10 w-full max-w-md shadow-2xl border border-outline-variant/20 animate-slide-up"
+      <div
+        className="relative bg-white rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl border border-outline-variant/20 animate-slide-up max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
@@ -105,8 +108,8 @@ export function ProfileModal({ user, onClose, onUpdated }: ProfileModalProps) {
 
         {/* Header */}
         <div className="mb-8">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-            <span className="material-symbols-outlined text-3xl text-primary">person</span>
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 text-3xl">
+            {icon}
           </div>
           <h2 className="font-headline text-2xl font-bold text-on-surface tracking-tight">Profil bearbeiten</h2>
           <p className="text-on-surface-variant text-sm mt-1 opacity-70">Ändere deinen Anzeigenamen</p>
@@ -114,6 +117,24 @@ export function ProfileModal({ user, onClose, onUpdated }: ProfileModalProps) {
 
         {/* Form */}
         <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60 px-2">
+              Emoji
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {ICON_OPTIONS.map(opt => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setIcon(opt)}
+                  className={`w-11 h-11 rounded-2xl text-xl flex items-center justify-center transition-all ${icon === opt ? 'bg-primary/15 ring-2 ring-primary scale-105' : 'bg-stone-50 hover:bg-stone-100'}`}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60 px-2">
               Anzeigename

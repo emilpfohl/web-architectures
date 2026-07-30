@@ -61,7 +61,7 @@ router.post('/logout', (req, res) => {
 // PUT /api/auth/profile
 router.put('/profile', authenticate, async (req, res) => {
   try {
-    const updatedUser = await authService.updateProfile(parseInt(req.user.userId), req.body.name);
+    const updatedUser = await authService.updateProfile(parseInt(req.user.userId), req.body.name, req.body.icon);
     res.json(updatedUser);
   } catch (error) {
     handleServiceError(error, res, 'Error updating profile:');

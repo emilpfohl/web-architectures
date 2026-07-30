@@ -9,11 +9,11 @@ export function ImpressumPage() {
             Angaben zum Betreiber
           </h2>
           <p className="mt-2">
-            Wehgehts
+            Emil Pfohl
             <br />
-            Musterstraße 1
+            Osianderstr. 6
             <br />
-            12345 Musterstadt
+            90443 Nürnberg
             <br />
             Deutschland
           </p>
@@ -22,7 +22,7 @@ export function ImpressumPage() {
         <section>
           <h2 className="font-headline text-base font-semibold text-foreground">Kontakt</h2>
           <p className="mt-2">
-            E-Mail: hallo@wehgehts.app
+            E-Mail: hallo@wehgehts.de
           </p>
         </section>
 
@@ -31,11 +31,11 @@ export function ImpressumPage() {
             Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV
           </h2>
           <p className="mt-2">
-            Wehgehts
+            Emil Pfohl
             <br />
-            Musterstraße 1
+            Osianderstr. 6
             <br />
-            12345 Musterstadt
+            90443 Nürnberg
           </p>
         </section>
 

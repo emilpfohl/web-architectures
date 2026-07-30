@@ -6,11 +6,12 @@ import { Register } from './features/auth/Register';
 import { LandingPage } from './features/landing/LandingPage';
 import { ContactPage } from './features/legal/ContactPage';
 import { ImpressumPage } from './features/legal/ImpressumPage';
+import { DatenschutzPage } from './features/legal/DatenschutzPage';
 import { AboutPage } from './features/legal/AboutPage';
 import { authFetch } from './shared/lib/authFetch';
 import { setupPushNotifications } from './shared/lib/push';
 
-const PUBLIC_PATHS = ['/login', '/register', '/welcome', '/contact', '/impressum', '/about'];
+const PUBLIC_PATHS = ['/login', '/register', '/welcome', '/contact', '/impressum', '/datenschutz', '/about'];
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -50,11 +51,7 @@ function App() {
   }, [isAuthenticated]);
 
   if (isAuthenticated === null) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-background">
-        <div className="material-symbols-outlined animate-spin text-primary/40 text-4xl">progress_activity</div>
-      </div>
-    );
+    return <div className="h-screen w-screen bg-background" />;
   }
 
   return (
@@ -64,6 +61,7 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/impressum" element={<ImpressumPage />} />
+      <Route path="/datenschutz" element={<DatenschutzPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/*" element={<MainLayout />} />
     </Routes>

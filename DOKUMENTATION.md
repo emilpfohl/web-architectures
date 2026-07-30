@@ -61,3 +61,9 @@ Beispiel: ToDo heute fällig.
 ## Hetzner + GitHub
 
 Wichtig war uns vorallem für die spätere weiterarbeit nach der Projektabgabe, dass wir einen leichten Process zum publishen neuer changes der Website auf Hetzner haben und haben deshalb die CI/CD-Pipeline eingerichtet
+
+# Testing
+
+Backend tests laufen über SQLite Datenbank anstatt von einem Prisma mock
+
+Prisma Mock ist eigentlich Standard war hier aber nicht möglich, da das gesamt Backend über CommonJS läuft und nie durch Vitest Mocks

@@ -20,8 +20,8 @@ describe('buildLeaderboard', () => {
       name: 'Anna',
       rankLabel: '02',
       taskLabel: '1 erledigt',
-      pointsLabel: '115 Pkt',
-      score: 115,
+      pointsLabel: '1 Pkt',
+      score: 1,
     });
     expect(result[1]).toMatchObject({
       id: 2,
@@ -29,7 +29,7 @@ describe('buildLeaderboard', () => {
       rankLabel: '01',
       taskLabel: '1 offen',
       pointsLabel: '0 Pkt',
-      score: -20,
+      score: 0,
     });
   });
 
@@ -46,8 +46,8 @@ describe('buildLeaderboard', () => {
     );
 
     expect(result).toHaveLength(2);
-    expect(result[0]).toMatchObject({ id: 1, name: 'Anna', score: 120 });
-    expect(result[1]).toMatchObject({ id: 2, name: 'Ben', score: 120 });
+    expect(result[0]).toMatchObject({ id: 1, name: 'Anna', score: 1 });
+    expect(result[1]).toMatchObject({ id: 2, name: 'Ben', score: 1 });
   });
 
   it('returns a neutral entry when a resident has no tasks', () => {

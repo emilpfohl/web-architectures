@@ -154,10 +154,108 @@ body {
   z-index: -1;
 }
 
+.shopping-mode {
+  background-color: color-mix(in srgb, var(--color-primary) 92%, black);
+  color: color-mix(in srgb, var(--color-primary) 8%, white);
+}
+
 .shopping-mode .bg-flare {
   background:
-    radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.14) 0%, transparent 45%),
-    radial-gradient(circle at 100% 100%, rgba(4, 120, 87, 0.18) 0%, transparent 45%);
+    linear-gradient(to right, rgba(255, 255, 255, 0.16) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.16) 1px, transparent 1px),
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--color-primary) 55%, transparent) 0%, transparent 45%),
+    radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--color-primary) 65%, transparent) 0%, transparent 45%),
+    color-mix(in srgb, var(--color-primary) 92%, black);
+  background-size: 48px 48px, 48px 48px, auto, auto, auto;
+  mask-image: none;
+  -webkit-mask-image: none;
+  opacity: 1;
+  /* .bg-flare's base z-index: -1 sinks it below .shopping-mode's own opaque
+     background-color (painted at the parent's normal stacking level), hiding
+     the grid entirely. Lift it back above that background but still behind
+     all real content (which starts at z-index: auto/0 further down the tree). */
+  z-index: 0;
+}
+
+.shopping-mode-main {
+  /* Kein eigener opaker Hintergrund mehr: <main> ist ein normales Block-Element
+     im DOM-Fluss und übermalt sonst vollständig das fixed positionierte
+     .bg-flare-Raster darunter (gleiche Stacking-Ebene, späteres DOM = malt drüber).
+     Stattdessen ein durchscheinender, abgedunkelter Farbton (etwas Schwarzanteil
+     statt reinem transparent), damit das Raster sichtbar bleibt, der Look aber
+     nicht zu hell/blass wirkt. */
+  background: color-mix(in srgb, color-mix(in srgb, var(--color-primary) 45%, black) 35%, transparent);
+}
+
+/* Kontrast-Fix: Karten/Sections innerhalb des Einkaufsmodus, die nicht explizit
+   themed sind (z.B. Dashboard-Karten außerhalb von ShoppingClient), bekommen
+   automatisch einen abgedunkelten, theme-getönten Hintergrund + helle Schrift,
+   statt weiß-auf-dunkel-Kontrastbrüchen. */
+.shopping-mode-main .bg-white,
+.shopping-mode-main .bg-sage-soft\/20,
+.shopping-mode-main .bg-stone-50,
+.shopping-mode-main .glass-panel {
+  background-color: color-mix(in srgb, var(--color-primary) 22%, black) !important;
+  border-color: color-mix(in srgb, var(--color-primary) 40%, white) !important;
+}
+
+.shopping-mode-main .text-on-surface,
+.shopping-mode-main .text-on-surface-variant,
+.shopping-mode-main .text-primary {
+  color: color-mix(in srgb, var(--color-primary) 10%, white) !important;
+}
+
+.shopping-mode-main input,
+.shopping-mode-main textarea,
+.shopping-mode-main select {
+  background-color: color-mix(in srgb, var(--color-primary) 30%, black) !important;
+  color: color-mix(in srgb, var(--color-primary) 8%, white) !important;
+  border-color: color-mix(in srgb, var(--color-primary) 45%, white) !important;
+}
+
+.shopping-mode-main input::placeholder,
+.shopping-mode-main textarea::placeholder {
+  color: color-mix(in srgb, var(--color-primary) 20%, white) !important;
+  opacity: 0.6;
+}
+
+/* Modals (ProfileModal, WgSettingsModal) rendern außerhalb von <main>, daher
+   eigener .shopping-mode-Scope (nicht -main) mit identischer Logik. */
+.shopping-mode .bg-white,
+.shopping-mode .bg-stone-50,
+.shopping-mode .bg-stone-100 {
+  background-color: color-mix(in srgb, var(--color-primary) 22%, black) !important;
+  border-color: color-mix(in srgb, var(--color-primary) 40%, white) !important;
+}
+
+.shopping-mode .text-on-surface,
+.shopping-mode .text-on-surface-variant,
+.shopping-mode .text-primary {
+  color: color-mix(in srgb, var(--color-primary) 10%, white) !important;
+}
+
+.shopping-mode input,
+.shopping-mode textarea,
+.shopping-mode select {
+  background-color: color-mix(in srgb, var(--color-primary) 30%, black) !important;
+  color: color-mix(in srgb, var(--color-primary) 8%, white) !important;
+  border-color: color-mix(in srgb, var(--color-primary) 45%, white) !important;
+}
+
+.shopping-mode input::placeholder,
+.shopping-mode textarea::placeholder {
+  color: color-mix(in srgb, var(--color-primary) 20%, white) !important;
+  opacity: 0.6;
+}
+
+.shopping-mode input:disabled {
+  color: color-mix(in srgb, var(--color-primary) 25%, white) !important;
+  opacity: 0.6;
+}
+
+.shopping-mode .hover\:bg-stone-100:hover,
+.shopping-mode .hover\:bg-stone-200:hover {
+  background-color: color-mix(in srgb, var(--color-primary) 35%, black) !important;
 }
 
 .login-page .bg-flare {

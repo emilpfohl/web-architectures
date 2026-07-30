@@ -1,0 +1,22 @@
+-- CreateTable
+CREATE TABLE `Debt` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `wgId` INTEGER NOT NULL,
+    `fromUserId` INTEGER NOT NULL,
+    `toUserId` INTEGER NOT NULL,
+    `amount` DOUBLE NOT NULL,
+    `description` VARCHAR(191) NOT NULL DEFAULT '',
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `settledAt` DATETIME(3) NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AddForeignKey
+ALTER TABLE `Debt` ADD CONSTRAINT `Debt_wgId_fkey` FOREIGN KEY (`wgId`) REFERENCES `WG`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Debt` ADD CONSTRAINT `Debt_fromUserId_fkey` FOREIGN KEY (`fromUserId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Debt` ADD CONSTRAINT `Debt_toUserId_fkey` FOREIGN KEY (`toUserId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

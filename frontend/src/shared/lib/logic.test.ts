@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   calculateFinanceSummary,
+  calculateNetDebts,
   buildTodoDisplayState,
   formatMessageTimestamp,
   getAccountInitials,
@@ -72,6 +73,49 @@ describe('calculateFinanceSummary', () => {
   });
 });
 
+describe('calculateNetDebts', () => {
+  it('returns a single net entry when debts go one direction only', () => {
+    expect(calculateNetDebts([
+      { fromUserName: 'Bob', toUserName: 'Anna', amount: 20 }
+    ])).toEqual([{ fromUserName: 'Bob', toUserName: 'Anna', amount: 20 }]);
+  });
+
+  it('nets opposing debts between the same pair', () => {
+    expect(calculateNetDebts([
+      { fromUserName: 'Bob', toUserName: 'Anna', amount: 20 },
+      { fromUserName: 'Anna', toUserName: 'Bob', amount: 5 }
+    ])).toEqual([{ fromUserName: 'Bob', toUserName: 'Anna', amount: 15 }]);
+  });
+
+  it('omits pairs whose balance is exactly zero', () => {
+    expect(calculateNetDebts([
+      { fromUserName: 'Bob', toUserName: 'Anna', amount: 10 },
+      { fromUserName: 'Anna', toUserName: 'Bob', amount: 10 }
+    ])).toEqual([]);
+  });
+
+  it('ignores settled debts', () => {
+    expect(calculateNetDebts([
+      { fromUserName: 'Bob', toUserName: 'Anna', amount: 20, settledAt: '2026-01-01T00:00:00.000Z' }
+    ])).toEqual([]);
+  });
+
+  it('keeps multiple independent pairs separate', () => {
+    expect(calculateNetDebts([
+      { fromUserName: 'Bob', toUserName: 'Anna', amount: 20 },
+      { fromUserName: 'Cara', toUserName: 'Anna', amount: 8 }
+    ])).toEqual([
+      { fromUserName: 'Bob', toUserName: 'Anna', amount: 20 },
+      { fromUserName: 'Cara', toUserName: 'Anna', amount: 8 }
+    ]);
+  });
+
+  it('returns an empty array for invalid input', () => {
+    expect(calculateNetDebts(null)).toEqual([]);
+    expect(calculateNetDebts('not an array')).toEqual([]);
+  });
+});
+
 describe('prepareShoppingItemInput', () => {
   it('normalizes a valid shopping item', () => {
     expect(prepareShoppingItemInput('  Milch  ', 'Haushalt')).toEqual({
@@ -123,7 +167,6 @@ describe('buildTodoDisplayState', () => {
       assignee: 'Anna',
       isCompleted: true,
       urgencyLabel: 'Dringend',
-      points: 1000,
     });
   });
 
@@ -134,7 +177,6 @@ describe('buildTodoDisplayState', () => {
       assignee: 'Keiner',
       isCompleted: false,
       urgencyLabel: 'Normal',
-      points: 0,
     });
   });
 
@@ -145,7 +187,6 @@ describe('buildTodoDisplayState', () => {
       assignee: 'Keiner',
       isCompleted: false,
       urgencyLabel: 'Ungültig',
-      points: 0,
     });
   });
 });

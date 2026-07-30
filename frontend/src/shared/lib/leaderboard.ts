@@ -43,7 +43,7 @@ export function buildLeaderboard(
 
       const completedCount = residentTodos.filter((todo) => todo.completed).length;
       const openCount = residentTodos.length - completedCount;
-      const score = completedCount * 120 - openCount * 20 + (resident.isHome ? 15 : 0);
+      const score = completedCount;
 
       return {
         id: resident.id,
@@ -55,7 +55,7 @@ export function buildLeaderboard(
             : openCount > 0
               ? `${openCount} offen`
               : 'Noch keine Aufgaben',
-        pointsLabel: `${Math.max(score, 0)} Pkt`,
+        pointsLabel: `${score} Pkt`,
         score,
       };
     })

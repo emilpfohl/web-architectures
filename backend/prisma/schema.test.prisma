@@ -24,6 +24,8 @@ model User {
   memberships       Membership[]
   todos             Todo[]
   finances          FinanceItem[]
+  debtsOwed         Debt[]             @relation("DebtsOwed")
+  debtsOwedTo       Debt[]             @relation("DebtsOwedTo")
   messages          Message[]
   pushSubscriptions PushSubscription[]
 }
@@ -39,6 +41,7 @@ model WG {
   todos       Todo[]
   calendar    CalendarEvent[]
   finances    FinanceItem[]
+  debts       Debt[]
   invitations Invitation[]
   messages    Message[]
 }
@@ -91,6 +94,20 @@ model FinanceItem {
   paidById    Int
   wg          WG     @relation(fields: [wgId], references: [id])
   paidBy      User   @relation(fields: [paidById], references: [id])
+}
+
+model Debt {
+  id          Int       @id @default(autoincrement())
+  wgId        Int
+  fromUserId  Int
+  toUserId    Int
+  amount      Float
+  description String    @default("")
+  createdAt   DateTime  @default(now())
+  settledAt   DateTime?
+  wg          WG        @relation(fields: [wgId], references: [id])
+  fromUser    User      @relation("DebtsOwed", fields: [fromUserId], references: [id])
+  toUser      User      @relation("DebtsOwedTo", fields: [toUserId], references: [id])
 }
 
 model Invitation {

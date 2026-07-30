@@ -1,13 +1,23 @@
 const { Resend } = require('resend');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
+let resend = null;
+function getResendClient() {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY || 're_dummy_key_mail_disabled');
+  }
+  return resend;
+}
+
 async function sendMail({ to, subject, react }) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('RESEND_API_KEY not set — skipping mail send to', to);
+    return;
+  }
   try {
-    const { error } = await resend.emails.send({
+    const { error } = await getResendClient().emails.send({
       from: FROM_EMAIL,
       to,
       subject,

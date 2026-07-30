@@ -8,6 +8,7 @@ const { deleteAllForWgOperation: deleteAllShoppingItemsForWg } = require('../sho
 const { deleteAllForWgOperation: deleteAllTodosForWg } = require('../tasks/tasks.service');
 const { deleteAllForWgOperation: deleteAllCalendarEventsForWg } = require('../calendar/calendar.service');
 const { deleteAllForWgOperation: deleteAllFinanceItemsForWg } = require('../finances/finances.service');
+const { deleteAllForWgOperation: deleteAllDebtsForWg } = require('../debts/debts.service');
 const { deleteAllForWgOperation: deleteAllMessagesForWg } = require('../messages/messages.service');
 
 async function listWgs(userId) {
@@ -133,6 +134,7 @@ async function removeWgMember(requesterId, wgId, targetUserId) {
       deleteAllTodosForWg(wgId),
       deleteAllCalendarEventsForWg(wgId),
       deleteAllFinanceItemsForWg(wgId),
+      deleteAllDebtsForWg(wgId),
       prisma.invitation.deleteMany({ where: { wgId } }),
       deleteAllMessagesForWg(wgId),
       prisma.membership.deleteMany({ where: { wgId } }),

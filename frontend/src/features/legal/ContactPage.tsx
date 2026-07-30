@@ -5,22 +5,22 @@ const CHANNELS = [
     icon: 'mail',
     title: 'E-Mail',
     text: 'Für Fragen, Feedback oder Kooperationen.',
-    action: 'hallo@wehgehts.app',
-    href: 'mailto:hallo@wehgehts.app',
+    action: 'hallo@wehgehts.de',
+    href: 'mailto:hallo@wehgehts.de',
   },
   {
     icon: 'support_agent',
     title: 'Support',
     text: 'Probleme mit eurem Konto oder eurer WG?',
-    action: 'support@wehgehts.app',
-    href: 'mailto:support@wehgehts.app',
+    action: 'support@wehgehts.de',
+    href: 'mailto:support@wehgehts.de',
   },
   {
     icon: 'bug_report',
     title: 'Bug melden',
     text: 'Etwas funktioniert nicht wie erwartet.',
-    action: 'bugs@wehgehts.app',
-    href: 'mailto:bugs@wehgehts.app',
+    action: 'bugs@wehgehts.de',
+    href: 'mailto:bugs@wehgehts.de',
   },
 ];
 

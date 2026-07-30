@@ -19,6 +19,8 @@ const invitationsRouter = require('./modules/wgs/invitations.routes');
 const shoppingRouter = require('./modules/shopping/shopping.routes');
 const calendarRouter = require('./modules/calendar/calendar.routes');
 const financesRouter = require('./modules/finances/finances.routes');
+const debtsRouter = require('./modules/debts/debts.routes');
+const wginfoRouter = require('./modules/wginfo/wginfo.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -52,10 +54,10 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", 'data:'],
       connectSrc: ["'self'", 'ws:', 'wss:'],
-      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      fontSrc: ["'self'"],
       objectSrc: ["'none'"],
       frameAncestors: ["'none'"],
       upgradeInsecureRequests: [],
@@ -88,6 +90,8 @@ app.use('/api/invitations', authenticate, invitationsRouter);
 app.use('/api/shopping', authenticate, shoppingRouter);
 app.use('/api/calendar', authenticate, calendarRouter);
 app.use('/api/finances', authenticate, financesRouter);
+app.use('/api/debts', authenticate, debtsRouter);
+app.use('/api/wginfo', authenticate, wginfoRouter);
 
 // Unbekannte /api-Pfade sauber als JSON-404 beantworten, statt sie in den
 // SPA-Fallback laufen zu lassen (der würde HTML statt JSON liefern).

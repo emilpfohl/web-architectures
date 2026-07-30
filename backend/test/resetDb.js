@@ -7,6 +7,7 @@ async function resetDb() {
   await prisma.pushSubscription.deleteMany();
   await prisma.invitation.deleteMany();
   await prisma.financeItem.deleteMany();
+  await prisma.debt.deleteMany();
   await prisma.calendarEvent.deleteMany();
   await prisma.todo.deleteMany();
   await prisma.shoppingItem.deleteMany();

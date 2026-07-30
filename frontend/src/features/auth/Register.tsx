@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { validatePasswordInput } from '../../shared/lib/logic';
 import { authFetch } from '../../shared/lib/authFetch';
 import { AuthShowcase } from './AuthShowcase';
+import { Footer } from '../../shared/components/Footer';
 
 const fieldContainer = {
   hidden: {},
@@ -193,21 +194,7 @@ export function Register() {
         </div>
       </div>
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 flex items-center justify-between bg-gradient-to-t from-background via-background/90 to-transparent px-4 py-4 sm:px-[30px] sm:py-[30px] lg:bg-none">
-        <div className="pointer-events-auto flex items-center gap-4 sm:gap-5">
-          <Link to="/contact" className="text-xs font-medium text-primary transition-opacity hover:opacity-80 sm:text-sm">
-            Kontakt
-          </Link>
-          <Link to="/impressum" className="text-xs font-medium text-primary transition-opacity hover:opacity-80 sm:text-sm">
-            Impressum
-          </Link>
-        </div>
-        <div className="pointer-events-auto hidden lg:flex">
-          <Link to="/about" className="text-sm font-medium text-white transition-opacity hover:opacity-80">
-            Über uns
-          </Link>
-        </div>
-      </div>
+      <Footer variant="auth" />
     </div>
   );
 }
